@@ -1,0 +1,21 @@
+td { width: 300px; }
+
+		body {
+  		  margin: 10px 0px 0px 50px;
+		  font-family: verdana, geneva, arial, helvetica, sans-serif; 
+		  font-size: 20px; 
+		  background-color: #ccdddd; 
+		  text-decoration: none; 
+		  font-weight: normal; 
+		  line-height: normal; 			
+		}
+		
+		li {
+			margin: 0px 0px 20px 0px;
+		}
+		
+		a          { color: #3399cc; }
+		a:link     { color: #3399cc; text-decoration: underline; }
+		a:visited  { color: #3399cc; text-decoration: underline; }
+		a:active   { color: #3399cc; text-decoration: underline; }
+		a:hover    { color: #3399cc; text-decoration: underline; }

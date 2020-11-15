@@ -1,0 +1,138 @@
+<html>
+<body>
+ <head>
+	<title>burn it!</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+ </head>
+<body>
+
+<h1>should i burn it?</h1>
+
+<h2>brute force</h2>
+
+<p>
+usually brute force, ie try every combo, is cause for a heartattack but it's actually not so bad in this case...</br>
+there are only 16 folders to consider on the backup and each is either included or it's not</br>
+gives a total of 2<sup>16</sup> or 65,536 combos to try.</br>
+well it's 2<sup>16</sup>-1 really since the case of <i>nothing</i> on the disk is not that exciting</br>
+</p>
+
+<p>
+anyways, here's an impl of a <a href="http://github.com/matpalm/burnit/tree/master/brute_force.rb">brute_force.rb</a> in ruby</br>
+and even though ruby is known for it's lack of performance it still gets the global optimum in under 1.5 seconds on my machine</br>
+</p>
+
+<p>
+it makes use of the binary representation of a number to denote whether a folder is on the disk or not</br>
+eg for 3 items or varying sizes...</br>
+</br><table>
+<tr><td>item</td><td>size</td></tr>
+<tr><td>1</td><td>4</td></tr>
+<tr><td>2</td><td>6</td></tr>
+<tr><td>3</td><td>3</td></tr>
+</table>
+</p>
+
+<p>
+...we can try all 2<sup>3</sup> combos</br>
+</br><table>
+<tr><td>n</td><td>binary</td><td>include</br>item</td><td>size</td></tr>
+<tr><td>0</td><td>000</td><td>{ }</td><td>0</td></tr>
+<tr><td>1</td><td>001</td><td>{ 1 }</td><td>4</td></tr>
+<tr><td>2</td><td>010</td><td>{ 2 }</td><td>6</td></tr>
+<tr><td>3</td><td>011</td><td>{ 2 1 }</td><td>6+4=10</td></tr>
+<tr><td>4</td><td>100</td><td>{ 3 }</td><td>3</td></tr>
+<tr><td>5</td><td>101</td><td>{ 3 1 }</td><td>3+4=7</td></tr>
+<tr><td>6</td><td>110</td><td>{ 3 2 }</td><td>3+6=9</td></tr>
+<tr><td>7</td><td>111</td><td>{ 3 2 1 }</td><td>3+6+4=13</td></tr>
+</table>
+</p>
+
+<p>
+but if we're going to resort to brute force we might as well add a little bit of elegance...
+</p>
+
+<p>
+consider the order we try the combos and what calculations are actually done</br>
+</br><table>
+<tr><td>n</td><td>binary</td><td>include</br>item</td><td>description</td></tr>
+<tr><td>0</td><td>000</td><td>{ }</td><td>empty the disk and add nothing</td></tr>
+<tr><td>1</td><td>001</td><td>{ 1 }</td><td>empty the disk and add item 1</td></tr>
+<tr><td>2</td><td>010</td><td>{ 2 }</td><td>empty the disk and add item 2</td></tr>
+<tr><td>3</td><td>011</td><td>{ 2 1 }</td><td>empty the disk and add item 2 and item 1</td></tr>
+<tr><td>4</td><td>100</td><td>{ 3 }</td><td>empty the disk and add item 3</td></tr>
+<tr><td>5</td><td>101</td><td>{ 3 1 }</td><td>empty the disk and add item 3 and item 1</td></tr>
+<tr><td>6</td><td>110</td><td>{ 3 2 }</td><td>empty the disk and add item 3 and item 2</td></tr>
+<tr><td>7</td><td>111</td><td>{ 3 2 1 }</td><td>empty the disk and add item 3 and item 2 and item 1</td></tr>
+</table>
+</p>
+
+<p>
+if we were doing this manually we'd be too lazy to test the combos like this;</br>
+instead consider if we tried the combos in a slightly different order by changing only one bit at time</br>
+(analogous to removing or adding just one item at time)</br>
+this type of order is called a <a href="http://en.wikipedia.org/wiki/Grey_code">grey encoding</a> and can be calculated easily using <tt>g(n)=n^(n>>1)</tt></br>
+</br><table>
+<tr><td>n</td><td>g(n)</td><td>binary</td><td>include</br>item</td><td>size</td></tr>
+<tr><td>0</td><td>0</td><td>000</td><td>{ }</td><td>0</td></tr>
+<tr><td>1</td><td>1</td><td>001</td><td>{ 1 }</td><td>4</td></tr>
+<tr><td>2</td><td>3</td><td>011</td><td>{ 2 1 }</td><td>6+4 = 10</td></tr>
+<tr><td>3</td><td>2</td><td>010</td><td>{ 2 }</td><td>6</td></tr>
+<tr><td>4</td><td>6</td><td>110</td><td>{ 3 2 }</td><td>3+6 = 9</td></tr>
+<tr><td>5</td><td>7</td><td>111</td><td>{ 3 2 1 }</td><td>3+6+4 = 13</td></tr>
+<tr><td>6</td><td>5</td><td>101</td><td>{ 3 1 }</td><td>3+4 = 7</td></tr>
+<tr><td>7</td><td>4</td><td>100</td><td>{ 3 }</td><td>3</td></tr>
+</table>
+</p>
+
+<p>
+using this order we can calculate the total size using a delta from the last size rather than doing the sum every time</br>
+</br><table>
+<tr><td>g(n)</td><td>binary</td><td>include</br>item</td><td>description</td><td>size</td></tr>
+<tr><td>0</td><td>000</td><td>{ }</td><td>empty the disk</td><td>0</td></tr>
+<tr><td>1</td><td>001</td><td>{ 1 }</td><td>add item 1</td><td>0+4 = 4</td></tr>
+<tr><td>3</td><td>011</td><td>{ 2 1 }</td>	<td>add item 2</td><td>4+6 = 10</td></tr>
+<tr><td>2</td><td>010</td><td>{ 2 }</td>		<td>take item 1 out</td><td>10-4 = 6</td></tr>
+<tr><td>6</td><td>110</td><td>{ 3 2 }</td><td>add item 3</td><td>6+3 = 9</td></tr>
+<tr><td>7</td><td>111</td><td>{ 3 2 1 }</td><td>add item 1</td><td>9+4 = 13</td></tr>
+<tr><td>5</td><td>101</td><td>{ 3 1 }</td><td>take item 2 out</td><td>13-6 = 7</td></tr>
+<tr><td>4</td><td>100</td><td>{ 3 }</td><td>take item 1 out</td><td>7-4 = 3</td></tr>
+</table>
+</p>
+
+<p>
+this guarantee of only one add or subtract per combo really pays off when there are more items.</br>
+here's some code for <a href="http://github.com/matpalm/burnit/tree/master/brute_force2.rb">brute_force_2.rb</a> using grey coding</br>
+and an implementation in c too <a href="http://github.com/matpalm/burnit/tree/master/brute_force2.c">brute_force2.c</a></br>
+</p>
+
+<p>
+so brute force is awesome,</br>
+until we add a few more folders...</br>
+</br><table>
+<tr><td># folders</td><td># combos</td><td>brute_force.rb</br>time</td><td>brute_force2.rb</br>time</td><td>brute_force2.c</br>time</td></tr>
+<tr><td>16</td><td>2<sup>16</sup> = 65,536</td><td>1.5 sec</td><td>0.5 sec</td><td>0.01 sec</td></tr>
+<tr><td>20</td><td>2<sup>20</sup> = 1,048,576</td><td>25 sec</td><td>5 sec</td><td>0.1 sec</td></tr>
+<tr><td>30</td><td>2<sup>30</sup> = 1,073,741,824</td><td>?</td><td>129 min</td><td>2 min 19 sec</td></tr>
+<tr><td>40</td><td>2<sup>40</sup> = 1,099,511,627,776</td><td>?</td><td>~ 3 months</td><td>~ 1.5 days</td></tr>
+<tr><td>50</td><td>2<sup>50</sup> = 1,125,899,906,842,624</td><td>?</td><td>?</td><td>~~ 4.5 years</td></tr>
+</table>
+</p>
+
+<p>
+yikes! it's easy to see then why algorithms that are exponential in the input size are not the best.</br>
+in fact 270 folders is 1,897,137,590,064,188,545,819,787,018,382,342,682,267,975,428,761,855,001,222,473,056,385,648,716,020,711,424 combos</br>
+more combos than <a href="http://pages.prodigy.net/jhonig/bignum/qauniver.html">the number of atoms in the universe</a></br>
+(i've always wanted to say that)
+</p>
+
+<p>
+let's try the other extreme of naive algorithms, the <a href="random_walk.html">random walk!</a>
+</p>
+
+<small>Dec 2008</small>
+
+</body>
+</html>
+

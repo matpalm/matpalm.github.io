@@ -1,0 +1,55 @@
+<html>
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+ </head>
+<body>
+<center>
+
+<h1>chaoscope</h1>
+<p>last night i found an app i installed awhile back called <a href="http://www.btinternet.com/~ndesprez/index.htm">chaoscope</a></p>
+<p>had a play and made some cool pics, like this one <p>
+<img src="eg1.jpg">
+</p>
+
+<h1>animated</h1>
+
+<p>my fav way of getting results with these apps though is animating them</p>
+<p>had a poke around in the app and couldn't find any tweening support</p>
+<p>but there is a batch mode that could generate images from a number of projects</p>
+<p>so here's what i did...</p>
+
+<ol>
+<li>played around and saved two projects, one to represent the a <a href="start.csproj.txt">start</a> of the animation and one for the <a href="end.csproj.txt">end</a></br>
+(notice these two differ only one value in the parameters section, around line 11)</li>
+
+<li>converted the project file into an <a href="http://en.wikipedia.org/wiki/ERuby">erb</a> replacing the varying values with references to <tt>x</tt>, <a href="project.erb.txt">eg</a></li>
+
+<li>wrote a <a href="csgen.rb">ruby script</a> to generate a project per frame into a <tt>batch</tt> directory</li>
+
+<li>
+fired up 4 instances of chaoscope (one for each core) and ran them in batch mode; each handling every 4th file</br>
+(i found not saving an image on overflow made the animation less jumpy)
+</li>
+
+<li>
+made a movie of the stills with <a href="http://en.wikipedia.org/wiki/Mencoder">mencoder</a></br>
+<tt>(mencoder mf://*bmp -o anim.avi -ovc lavc -lavcopts vbitrate=10000)</tt>
+</li>
+
+<p>
+<object width="425" height="344"><param name="movie" value="http://www.youtube.com/v/mw-bfLwDPyc&hl=en"></param><embed src="http://www.youtube.com/v/mw-bfLwDPyc&hl=en" type="application/x-shockwave-flash" width="425" height="344"></embed></object>
+<object width="425" height="344"><param name="movie" value="http://www.youtube.com/v/Q0xKGOfRoLk&hl=en"></param><embed src="http://www.youtube.com/v/Q0xKGOfRoLk&hl=en" type="application/x-shockwave-flash" width="425" height="344"></embed></object>
+<object width="425" height="344"><param name="movie" value="http://www.youtube.com/v/ILUlcal0cdg&hl=en"></param><embed src="http://www.youtube.com/v/ILUlcal0cdg&hl=en" type="application/x-shockwave-flash" width="425" height="344"></embed></object>
+<object width="425" height="344"><param name="movie" value="http://www.youtube.com/v/I6wyKWF-2QI&hl=en"></param><embed src="http://www.youtube.com/v/I6wyKWF-2QI&hl=en" type="application/x-shockwave-flash" width="425" height="344"></embed></object>
+<object width="425" height="344"><param name="movie" value="http://www.youtube.com/v/6xiixU1DwUA&hl=en"></param><embed src="http://www.youtube.com/v/6xiixU1DwUA&hl=en" type="application/x-shockwave-flash" width="425" height="344"></embed></object>
+</p>
+
+
+</ol>
+
+<small><small>june 7 2008</small></small>
+</center>
+
+</body>
+</html>
