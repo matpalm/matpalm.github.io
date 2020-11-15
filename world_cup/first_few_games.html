@@ -1,0 +1,41 @@
+<html>
+  <head>
+    <script type='text/javascript' src='http://www.google.com/jsapi'></script>
+    <script type='text/javascript'>
+      google.load('visualization', '1', {'packages':['annotatedtimeline']});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('date', 'Date');
+data.addColumn('number','korea republic');
+data.addColumn('number','greece');
+data.addColumn('number','argentina');
+data.addColumn('number','nigeria');
+data.addColumn('number','usa');
+data.addColumn('number','england');
+data.addColumn('number','algeria');
+data.addColumn('number','slovenia');
+data.addColumn('number','australia');
+data.addColumn('number','germany');
+data.addRows([[new Date(2010,6,14,17),53,36,54,36,73,113,16,14,140,258],[new Date(2010,6,14,11),65,56,97,52,122,117,17,19,199,260],[new Date(2010,6,13,23),77,81,99,26,89,176,488,618,154,190],[new Date(2010,6,13,13),76,53,109,69,139,145,26,24,101,98],[new Date(2010,6,12,21),1041,800,140,65,211,223,2,1,71,94],[new Date(2010,6,12,15),151,130,214,130,266,220,3,1,79,106],[new Date(2010,6,14,13),40,32,85,22,96,76,8,5,158,217],[new Date(2010,6,14,0),32,27,38,27,79,71,31,69,102,99],[new Date(2010,6,13,11),181,115,186,122,337,338,31,24,173,192],[new Date(2010,6,13,6),14,15,41,20,1592,963,13,12,17,41],[new Date(2010,6,14,16),63,48,58,41,75,132,8,14,116,181],[new Date(2010,6,14,10),75,60,107,63,176,117,22,19,251,308],[new Date(2010,6,13,22),49,43,76,43,158,176,897,821,160,256],[new Date(2010,6,13,12),159,115,168,120,272,236,27,27,144,151],[new Date(2010,6,12,20),721,250,206,163,280,427,8,7,98,127],[new Date(2010,6,12,14),237,209,287,163,317,279,6,6,121,152],[new Date(2010,6,14,12),70,62,92,50,109,104,11,15,172,217],[new Date(2010,6,14,7),54,43,73,43,159,129,24,37,419,773],[new Date(2010,6,13,10),154,127,228,117,383,353,33,25,140,178],[new Date(2010,6,13,1),50,35,1111,714,404,311,3,1,35,32],[new Date(2010,6,14,9),84,82,189,90,231,138,14,16,259,390],[new Date(2010,6,12,19),560,224,200,127,338,555,7,7,90,136],[new Date(2010,6,12,13),188,186,333,175,326,285,5,3,130,194],[new Date(2010,6,14,6),31,33,66,33,101,111,16,12,894,1326],[new Date(2010,6,13,0),76,78,1093,670,293,242,4,4,35,58],[new Date(2010,6,14,8),70,61,101,55,147,138,29,60,307,513],[new Date(2010,6,14,3),37,36,99,32,155,139,22,29,664,1097],[new Date(2010,6,13,5),16,15,21,16,1425,1024,2,0,15,31],[new Date(2010,6,12,18),283,259,248,192,431,503,11,5,160,183],[new Date(2010,6,12,12),79,66,209,68,146,130,0,1,41,62],[new Date(2010,6,14,19),46,44,60,39,57,99,9,6,103,155],[new Date(2010,6,14,5),25,28,44,26,70,72,3,0,1219,1443],[new Date(2010,6,13,21),24,19,27,21,53,88,611,499,129,156],[new Date(2010,6,13,3),65,44,104,45,2190,1456,4,2,34,54],[new Date(2010,6,12,23),625,433,786,430,336,304,11,7,59,73],[new Date(2010,6,14,15),66,57,68,49,91,86,6,4,158,208],[new Date(2010,6,14,2),76,63,129,66,214,185,45,38,538,861],[new Date(2010,6,13,19),1,1,2,1,27,13,3,3,6,8],[new Date(2010,6,13,9),57,43,111,59,541,315,19,18,59,78],[new Date(2010,6,13,4),14,13,35,16,1932,1231,5,0,12,34],[new Date(2010,6,12,17),181,167,183,141,397,457,9,4,116,169],[new Date(2010,6,14,18),50,42,54,37,88,130,19,18,172,208],[new Date(2010,6,14,4),15,17,38,11,78,71,8,2,1319,1767],[new Date(2010,6,13,20),2,0,3,1,9,5,6,6,14,17],[new Date(2010,6,13,2),100,76,421,204,1534,1148,9,5,67,98],[new Date(2010,6,12,22),1022,808,135,47,220,255,18,17,47,60],[new Date(2010,6,14,14),36,28,49,25,62,87,15,12,128,159],[new Date(2010,6,14,1),73,58,83,42,125,155,24,17,169,195],[new Date(2010,6,13,18),34,19,49,26,118,169,30,23,97,114],[new Date(2010,6,13,8),90,84,189,88,581,418,36,27,105,123],[new Date(2010,6,13,7),85,80,154,79,1186,618,22,15,94,152],[new Date(2010,6,12,16),197,141,237,115,275,272,5,3,89,118]]);
+var chart = new google.visualization.AnnotatedTimeLine(document.getElementById('chart_div'));
+chart.draw(data, {displayAnnotations: true});
+      }
+    </script>
+  </head>
+
+  <body>
+    <div style='height:10%'>
+      <p>
+	method: slurp the twitter search api for <a href="http://twitter.com/#search?q=%23worldup">#worldcup</a> and calculate the frequency, 
+	per hour, of the use of the official country hashtags (eg <a href="http://twitter.com/#search?q=%23aus">#aus</a> for australia).
+	results show pretty clearly when the games were being played i think.
+      </p>
+      <p>
+	until i get a chance to do some more tomorrow feel free to
+	check out the horridly hacky code to do this on <a href="http://github.com/matpalm/twitter/tree/master/searchslurp/">github</a> 
+      </p>
+    </div>
+    <div id='chart_div' style='width: 100%; height: 89%'></div>
+  </body>
+</html>

@@ -1,0 +1,89 @@
+<html>
+<head>
+	<title>semi supervised naive bayes</title>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<link rel=StyleSheet href="style.css" type="text/css">
+</head>
+
+<body>
+
+<p>
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="semi_supervised_bayes.html">semi supervised naive bayes&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<h1>semi supervised algorithms</h1>
+
+<p>
+firstly what is a semi supervised algorithm?
+</p>
+
+<h2>supervised learning</h2>
+<p>
+a <em>supervised</em> learning algorithm is one where <em>all</em> of the training examples are labelled.</br>
+in this case we are trying to predict a feature of a new example.
+</p>
+
+<p>
+eg. given catergorised training data
+<table>
+<thead><tr><td>height</td><td>colour</td><td>class</td></tr></thead>
+<tbody>
+<tr><td>10cm</td><td>red</td><td>widget</td>
+<tr><td>15cm</td><td>blue</td><td>widget</td>
+<tr><td>10cm</td><td>blue</td><td>foobar</td>
+</tbody>
+</table>
+</p>
+
+<p>
+what might we predict the class of a new item to be?
+<table>
+<thead><tr><td>height</td><td>colour</td><td>class</td></tr></thead>
+<tbody>
+<tr><td>15cm</td><td>green</td><td>???</td>
+</tbody>
+</table>
+</p>
+
+<h2>unsupervised learning</h2>
+<p>
+an <em>unsupervised</em> learning algorithm is one where <em>none</em> of our training examples are labelled.</br>
+in this case we are just looking to find patterns in the data.
+</p>
+<p>
+clustering is a classic example of an unsupervised algorithm.
+</p>
+
+<h2>semi supervised learning</h2>
+<p>
+a <em>semi supervised</em> learning algorithm is one where, wait for it, <em>some</em> of the training examples are labelled.</br>
+</p>
+
+<p>
+a good example of this is categorising text documents.</br>
+we might have a large existing corpus of documents but can only afford to label some of the data.</br>
+it is worth trying to use the entire corpus though since it might contain some inherent structure.
+</p>
+
+<p>
+let's have a look at <a href="semi_supervised_bayes.html">a semi supervised version of naive bayes</a>
+</p>
+
+<p>
+<small>february two thousand and ten</small>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+</body>
+</html>
+

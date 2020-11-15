@@ -1,0 +1,105 @@
+ <head>
+	<title>should i read it? considering word occurrences</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+ </head>
+<body>
+<h1>simple supervised learning</h1>
+<h2>part 2: should i read it? considering word occurrences</h2>
+
+<p>
+when making a decision on whether to read an article or not what do we have to work with?</br>
+not much except for the actual words of the article
+</p>
+
+<p>
+when looking at articles from theregister i expect to see words like microsoft or linux</br>
+the words in these articles can be considered "words i like"</br>
+</p>
+
+<p>
+when looking at articles from perezhilton i expect to see words like hollywood or gossip</br>
+the words in these articles can be considered "words i don't like"</br>
+</p>
+
+<p>
+as such an article can be classified based on whether it has more words in common with the "words i like" or the "words i don't like"
+</p>
+
+<p>
+this introduces the ideas of <i>training</i></br>
+we can train the classifier about articles i like by feeding it a bunch of articles from the register</br>
+likewise we can train the classifier about articles i don't like by feeding it a bunch of articles from perezhilton</br>
+</p>
+
+<p>
+this also introduces the idea of <i>testing</i></br>
+once a classifer is trained it can be tested by giving it other articles outside of the training set</br>
+it get's it right if if it says i'd like each one from theregister and says i wouldnt like each one from perezhilton</br>
+</p>
+
+<p><small>
+(in actual fact it's a bit fuzzier than just youd-like-theregister-but-hate-perezhilton</br>
+there's no guarantee i wouldnt want to read any article from perezhilton</br>
+perhaps one day they'll have an article on some celebrities high tech house i would actually like to read</br>
+such an article might use words usually only usually seen in theregister</br>
+the classifier might, quite correctly, recommend i read it, even though it's in the feed i don't like)
+</small></p>
+
+<hr/>
+<p>
+so let's take 9,800 articles (5,000 from perezhilton and 4,800 from theregister) and split them into sets of 250</br>
+we'll by see how varying the number of articles in the training set changes the prediction accuracy.</br>
+we'll train with first set (articles 1-250) and test against the second set (articles 251-500) and see what percentage we get correct</br>
+then train with the first two sets (articles 1-500) and test against the third set (articles 501-750) and see what percentage we get correct</br>
+then train with the first three sets (articles 1-750) and test against the third set (articles 751-1000) and see what percentage we get correct</br>
+and so on</br>
+</p>
+
+<p>
+here's a graph of the success rate vs number of articles used in the training (including the number of unique words)</br>
+<img src="run1.png"/></br>
+things i think are interesting...
+<ol>
+<li>the classifier gets good results <i>very</i> quickly. it didn't need much training at all to get 80%+ success rate</li>
+<li>it doesnt get much better over time</li>
+<li>the number of unique words doesnt appear to be asymptoting</li>
+</ol>
+</p>
+
+<hr/>
+<p>
+even considering a much smaller training set, say we only consider the first 200 and do the training / testing in blocks of 10 we get
+good results quickly</br>
+<img src="run2.png"/></br>
+</p>
+
+<h3>digression</h3>
+<p>
+i was surprised about the number of unique words not even remotely asymptoting</br>
+consider the stead increase in number of unique words across the rss corpus i've collected
+</p>
+<p>
+<small>(170,000 articles from 60 rss feeds; 20,000,000 words, 186,000 of which are unique)</small></br>
+<img src="unique_words.png"/>
+</p>
+
+<p>
+we see why the is constant growth when considering the histogram of words vs their frequency</br>
+<img src="histo.png"/></br>
+points on this graph denote the number of words that occur for a particular frequency</br>
+eg the point in the top left, (1,76213), denotes that <b>there are 76,213 words that occur only once</b> in the entire corpus</br>
+the final point in the bottom right, (987366,1) denotes there is one word that appears 987,366 times
+</p>
+
+</hr><h3>code</h3>
+<p>here's the <a href="http://github.com/matpalm/rss-feed-experiments/blob/master/classifier/word_occ.rb">code</a>, including ruby source and gnuplot scripts
+and here's <a href="../perez_register_small.bz2">a small dataset</a> or articles</p>
+
+<h3>what to try next?</h3>
+<p>
+instead of just word occurences we could try using a more complex form of word occurence analysis, <a href="../p3">the naive bayes method</a>
+</p>
+
+<small>july12 2008</small>
+</body>

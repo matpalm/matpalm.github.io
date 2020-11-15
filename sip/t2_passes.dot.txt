@@ -1,0 +1,13 @@
+digraph  {
+	graph [bgcolor="#00000000"]
+	node [style=filled color="#000000" fillcolor="#ccddff"]
+	"input" -> "term_freq";
+	"term_freq" -> "total_num_terms";
+	"input" -> "trigrams";
+	"trigrams" -> "exploded_trigrams";
+	"term_freq" -> "trigram_freq";
+	"exploded_trigrams" -> "trigram_freq";
+	"total_num_terms" -> "trigram_freq";
+	"trigram_freq" -> "trigram_freq_sum";
+	"trigram_freq_sum" -> "least_freq_trigrams";
+}

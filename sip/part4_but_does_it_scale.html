@@ -1,0 +1,160 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+	<title>diy statistically improbable phrases</title>
+</head>
+<body>
+
+<p>
+<a href="take3_markov_chains.html">&lt;&lt;&nbsp;&nbsp;take 3: markov chains</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+</p> 
+
+<h1>but does it scale?</h1>
+
+<h2>running locally</h2>
+
+
+<p>
+remember when all that anyone would every ask about a technology was "but does it scale?" those
+were the days...
+</p>
+
+<p>
+hadoop is fun, but it's complex. thinking in map reduce requires a mind shift and having to 
+handle the joins yourself is a pain in the arse. why would anyone bother? because of the 
+promise of linear scalability for insanely large datasets. so my question is how
+large is insanely large?
+</p>
+
+<p>
+we've been working on a (far from insanely large) corpus of 8 docs. running on my home machine (modest quadcore) it takes 9 min to run
+the 13 map reduce tasks required to build the sips and for this size of data that's ludicrous. i wrote 
+<a href="http://github.com/matpalm/sip/blob/master/calc_sips_simple.rb">another version</a>
+in plain ruby and it runs in 18 secs and it's just ruby for
+god sakes (fun to write, not so fun to wait for). imagine how fast (and painful) it would be with c++ using <a href="http://openmp.org/wp/">open-mp</a>?
+</p>
+
+<p>
+most of the time the cpu is not at 100% as a lot of
+the time is framework "stuff"; stopping and starting instances and the like. as an illustration consider
+ths case of just a single document. ruby &lt;1s, hadoop 2m 40s. bam.
+</p>
+
+<p>
+so at what size do we switch over to hadoop being worth it? and when do we have to move from one machine to a cluster?
+</p>
+<p>
+lets start with some runs using hadoop in 
+<a href="http://hadoop.apache.org/common/docs/r0.20.0/quickstart.html#PseudoDistributed">pseudo distributed mode</a>, 
+i'll leave it's default config for my quad core box at 2 mappers and reducers.
+</p>
+
+<p>
+<table border="1">
+<tr><td>num docs</td><td>size (gz'd)</td><td>total tokens</td><td>unique tokens</td><td>ruby time</td><td>hadoop local</td></tr>
+<tr><td>1</td><td>22 kb</td><td>9e3</td><td>2e3</td><td>&lt;1s</td><td>2m 40s</td></tr>
+<tr><td>8</td><td>800 kb</td><td>408e3</td><td>27e3</td><td>18s</td><td>7m 20s</td></tr>
+<tr><td>20</td><td>3 mb</td><td>1.5e6</td><td>66e3</td><td>1m 8s</td><td>16m</td></tr>
+<table>
+</p>
+
+<p>
+so far, not so good. but to be fair we're still only running on a single machine, this stuff was made for a cluster...
+</p>
+
+<h2>running on ec2</h2>
+
+<h3>setup</h3>
+
+<p>
+ec2 is a great way to get a bunch of machines for a bit and hadoop is well supported with scripts provided to 
+manage an ec2 cluster.
+</p>
+
+<p>
+the first thing to do is prep the data and get it into the cloud. the complete steps then are...
+<ol>
+<li>remove the prj gut header/footer with the clean text scripts, unzipped this is 2.8gb</li>
+<li>run <tt>rake prepare_input</tt> to reformat each file as a single line, gzipped results in 980mb</li>
+<li>use <a href="http://github.com/matpalm/sip/blob/master/util/chunky.rb"><tt>chunky.rb</tt></a> to chunk these 7,900 files into 98 files of 10mb each</li>
+<li>upload from home machine to s3 with <a href="http://s3tools.org/s3cmd"><tt>s3cmd</tt></a> </li>
+<li>fire up ec2 instances</li>
+<li>download from s3 to hdfs using the <a href="http://hadoop.apache.org/common/docs/current/distcp.html"><tt>hadoop distcp</tt></a> tool</li>
+<li>go nuts</li>
+</ol>
+</p>
+
+<p>
+the main pro of this approach is that it minimising the the time 'wasted' between firing the ec2 instances up and having the data in hdfs.
+moving the data from s3 to hdfs is fast (an intracloud transfer) and the <tt>distcp</tt> works in parallel
+</p>
+
+<p>
+a minor con is that the optimal size of file in hdfs is 64mb not 10mb but i don't want to make the smallest size 64mb since it'll be 
+more awkward to do smaller scale tests.
+</p>
+
+<h3>results</h3>
+
+<p>
+so how does it preform? let's use a 10 node cluster running amazons medium cpu instance.</br>
+these 10 notes provide a 30/30 map/reduce capability.</br>
+since the data size is quite small had to up the mapred.map.tasks and mapred.reduce.tasks to 30/30.</br>
+</p>
+
+<p>
+<div style="float:left">
+<table border="1" style="float:left">
+<tr><td>#chunks</td><td>num docs</td><td>total tokens</td><td>unique tokens</td><td>ruby time</td><td>cluster time</td></tr>
+<tr><td>1</td><td>56</td><td>5.6e6</td><td>75e3</td><td>4m 32s</td><td>10m 37s</td></tr>
+<tr><td>2</td><td>110</td><td>11e6</td><td>98e3</td><td>8m 48s</td><td>&nbsp;</td></tr>
+<tr><td>3</td><td>177</td><td>16e6</td><td>117e3</td><td>12m 17s</td><td>17m 50s</td></tr>
+<tr><td>4</td><td>233</td><td>22e6</td><td>134e3</td><td>16m 45s</td><td>&nbsp;</td></tr>
+<tr><td>5</td><td>306</td><td>27e6</td><td>150e3</td><td>20m 15s</td><td>24m 49s</td></tr>
+<tr><td>6</td><td>378</td><td>33e6</td><td>162e3</td><td>24m 13s</td><td>&nbsp;</td></tr>
+<tr><td>7</td><td>450</td><td>38e6</td><td>173e3</td><td>28m (40m)</td><td>33m 12s</td></tr>
+<tr><td>8</td><td>531</td><td>44e6</td><td>189e3</td><td>32m 24s</td><td>&nbsp;</td></tr>
+<tr><td>9</td><td>599</td><td>50e6</td><td>197e3</td><td>36m 49s</td><td>&nbsp;</td></tr>
+<tr><td>10</td><td>686</td><td>55e6</td><td>212e3</td><td>41m 29s</td><td>45m 22s</td></tr>
+</table>
+<img src="plot.png"></img>
+</div>
+</p>
+
+<p>
+this is quite interesting...
+</p>
+
+<p>
+extrapolation says hadoop will overtake the ruby one at a runtime of 2h 5min (310mb). though with a sample size this small though
+such extrapolation needs to be taken with a grain of salt. so hadoop is roughly 6min + 4min per 10mb processed, ruby is 4min per 10mb.
+</p>
+
+<p>
+so what conclusions can we draw? for me these results raises more questions than they answer.
+</p>
+
+<p>
+<ul>
+<li>is it that hadoop is scalable but not that performant? possible since the infrastructure cost is large. i would do some longer tests on ec2 but it's not free...</li>
+<li>have i made a fundamental mistake regarding my map reduce implementation? are my joins terribly implemented?</li>
+<li>could i have implemented the algorithm using less passes of the data?</li>
+<li>is streaming <i>that</i> much slower than native java? i can't see how it would make that much of a difference</li>
+<li>how would <a href="http://hadoop.apache.org/pig/">pig</a> go? especially for the expensive join steps?</li>
+</ul>
+</p>
+
+<p> hmm. some more investigation is required!</p>
+
+<p>
+<a href="take3_markov_chains.html">&lt;&lt;&nbsp;&nbsp;take 3: markov chains</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+</p> 
+
+<p>sept 2009</p>
+
+</body>
+</html>
+

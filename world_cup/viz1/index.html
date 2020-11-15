@@ -1,0 +1,132 @@
+<html>
+<head>
+	<title>#worldcup tweets, viz v1</title>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<link rel=StyleSheet href="style.css" type="text/css">
+</head>
+
+<body>
+
+      <div id="viz_container">
+
+	<!-- This version plays nicer with older browsers,
+	     but requires JavaScript to be enabled.
+	     http://java.sun.com/javase/6/docs/technotes/guides/jweb/deployment_advice.html -->
+	<script type="text/javascript"
+		src="http://www.java.com/js/deployJava.js"></script>
+	<script type="text/javascript">
+	  /* <![CDATA[ */
+
+	  var attributes = { code:'viz.class',
+			     archive: 'viz.jar',
+			     width:800, height:600 } ;
+	  var parameters = { };
+	  var version = '1.5';
+	  deployJava.runApplet(attributes, parameters, version);
+
+	  /* ]]> */
+	</script>
+
+	<noscript> <div>
+	  <!--[if !IE]> -->
+	  <object classid="java:viz.class"
+		  type="application/x-java-applet"
+		  archive="viz.jar"
+		  width="800" height="600"
+		  standby="Loading Processing software..." >
+
+	    <param name="archive" value="viz.jar" />
+
+	    <param name="mayscript" value="true" />
+	    <param name="scriptable" value="true" />
+
+	    <param name="image" value="loading.gif" />
+	    <param name="boxmessage" value="Loading Processing software..." />
+	    <param name="boxbgcolor" value="#FFFFFF" />
+
+	    <param name="test_string" value="outer" />
+	  <!--<![endif]-->
+
+	    <!-- For more instructions on deployment,
+		 or to update the CAB file listed here, see:
+		 http://java.sun.com/javase/6/webnotes/family-clsid.html
+		 http://java.sun.com/javase/6/webnotes/install/jre/autodownload.html -->
+	    <object classid="clsid:8AD9C840-044E-11D1-B3E9-00805F499D93"
+		    codebase="http://java.sun.com/update/1.6.0/jinstall-6u18-windows-i586.cab"
+		    width="800" height="600"
+		    standby="Loading Processing software..."  >
+
+	      <param name="code" value="viz" />
+	      <param name="archive" value="viz.jar" />
+
+	      <param name="mayscript" value="true" />
+	      <param name="scriptable" value="true" />
+
+	      <param name="image" value="loading.gif" />
+	      <param name="boxmessage" value="Loading Processing software..." />
+	      <param name="boxbgcolor" value="#FFFFFF" />
+
+	      <param name="test_string" value="inner" />
+
+	      <p>
+		<strong>
+		  This browser does not have a Java Plug-in.
+		  <br />
+		  <a href="http://www.java.com/getjava" title="Download Java Plug-in">
+		    Get the latest Java Plug-in here.
+		  </a>
+		</strong>
+	      </p>
+
+	    </object>
+
+	  <!--[if !IE]> -->
+	  </object>
+	  <!--<![endif]-->
+
+	</div> </noscript>
+
+      </div>
+
+<h1>#worldcup tweets, viz v1</h1>
+
+
+<p>
+this is a visualisation of the use of the official country hash tags (eg #aus) in the twitter search stream of #worldcup since june 12th.
+</p>
+
+<p>
+if you can't see anything you don't have java installed. you must feel very sad about that. i wouldn't worry too much, the firefox java plugin
+has been very flaky for me anyways. it's not interactive so you can go
+<a href="http://vimeo.com/user2935988/videos">watch it on vimeo</a> instead if you like.
+</p>
+
+<p>
+<ul>
+<li>orb size denotes the relative frequency of the use of the tag.</li>
+<li>lines join orbs if there was a high frequency of both countries appearing in the same tweet (only the top 10 frequent pairs shown)</li>
+<li>motion means nothing at all, i just got distracted.</li>
+<li>the rate of progress is roughly an hour of tweets per half second of animation.</li>
+<li>the bit where the edges vanish and all the orbs go the same size was a twitter outage.</li>
+</ul>
+</p>
+
+<p>
+this animation was written in <a href="http://processing.org">processing</a>.
+the code for it is <a href="http://github.com/matpalm/twitter/tree/master/searchslurp/">on github.</a>
+it makes use of <a href="http://processing.org/learning/topics/circlecollision.html">this processing example</a>
+(though with heavy mods to support changing size).
+was writing something that looked slightly different until i saw this awesome visualisation from the
+<a href="http://www.guardian.co.uk/football/world-cup-match-replay">guardian</a> and decided orb thingies are the way to go!
+</p>
+
+<p>
+next i'll work on weighting the edges based on frequency and perhaps introducing a spring layout.
+in the meantime check out my <a href="http://matpalm.com">other random stuff.</a>
+</p>
+
+<p><small>jun 20 2010</small></p>
+
+
+</body>
+</html>

@@ -1,0 +1,17 @@
+
+		body {
+  		  margin: 10px 0px 0px 150px;
+		  font-family: verdana, geneva, arial, helvetica, sans-serif; 
+		  font-size: 15px; 
+		  background-color: #bcdbed; 
+		  text-decoration: none; 
+		  font-weight: normal; 
+		  line-height: normal; 
+			
+		}
+		
+		a          { color: #3366cc; }
+		a:link     { color: #3366cc; text-decoration: underline; }
+		a:visited  { color: #3366cc; text-decoration: underline; }
+		a:active   { color: #3366cc; text-decoration: underline; }
+		a:hover    { color: #3366cc; text-decoration: underline; }

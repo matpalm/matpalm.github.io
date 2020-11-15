@@ -1,0 +1,14 @@
+
+digraph {
+rankdir="LR";
+graph [bgcolor="#00000000"]
+node [style=filled color="#000000" fillcolor="#ccddff"]
+"a" -> "a" [penwidth="3"]
+"a" -> "b" [penwidth="6"]
+"a" -> "c" [penwidth="2"]
+"b" -> "a" [penwidth="4"]
+"b" -> "d" [penwidth="3"]
+"c" -> "d" [penwidth="2"]
+"d" -> "a" [penwidth="3"]
+"d" -> "b" [penwidth="1"]
+}

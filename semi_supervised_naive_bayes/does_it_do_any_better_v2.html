@@ -1,0 +1,60 @@
+<html>
+<head>
+	<title>semi supervised naive bayes</title>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<link rel=StyleSheet href="style.css" type="text/css">
+</head>
+
+<body>
+
+<p>
+<a href="semi_supervised_bayes.html">&lt;&lt;&nbsp;&nbsp;semi supervised naive bayes</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="rewriting_for_scale.html">v2: rewriting for scale&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<h1>but does it do any better? (v2)</h1>
+
+<h2>rerunning the same tests</h2>
+
+<p>
+let's rerun <a href="does_it_do_any_better.html">the same tests</a>, using the same method, we did before.
+</p>
+
+<p>
+again as a test i took a random sample of 300 rss articles from a total of 8000.
+</p>
+
+<p>
+30 articles were used for the training set, 30 for the test set with a varying number were used for the unlablled extras.
+</p>
+
+<p>
+the experiment was repeated 7 times for a different random 300 articles with the results plotted below showing the addition gain over naive bayes (nb) using a semi supervised version (ssnb) with 20, 50, 100 or 200 unlabelled examples.
+</p>
+
+<p>
+<img src="g20.12.v1.png"/><img src="g20.12.v2.png"/>
+</p>
+
+<p>
+an interesting thing to note is that the default multinominal supervised classifier does a hell of a lot better than the default nominal supervised classifier before we even consider the semi supervised part...
+<p>
+
+<p>
+it also scales well past 200 articles but, doesn't really need it for this simple two class problem it seems
+</p>
+
+<p>
+TODO!
+a 5-6 class problem and some graphs showing some real scaling, in the mean time i've got <a href="http://matpalm.com/blog/tag/e10">distracted by something else!</a>
+</p>
+</p>
+
+<p>
+<small>march two thousand and ten</small>
+</p>
+
+</body>
+</html>
+

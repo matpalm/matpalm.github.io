@@ -1,0 +1,275 @@
+ <head>
+	<title>should i read it? the naive bayes method</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+ </head>
+<body>
+
+<h1>simple supervised learning</h1>
+<h2>part 3: should i read it? the naive bayes method</h2>
+
+<h3>intro</h3>
+<p>
+our <a href="../p2">last experiement</a> in seeing whether a word exists in a feed does pretty well, but can we do better?</br>
+lets the tried and true machine learning classification technique of <a href="http://en.wikipedia.org/wiki/Naive_bayes">naive bayes</a></br>
+<small>(it's <i>bayes</i> because it makes use of that cornerstone of probability, <a href="http://en.wikipedia.org/wiki/Bayes'_theorem">bayes theorem</a></br>
+i'll describe why iit's <i>naive</i> in a bit)</small>
+</p>
+
+<p>
+furthermore 80% success from our <a href="../p2">last experiment</a> is too good, lets make the problem harder!</br>
+we'll introduce articles from another new feed, the auto industry related <a href="autoblog.com">autoblog.com</a></br>
+and change the rules to be that...</br>
+<ol>
+<li>i want to read anything from theregister</li>
+<li>i want to read any article with the word lamborghini in it</li>
+</ol>
+</p>
+
+<p>
+a quick peek at our collected data shows...</br></br>
+<table>
+<tr><td>rss feed</td><td>total articles</td><td>articles with the word 'lamborghini'</td></tr>
+<tr><td>theregister</td><td>5,000</td><td>1</td></tr>
+<tr><td>perezhilton</td><td>4,800</td><td>2</td></tr>
+<tr><td>autoblog</td><td>3,600</td><td>98</td></tr>
+</table>
+</p>
+
+<p>
+</p>
+
+<h3>long example</h3>
+
+<p>let's work through an example</p>
+
+<p>
+consider the articles below (our training data) and whether we should read them</br></br>
+<table>
+<tr><td>text</td><td>feed</td><td>should read it?</td></tr>			
+<tr><td class="y">on the linux</td>		<td class="y">the register</td>	<td class="y">yes (rule 1)</td></tr>
+<tr><td>cat on ferrari</td>		<td>autoblog</td>	<td>no</td></tr>
+<tr><td>on the hollywood</td>	<td>perezhilton</td>	<td>no</td></tr>
+<tr><td class="y">lamborghini on cat</td>	<td class="y"> autoblog</td>	<td class="y">yes (rule 2)</td></tr>
+<tr><td>hollywood cat</td>		<td>perezhilton</td>	<td>no</td></tr>
+<tr><td class="y">the lamborghini</td>		<td class="y">perezhilton</td>	<td class="y">yes (rule 2)</td></tr>
+<tr><td class="y">cat on linux </td>		<td class="y">the register</td>	<td class="y">yes (rule 1)</td></tr> 		
+</table>
+</p>
+
+<p>
+in terms of word occurences (we'll add word frequencies soon enough) our training data breaks down to </br></br>
+<table>
+<tr><td>text</td><td>on</td><td>the</td><td>linux</td><td>cat</td><td>ferrari</td><td>hollywood</td><td>lamborghini</td><td>read</td></tr>
+<tr><td class="y">on the linux</td><td class="y">Y</td> <td class="y">Y</td>  <td class="y">Y</td>     <td class="y">N</td>   <td class="y">N</td>       <td class="y">N</td> <td class="y">N</td> <td class="y">Y</td></tr>
+<tr><td>cat on ferrari</td><td>Y</td> <td>N</td>   <td>N</td>     <td>Y</td>   <td>Y</td>       <td>N</td>         <td>N</td>        <td>N</td></tr>
+<tr><td>on the hollywood</td><td>Y</td>  <td>Y</td>   <td>N</td>     <td>N</td>   <td>N</td>       <td>Y</td>         <td>N</td>           <td>N</td></tr>
+<tr><td class="y">lamborghini on cat</td><td class="y">Y</td>  <td class="y">N</td>   <td class="y">N</td>     <td class="y">Y</td>   <td class="y">N</td>       <td class="y">N</td>         <td class="y">Y</td>           <td class="y">Y</td></tr>
+<tr><td>hollywood cat</td><td>N</td>  <td>N</td>   <td>N</td>     <td>Y</td>   <td>N</td>       <td>Y</td>         <td>N</td>           <td>N</td></tr>
+<tr><td class="y">the lamborghini</td><td class="y">N</td>  <td class="y">Y</td>   <td class="y">N</td>     <td class="y">N</td>   <td class="y">N</td>       <td class="y">N</td>         <td class="y">Y</td>           <td class="y">Y</td></tr>
+<tr><td class="y">cat on linux</td><td class="y">Y</td>  <td class="y">N</td>   <td class="y">Y</td>     <td class="y">Y</td>   <td class="y">N</td>       <td class="y">N</td>         <td class="y">N</td>           <td class="y">Y</td></tr>
+</table>
+</p>
+
+<p>
+from our word occurence table we can determine some terribly exciting probabilites</br>
+if P(X) denote the probability of X occuring, then</br>
+we have decided read 4 of the 7 articles; so <tt>P(read) = 4/7</tt></br>
+therefore we have decided to ignore the other 3; so <tt>P(ignore) = 3/7</tt></br>
+how excitement!</br>
+</p>
+
+<p>
+we can also determine some probabilities relating the occurences of words to whether we should read or ignore</br>
+if P(A|B) denotes the probability of event A occuring given event B has occured, then</br>
+of the 4 articles to read 2 have the word 'lamborghini'</br>
+so the probability of the word lamborghini given we decided to read the article, <tt>P('lamborghini'|read) = 2/4</tt></br>
+of the 3 articles to ignore none have the word 'lamborghini'</br>
+so the probability of the word lamborghini given we decided to ignore the article, <tt>P('lamborghini'|ignore) = 0/3</tt></br>
+mind bending stuff indeed.
+</p>
+
+<p>
+but who cares about stuff we already know, we're interested in stuff we <i>don't</i> know yet!</br>
+so say we are given a new article, should we read it or not?</br></br>
+<table>
+<tr><td>text</td><td>feed</td><td>should read it?</td></tr>			
+<tr><td>the hollywood lamborghini</td>		<td>unknown</td>	<td>?</td></tr>
+</table>
+</p>
+
+<p>
+we are interested in two probabilities
+<ol>
+<li>the probability that i should read an article given the article contains the words 'the hollywood lamborghini' </li>
+<li>the probability that i should ignore an article given the article contains the words 'the hollywood lamborghini' </li>
+</ol>
+if the probability for reading is higher we'll read it, if the probability of ignoring is higher we'll ignore it.</br>
+</p>
+
+<p>
+so using the P(A|B) notation we're interesting in the maximum of the probabilties</br>
+<tt>max(P(read|'the hollywood lamborghini'), P(ignore|'the hollywood lamborghini'))</tt>
+</p>
+
+<p>
+but how do we relate our known probabilities (such as <tt>P('lamborghini'|read)</tt>) to this function?
+</p>
+
+<p>
+enter the mighty bayes theorem!</br>
+<img src="f_bayes.png"/></br>
+</p>
+
+<p>
+again the maximum we're looking for is</br>
+<img src="f_thl_1.png"/></br></br>
+which, from bayes theorem, is equivalent to </br>
+<img src="f_thl_2.png"/></br></br>
+since the denominators are the same all that we care about is</br>
+<img src="f_thl_3.png"/></br></br>
+and, if we make the <b>naive</b> assumption that the probability of 'the', 'hollywood' and 'lamborghini' occuring in an article are totally independant we can say</br>
+<img src="f_thl_4.png"/></br></br>
+which, if we substitute into our equality, gives us</br>
+<img src="f_thl_5.png"/></br></br>
+</p>
+
+<p>
+now, as luck would have it, these are the sort of probabilities we can determine from our test data as we saw earlier!</br></br>
+<table>
+<tr><td>probability</td><td>value</td></tr>
+<tr><td>P('the'|read)</td><td>2/4</td></tr>
+<tr><td>P('hollywood'|read)</td><td>0/4</td></tr>
+<tr><td>P('lamborghini'|read)</td><td>2/4</td></tr>
+<tr><td>P(read)</td><td>4/7</td></tr>
+<tr><td>P('the'|ignore)</td><td>1/3</td></tr>
+<tr><td>P('hollywood'|ignore)</td><td>2/3</td></tr>
+<tr><td>P('lamborghini'|ignore)</td><td>0/3</td></tr>
+<tr><td>P(ignore)</td><td>3/7</td></tr>
+</table>
+</p>
+
+<p>
+substituting back into our max function gives</br>
+<tt>max ( (2/4 . 0/4 . 2/4 . 4/7) , (1/3 . 2/3 . 0/3 . 3/7) )</tt></br>
+<tt>= max ( (1/2 . <b>0</b> . 1/2. 4/7) , (1/3 . 2/3 . <b>0</b> . 3/7) )</tt></br>
+<tt>= max ( 0 , 0 )</tt></br>
+<tt>= 0</tt></br>
+<b>fail!</b></br>
+those pesky 0's completely clobbered everything</br>
+what to do?
+</p>
+
+<p>
+it turns out <a href="http://en.wikipedia.org/wiki/Pierre-Simon_Laplace">laplace</a> solved this one 200 or so years ago</br>
+we can, errr, <i>avoid</i> the zeros by adding one to each numerators and by adding a compensation to the denominators</br> 
+this technique is called laplace's <a href="http://en.wikipedia.org/wiki/Rule_of_succession">rule of succession</a>
+</p>
+
+<p>
+doing this for the P(A|B) probabilites we have</br></br>
+<table>
+<tr><td>probability</td><td>value</td><td>adjusted</td></tr>
+<tr><td>P('the'|read)</td><td>2/4</td><td>3/7</td></tr>
+<tr><td>P('hollywood'|read)</td><td>0/4</td><td>1/7</td></tr>
+<tr><td>P('lamborghini'|read)</td><td>2/4</td><td>3/7</td></tr>
+<tr><td>P(read)</td><td>4/7</td><td>&nbsp;</td></tr>
+<tr><td>P('the'|ignore)</td><td>1/3</td><td>2/6</td></tr>
+<tr><td>P('hollywood'|ignore)</td><td>2/3</td><td>3/6</td></tr>
+<tr><td>P('lamborghini'|ignore)</td><td>0/3</td><td>1/6</td></tr>
+<tr><td>P(ignore)</td><td>3/7</td><td>&nbsp;</td></tr>
+</table>
+</p>
+
+<p>
+now we have the function</br>
+<tt>max ( (3/7 . 1/7 . 3/7 . 4/7) , (2/6 . 3/6 . 1/6 . 3/7) )</tt></br>
+<tt>= max ( 0.0149 , 0.0119 )</tt></br>
+<tt>= max ( 55% , 45% ) [normalisation]</tt></br>
+</p>
+
+<p>
+so the probability of should read 55% just outweights the probability we should ignore 44%</br>
+hence we should read this article.</br>
+(phew, what a lot of work...)
+</p>
+
+<h3>another short example</h3>
+
+<p>
+lets quickly run through another example...</br></br>
+<table>
+<tr><td>text</td><td>feed</td><td>should read it?</td></tr>			
+<tr><td>the hollywood ferrari</td>		<td>unknown</td>	<td>?</td></tr>
+</table>
+</p>
+
+<p>
+<table>
+<tr><td>probability</td><td>value</td><td>adjusted</td></tr>
+<tr><td>P('the'|read)</td><td>2/4</td><td>3/7</td></tr>
+<tr><td>P('hollywood'|read)</td><td>0/4</td><td>1/7</td></tr>
+<tr><td>P('ferrari'|read)</td><td>0/4</td><td>1/7</td></tr>
+<tr><td>P(read)</td><td>4/7</td><td>&nbsp;</td></tr>
+<tr><td>P('the'|ignore)</td><td>1/3</td><td>&nbsp;</td></tr>
+<tr><td>P('hollywood'|ignore)</td><td>2/3</td><td>&nbsp;</td></tr>
+<tr><td>P('ferrari'|ignore)</td><td>1/3</td><td>&nbsp;</td></tr>
+<tr><td>P(ignore)</td><td>3/7</td><td>&nbsp;</td></tr>
+</table>
+</p>
+
+<p>
+gives max function</br>
+<tt>max ( 3/7 . 1/7 . 1/7 . 4.7) , (1/3 . 2/3 . 1/3 . 3/7))</tt></br>
+<tt>= max ( 0.0050 , 0.0317 )</tt></br>
+<tt>= max ( 14% , 86% )  [normalisation]</tt></br>
+which is a strong indicator to ignore this article</br>
+
+<h3>run against the big dataset</h3>
+
+<p>
+firstly lets change how we have been running the tests a little</br>
+instead of training a bit, testing a bit, etc we'll use a process called <a href="http://en.wikipedia.org/wiki/Cross-validation">cross validation</a></br>
+</p>
+
+<p>
+in cross validation we break the set of articles into a number of groups, say 16</br>
+for each of the groups we train a classifier with the 15 <i>other</i> groups and then use the selected group for testing</br>
+</p>
+
+<p>
+<div class="left"><img src="classifier_comparisons.png"/></div>
+</p>
+
+<div class="right">
+<p>
+so how does this algorithm run against the 13,500 articles we have for theregister, perezhilton and autoblog then?</br>
+it turns out it's <b>not</b> as good as the much simpler version we tried <a href="../p2">previously in our last experiment</a></br>
+</p>
+
+<p>
+the graph to the left shows the accuracy of the three classification algorithms we discussed so far</br>
+<small>(thick lines denote the median performance of the algorithm over a number of runs</br>
+crosses denote a cross validation run)</small></br>
+</p>
+
+<p>
+- <a href="../p1">the <i>m</i>-algorithm</a> preforms the worst</br>
+- naive bayes does better</br>
+- but the best is still just <a href="../p2">considering word occurences</a> </br>
+</p>
+
+<p>
+curious! just goes to show that you don't always need a complex solution.
+</p>
+
+<p>
+while we're in a bayes mood let's try a slight variation on naive bayes called <a href="../p4">multinomial bayes</a>
+</p>
+
+<p>view the code at <a href="http://github.com/matpalm/rss-feed-experiments">github.com/matpalm/rss-feed-experiments</a></p>
+
+</div>
+
+ <small>july 2008</small>
+</body>

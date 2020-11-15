@@ -1,0 +1,95 @@
+ <head>
+	<title>should i read it? multinomial bayes</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+ </head>
+<body>
+
+<h1>simple supervised learning</h1>
+<h2>part 4: should i read it? multinomial bayes</h2>
+
+<h3>what is it?</h3>
+<p>
+multi nominal bayes is a variation of <a href="../p3">naive bayes</a> that considers not the frequency of articles of a class but the frequencies of the words in a class</br>
+</p>
+
+<h3>example revisited</h3>
+<p>
+let's revisit our test data from the last experiment, with some slight variatons </br>
+<table>
+<tr><td>text</td><td>feed</td><td>should read it?</td></tr>			
+<tr><td class="y">linux on the linux</td>		<td class="y">the register</td>	<td class="y">yes (rule 1)</td></tr>
+<tr><td>cat on ferrari</td>		<td>autoblog</td>	<td>no</td></tr>
+<tr><td>on the hollywood</td>	<td>perezhilton</td>	<td>no</td></tr>
+<tr><td class="y">on lamborghini on cat</td>	<td class="y"> autoblog</td>	<td class="y">yes (rule 2)</td></tr>
+<tr><td>hollywood cat</td>		<td>perezhilton</td>	<td>no</td></tr>
+<tr><td class="y">the lamborghini</td>		<td class="y">perezhilton</td>	<td class="y">yes (rule 2)</td></tr>
+<tr><td class="y">cat on linux cat</td>		<td class="y">the register</td>	<td class="y">yes (rule 1)</td></tr> 		
+</table>
+</p>
+
+<p>
+considering just a few words this breaks down to </br></br>
+<table>
+<tr><td>word</td><td>total</br>occurences</td><td>number in</br> should read</td><td>number in</br>should ignore</td></tr>
+<tr><td>on</td><td>6</td><td>4</td><td>2</td></tr>
+<tr><td>linux</td><td>3</td><td>3</td><td>0</td></tr>
+<tr><td>the</td><td>3</td><td>2</td><td>1</td></tr>
+<tr><td>hollywood</td><td>2</td><td>0</td><td>2</td></tr>
+<tr><td>&nbsp;</td><td>&nbsp;</td><td>9</td><td>5</td></tr>
+</table>
+</p>
+
+<p>
+from this table we have some various word / class related probabilities including...</br></br>
+P('on' | read) = 4/9 = 44%</br>
+P('linux' | ignore) = 0/5 = 0% 
+</p>
+
+<p>
+we can use a multinomial distribution to determine the probability for a given test article</br>
+<img src="multinomial_bayes.png"/></br>
+</p>
+
+<h3>should we read 'linux the linux'</h3>
+
+so for test article, 'linux the linux', we have probabiltiy of <i>should read</i></br>
+<img src="multinomial_bayes_ltl_read.png"/></br>
+which is 7.5%
+</p>
+
+<p>
+and for the same article, 'linux the linux', we have probabiltiy of <i>should ignore</i> being</br>
+<img src="multinomial_bayes_ltl_ignore.png"/></br>
+which is strictly 0% but using a <a href="http://en.wikipedia.org/wiki/Pierre-Simon_Laplace">laplace</a> estimator (as seen in <a href="../p3">last experiment</a>) we have</br>
+<img src="with_estimator.png"/></br>
+which is 2.2%, less than the <i>should read</i> probability, so the classifier would recommend we read this article
+</p>
+
+<h3>run against the big data set</h3>
+
+<p>
+<div class="left"><img src="classifier_comparisons.png"/></div>
+</p>
+
+<div class="right">
+<p>
+so how does this algorithm run against the 13,500 articles we have for theregister, perezhilton and autoblog then?</br>
+whereas <a href="../p3">naive bayes</a> did worse than the simple <a href="../p2">word occurences</a>, the multinomial bayes kicks ass!</br>
+</p>
+
+<p>
+the graph to the left shows the accuracy of the three classification algorithms we discussed so far</br>
+<small>(thick lines denote the median performance of the algorithm over a number of runs</br>
+crosses denote a cross validation run)</small></br>
+</p>
+
+<p>
+well i've had enough of bayes, lets try a classifier based on <a href="../p5">markov chains</a>!
+</p>
+
+<p>view the code at <a href="http://github.com/matpalm/rss-feed-experiments">github.com/matpalm/rss-feed-experiments</a></p>
+
+</div>
+ <small>july 2008</small>
+</body>

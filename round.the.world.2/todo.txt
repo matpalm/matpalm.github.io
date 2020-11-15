@@ -1,0 +1,5 @@
+reupload iquitos index.xhtml
+remove index.html
+test xhtml root for iquitos actually works
+finish miami, colorado springs
+upload miami, colorado springs

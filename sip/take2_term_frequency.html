@@ -1,0 +1,477 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+	<title>diy statistically improbable phrases</title>
+</head>
+<body>
+
+<p>
+<a href="take1_trigram_frequency.html">&lt;&lt;&nbsp;&nbsp;take 1: trigram frequency</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="take3_markov_chains.html">take 3: markov chains&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<h1>take 2: term frequency</h1>
+
+<p>sips are about more than just the sequence of words, they should also take into account how often those words appear.
+how can we make use of a term's global frequency in the calculation?</p>
+
+<p>firstly building a term freq table is trivial
+<pre>
+#!/usr/bin/env ruby
+STDIN.each do |line|
+  line.strip.split.each do |term| 
+    puts "LongValueSum:#{term}\t1" 
+  end
+end
+</pre>
+</p>
+
+<p>
+there are 430,000 occurences of terms in our corpus consisting of 27,000 unique terms</br>
+</p>
+
+<p>
+<table border="1">
+<tr><td colspan="4">term frequency histogram</td></tr>
+<tr>
+ <td><a title="number of terms appearing with this frequency">freq of freq (*)</a></td>
+ <td><a title="how often the term appears in the corpus">term freq (*)</a></td>
+ <td>examples</td>
+</tr>
+<tr><td>1</td>     <td>21,000</td>             <td>the</td></tr>
+<tr><td>1</td>     <td>11,500</td>             <td>and</td></tr>
+<tr><td>...</td>       <td>...</td>           <td>...</td></tr>
+<tr><td>350</td>        <td>10</td>          <td>admired, generous, stars</td></tr>
+<tr><td>...</td>       <td>...</td>           <td>...</td></tr>
+<tr><td>2,500</td>         <td>3</td>          <td>customers, sagacity, writhing</td></tr>
+<tr><td>4,600</td>         <td>2</td>          <td>alternate, lashed, piebald</td></tr>
+<tr><td>11,600</td>         <td>1</td>         <td>enfokusigxas, gloved, succor</td></tr>
+</table>
+</p>
+
+<h2>sip frequency</h2>
+
+<p>
+let's make up a new measure of how frequent a trigram is expected based on 
+the frequency of it's terms</p>
+
+<p>we'll call this the trigrams sip_mle for the sip's 
+<a href="http://en.wikipedia.org/wiki/Maximum_likelihood">maximum likelihood estimate</a> </br>
+<pre>sip_mle('a b c') = p(a) * p(b) * p(c)</pre>
+note: this straight away is ignoring the order of the terms; eg p('a b c') = p('c b a'); but it's a start</br>
+we can then say the sips of a document are the trigrams with the lowest probabilities.
+</p>
+
+</p>
+an example; consider three trigrams from our corpus ...</br>
+<pre>
+daddy alfred interrupted
+as that even
+from which the
+</pre>
+</p>
+
+<p>
+and the frequencies of the terms in those trigrams ...
+<table border="1">
+<tr><td>term</td>        <td>freq</td>    <td>global freq</td> </tr>
+<tr><td>alfred</td>      <td>200</td>     <td>0.00046</td>     </tr>
+<tr><td>as</td>          <td>3,000</td>   <td>0.0069</td>      </tr>
+<tr><td>daddy</td>       <td>10</td>      <td>0.000023</td>    </tr>
+<tr><td>even</td>        <td>350</td>     <td>0.00081</td>     </tr>
+<tr><td>from</td>        <td>1,400</td>   <td>0.0032</td>      </tr>
+<tr><td>interrupted</td> <td>20</td>      <td>0.000046</td>    </tr>
+<tr><td>that</td>        <td>4,300</td>   <td>0.01</td>        </tr>
+<tr><td>the</td>         <td>21,000</td>  <td>0.048</td>       </tr>
+<tr><td>which</td>       <td>1,300</td>   <td>0.003</td>       </tr>
+</table>
+</p>
+
+<p>
+which trigram is the least probable according to sip_mle?
+</p>
+
+<p>
+<pre>
+sip_mle('daddy alfred interrupted')
+ = p(daddy) * p(alfred) * p(interrupted)
+ = 0.000023 * 0.00046 * 0.000046
+ = 0.00000000000048668
+</pre>
+straight away we see a classic problem with small probabilities on computers, numerical underflow</br>
+</p>
+
+<p>
+luckily, as <a href="http://matpalm.com/rss.feed/p5/">previously discussed in another experiment</a>, logarithms are our saviour.</br>
+</p>
+
+<p>
+<tt>a * b = e ^ (ln(a) + ln(b))</tt></br>
+so we can rewrite as 
+<pre>
+sip_mle('daddy alfred interrupted')
+ = p(daddy) * p(alfred) * p(interrupted)
+ = e ^ ( log(p(daddy)) + log(p(alfred)) + log(p(interrupted)) )
+ = e ^ ( -10.66 - 7.67 - 9.97 )
+ = e ^ -41.03
+</pre>
+and similiarly
+<pre>
+sip_mle('as that even')   = e ^ (-4.96 - 4.60 - 7.11)  = e ^ -29.4 
+sip_mle('from which the') = e ^ (-5.72 - 5.80 - 3.01)  = e ^ -25.88
+</pre>
+</p>
+
+<p>
+now since: <tt>if a &lt; b then log(a) &lt; log(b)</tt> x is minimised when log(x) is minimised</br>
+we can say that 'daddy alfred interrupted' has the lowest probability since it's got the most negative exponent, -41.03.
+</p>
+
+<p>
+lets try to run it against a larger amount of data...
+</p>
+
+<a name="hadoop+part+2"></a>
+<h1>hadoop part 2</h1>
+
+<h2>not so easy this time?</h2>
+
+<p>
+luckily the last example of using hadoop was super simple and finding the sip_mle of a trigram will be equally super simple yeah?
+yeahhhhhhh. no.
+</p>
+
+<p>
+consider how we calculate sip_mle in a non map-reduce environment.</br>
+if we have a trigram: <tt>tri = 'a b c'</tt><br>
+and the component frequencies: <tt>freq = {'a' =&gt; 5, 'b' =&gt; 4, 'c' =&gt;3 }</tt><br>
+we can calculate the mle freq with: <tt>mle_freq = tri.split.collect{ |v| freq[v] }.sum</tt>
+</p>
+
+<p>
+the problem for hadoop lies in the calls to <tt>freq[v]</tt>. in a standard application we could hold the
+frequency hash in memory (if it was small enough) or on disk if it was too large for ram.
+but in the land of hugely massive datasets neither of these might be feasible; we need to use a streaming approach.
+</p> 
+
+<p>
+instead we need to do a join like operation in the reduce phase</br>
+</p>
+
+<p>
+we run a map pass emitting each trigram keyed three times, once for each of it's components.
+we then run a reduce pass across this set and the frequencies, which is also keyed by the components.
+</p>
+
+<p>
+by careful use of key/value ordering we can have a reduce phase that will receive a frequency followed by
+the trigrams that use that frequency.
+</p>
+
+<p>
+our special ordering is to emit frequencies including a composite key include a 0p to indicate the primary key.
+<pre>
+a.0p  5
+b.0p  4
+c.0p  3
+</pre>
+</p>
+
+<p>
+... and emit trigram keys using a composite key of 1f denoting a foreign key
+<pre>
+a.1f  a b c
+b.1f  a b c
+c.1f  a b c
+</pre>
+</p>
+
+<p>
+reducing on both the frequencies and these exploded trigrams puts the frequencies just
+before any trigram that uses it since the composite key for the primary uses a 0 token
+<pre>
+a.0p  5
+a.1f  a b c
+b.0p  4
+b.1f  a b c
+c.0p  3
+c.1f  a b c
+</pre>
+</p>
+
+<p>
+now during the reduce if we see a primary key we can record the frequency in memory so we can emit it when we see the following
+corresponding trigram records. this results in the join data.
+<pre>
+a b c  5
+a b c  4
+a b c  3
+</pre>
+and finally use a sum aggregator.</br>
+<pre>
+a b c  12
+</pre>
+</p>
+
+<p>
+the use of 'f' and 't' in the keys is a bit hacky and if using the 'proper' hadoop there are better ways to
+represent this by careful selection of a key's hash and compareTo.</br>
+see the <a href="http://vimeo.com/3584536">mapreduce algorithms tutorial</a> by 
+<a href="http://cloudera.com/">cloudera</a> for more info
+</p>
+
+<h2>walkthrough end to end example</h2>
+<p>
+we start with
+<pre>
+bash> zcat input.simple/d1.txt.gz
+a b b c d e
+a c d e f
+bash> zcat input.simple/d2.txt.gz
+b c e e f
+b b c d f
+</pre>
+</p>
+
+<p>
+firstly we need to augment all the lines of each file with the filename itself.</br>
+this is required since each line of input as far as mapreduce is concerned is independent and
+we want to keep try of what line a file came from ourselves.
+<pre>
+bash> rake prepare_files input=input.simple
+bash> zcat hadoop_input/d1.txt.gz
+d1 a b b c d e
+d1 a c d e f
+bash> zcat hadoop_input/d2.txt.gz
+d2 b c e e f
+d2 b b c d f
+</pre>
+</p>
+
+<p>
+we upload to hadoop hdfs (hadoop distributed file system) with 
+<pre>
+bash> rake upload_input
+</pre>
+</p>
+
+<p>
+the first map reduce pass is to calculate term frequencies</br>
+<pre>
+bash> rake term_frequencies
+bash> rake cat dir=term_frequencies
+a f  2
+b f  5
+c f  4
+d f  3
+e f  4
+f f  3
+(6 lines)
+</pre>
+
+<p></p>
+
+<p>
+another pass over the term frequencies to get the total number of terms<br>
+</p><pre>bash&gt; rake total_num_terms
+bash&gt; rake cat dir=total_num_terms
+T 21
+(1 lines)
+</pre>
+<p></p>
+
+<p>
+another pass to calculate all unique document trigrams (note 'c d e' is only emitted once for doc1)
+<pre>
+bash> rake trigrams
+bash> rake cat dir=trigrams
+d1 a b b  1
+d1 a c d  1
+d1 b b c  1
+...
+d2 c d f  1
+d2 c e e  1
+d2 e e f  1
+(12 lines)
+</pre>
+</p>
+
+<p>
+next we make another pass over the list of trigrams emitting the trigram once for each of it's tokens
+<pre>
+bash> rake exploded_trigrams
+bash> rake cat dir=exploded_trigrams
+a t  d1 a b b
+b t  d1 a b b
+b t  d1 a b b
+...
+e t  d2 e e f
+e t  d2 e e f
+f t  d2 e e f
+(36 lines)
+</pre>
+</p>
+
+<p>
+now we are ready for the join operation across the term_frequencies (maximum likelihood estimate) and the exploded_trigrams to 
+evaluate the frequencies per trigram component. (note: we have done the conversion to log(freq) in
+this step).
+<pre>
+bash&gt; rake trigram_mle_frequencies
+bash&gt; rake cat dir=trigram_mle_frequencies
+d1 a b b  -2.3513
+d1 a c d  -2.3513
+d1 a b b  -1.4350
+...
+d1 d e f  -1.9459
+d2 c d f  -1.9459
+d2 e e f  -1.9459
+(36 lines)
+</pre>
+</p>
+
+<p>
+finally we sum the for each trigram and pluck out the least frequent trigrams per document
+<pre>bash&gt; rake trigram_frequency_sum
+bash&gt; rake cat dir=trigram_frequency_sum
+d1 a b b  -5.2215
+d1 a c d  -5.9555
+d1 b b c  -4.5283
+...
+d2 c d f  -5.5500
+d2 c e e  -4.9746
+d2 e e f  -5.2623
+(12 lines)
+
+bash&gt; rake least_frequent_trigrams
+bash&gt; rake cat dir=least_frequent_trigrams
+d1  -5.9555 a c d
+d2  -5.5500 c d f
+(2 lines)
+</pre>
+</p>
+
+<p>
+hoorah!
+</p>
+
+<p>
+here is the map reduce task dependency graph</br>
+<a href="t2_passes.dot.txt"><img src="t2_passes.png"/></a>
+</p>
+
+<h2>even bigger example</h2>
+
+<p>
+how about running it against our original 8 texts? there are quite a few sips and they are all instances of 3 
+<a href="http://en.wikipedia.org/wiki/Hapax_legomenon" title="terms that only appear once in entire corpus">hapax legomenon</a>
+in a row.</p>
+
+<p>
+<em>7hmvg10 Home Vegetable Gardening (1911)</em> has 5 sips.</br>
+including <tt>gregg mccormick munger</tt> and <tt>ccormick munger cumberland,</tt> from ...
+<pre>
+RASPBERRY VARIETIES
+Of the blackcaps, Gregg, McCormick, Munger, Cumberland, Columbian,
+</pre>
+(these two overlap and could be considered a single <em>super</em> sip!)</br> 
+
+another is <tt>rathburn snyder erie</tt> from ...
+<pre>
+BLACKBERRY VARIETIES
+As with the other small fruits, so many varieties are being introduced
+that it is difficult to give a list of the best for home use. Any
+selections from the following, however, will prove satisfactory, as
+they are tried-and-true:--Early King, Early Harvest, Wilson Junior,
+Kittatinny, Rathburn, Snyder, Erie.
+</pre>
+</p>
+
+<p>
+<em>7stir10 The Journal of Arthur Stirling (1903)</em> has 4</br>
+including <tt>browns elite tonsorial</tt> from...
+<pre>
+edition!--And it was at seventy-two and the market--Cab! Cab!--Try
+Jones's Little Five-cent Cigars!--Brown's Elite Tonsorial and Shaving
+Parlors!--Have you seen Lucy Legs in the High Kicker? The Daily Hullabaloo
+</pre>
+and <tt>peerless cocktails levys</tt> from...
+<pre>
+elegant--Use Tompkins's Tooth Powder! _Use Tompkins's Tooth Powder!!_
+USE TOMPKINS'S--Read the Evening Slop-Bucket! We rake all the
+mud-gutters!--Murphy's Wines and Liquors--Try Peerless Cocktails--Levy's
+High-Class Clothing Emporium!--Come in and buy something--anything--we get
+down on our knees--we beg you!--Cab, sir? Cab!--Bargains! Bargains!--Cash!
+</pre>
+</p>
+
+<p>
+<em>8prmt10 Prometheus (1772 in german)</em> and <em>esper10 A Complete Grammar of Esperanto</em>
+are both full of them, 19 and 44 respectively, but they are in another language so no surprise...
+</p>
+
+<p>
+<em>8sknn10 The Story Of Kennett (1866)</em></br>
+has one <tt>pouch flint tinder</tt> from...
+<pre>
+rummaging in a deep pocket, she produced, one after the other, a short
+black pipe, an eel-skin tobacco-pouch, flint, tinder, and a clumsy
+knife. With a dexterity which could only have come from long habit, she
+</pre>
+</p>
+
+<p>
+<em>
+dwqoh10 Widger's Quotations from the Works of Oliver W. Holmes, Sr.</em></br>
+has 4, all in french, though the bulk of this text is english.
+</p>
+
+<p>
+<em>fbncc10 The first 1001 Fibonacci Numbers</em></br>
+has 1 <tt>metalab unc edu</tt>
+which appears to be a url from the uncleaned project gutenberg header
+</p>
+
+<p>
+<em>gm77v10 One of Our Conquerors (1897)</em></br>
+has 7 including <tt>girly sugary crudity</tt> from ...
+<pre>
+of the state of reverential wonderment in rapture, which an ancient wine
+will lead to, well you wot.  The silly girly sugary crudity his given way
+to womanly suavity, matronly composure, with yet the sparkles; they
+</pre>
+and <tt>tiptoe stockholders twinkling</tt> from ...
+<pre>
+Percentage, like a cabman without a fare, has gone to sleep inside his
+vehicle.  Dividend may just be seen by tiptoe: stockholders, twinkling
+heels over the far horizon.  Too true!--and our merchants, brokers,
+</pre>
+</p>
+
+<p>
+have a look at the code on <a href="http://github.com/matpalm/sip/">github</a>
+</p>
+
+<h2>conclusions</h2>
+
+<ul>
+<li>items in other languages are just noise, but for comparison with later techniques i might leave them in</li>
+<li>same goes for 'the first 1001 fibonacci numbers'</li>
+</ul>
+
+<p>
+lets try using <a href="take3_markov_chains.html">markov chains</a>
+</p>
+
+<p>
+<a href="take1_trigram_frequency.html">&lt;&lt;&nbsp;&nbsp;take 1: trigram frequency</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="take3_markov_chains.html">take 3: markov chains&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<p>sept 2009</p>
+
+</body></html>
+

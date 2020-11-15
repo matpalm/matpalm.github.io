@@ -1,0 +1,158 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+	<title>diy statistically improbable phrases</title>
+</head>
+<body>
+
+<p>
+<a href="intro.html">&lt;&lt;&nbsp;&nbsp;intro</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="take2_term_frequency.html">take 2: term frequency&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<h1>take 1: trigram frequency</h1>
+
+<p>as a warm up we'll analyse the frequencies of trigrams (ie sequences of three terms) in the text. </p>
+
+<p>eg. the document "the cat sat on the mat" has 4 trigrams;</br>
+"the cat sat", "cat sat on", "sat on the" and "on the mat"</p>
+
+<p>intuitively it feels like trigrams with a low frequency are candiate sips (most definitely the converse is true).
+however this naive approach alone won't work too well since, according to 
+<a href="http://en.wikipedia.org/wiki/Zipf_law">zipf's law</a> we expect almost all trigrams to be unique.
+</p>
+
+<p>
+we'll also continue to be lazy^H^H^H^Hpragmatic by simplifying in the following ways...
+<ol>
+<li>remove non alpha numeric characters</li>
+<li>allow the trigrams to span a sentence boundary</li>
+<li>collapse each file into a single line to allow trigrams to span what would have been line boundaries</li>
+</ol>
+</p>
+
+<h1>digression: hadoop</h1>
+
+<p><a href="http://hadoop.apache.org/">hadoop</a> is an opensource implemenation of a
+<a href="http://en.wikipedia.org/wiki/MapReduce">map reduce framework</a> very well suited to this type of data stream processing task.
+it includes a great <a href="http://hadoop.apache.org/common/docs/current/streaming.html">streaming interface</a> allowing map 
+reduce tasks to be
+implemented using any language. all you need is a program that will accept records as a line of stdin and emit key/value pairs on stdout
+</p>
+
+<p>
+eg trigram frequency generation can be done as a single map task...
+<pre>
+#!/usr/bin/env ruby
+def emit tuple
+ puts "LongValueSum:#{tuple.join(' ')}\t1"
+end
+ 
+NGRAM_SIZE = 3
+ 
+STDIN.each do |line|
+ terms = line.strip.split
+ next if terms.size < NGRAM_SIZE
+ 
+ tuple = []
+ NGRAM_SIZE.times { tuple << terms.shift }
+ emit tuple
+ 
+ while not terms.empty?
+  tuple.shift
+  tuple &lt;&lt; terms.shift
+  emit tuple
+ end
+ 
+end
+</pre>
+</p>
+
+<p>
+...and run in hadoop as easily as 
+<pre>
+$HADOOP_HOME/bin/hadoop \
+ jar $HADOOP_HOME/contrib/streaming/hadoop-0.20.0-streaming.jar \
+ -input input_dir \
+ -output trigrams \
+ -mapper emit_ngrams.rb \
+ -reducer aggregate
+</pre>
+(see <a href="http://hadoop.apache.org/common/docs/current/streaming.html#Working+with+the+Hadoop+Aggregate+Package+(the+-reduce+aggregate+option)">this note</a> 
+about using an aggregate reducer)
+</p>
+
+<p>
+what could be easier?? ( but don't worry, it'll get hard soon enough )
+have a look at the code on <a href="http://github.com/matpalm/sip/">github</a>
+</p>
+
+<h1>take 1: trigram frequency (continued)</h1>
+
+
+<p>
+<p>consider a <a href="http://github.com/matpalm/sip/tree/master/input.eg">sample corpus</a> of 8 randomly chosen
+gutenburg texts. (55,000 lines in total)
+<pre>
+7hmvg10 Home Vegetable Gardening (1911)
+7stir10 The Journal of Arthur Stirling (1903)
+8prmt10 Prometheus (1772 german poetry)
+8sknn10 The Story Of Kennett (1866)
+dwqoh10 Widger's Quotations from the Works of Oliver W. Holmes, Sr.
+esper10 A Complete Grammar of Esperanto
+fbncc10 The first 1001 Fibonacci Numbers
+gm77v10 One of Our Conquerors (1897)
+</pre>
+</p>
+
+<p>
+we end up with 340,000 trigrams occurences.
+not surprisingly they are almost <em>all</em> unique.
+</p>
+
+<p>
+<small>
+the following table says...</br>
+there was 1 trigram that appeared 97 times; the phrase 'one of the'</br>
+there were 10 trigrams that appeared 30 times; an example is 'even if you'</br>
+there were 247,000 trigrams that appeared only once; an example is 'addition during three'</br>
+</small>
+</p>
+
+<p>
+<table border="1">
+<tr><td colspan="4">trigram frequency histogram</td></tr>
+<tr>
+ <td><a title="number of trigrams appearing with this frequency">freq of freq (*)</a></td>
+ <td><a title="how often the trigram appears in the corpus">trigram freq (*)</a></td>
+ <td>examples</td>
+</tr>
+<tr><td>1</td><td>97</td><td>one of the</td></tr>
+<tr><td>1</td><td>95</td><td>i do not</td></tr>
+<tr><td>...</td><td>...</td><td>...</td></tr>
+<tr><td>10</td><td>30</td><td>even if you, that is the, what do you</td></tr>
+<tr><td>...</td><td>...</td><td>...</td></tr>
+<tr><td>4,300</td><td>3</td><td>have seen that, must be a, you think it</td></tr>
+<tr><td>18,000</td><td>2</td><td>such a word, than flowers it, was merely the</td></tr>
+<tr><td>247,000</td><td>1</td><td>addition during three, had an incorrigible, ne lasu min</td></tr>
+</table>
+</p>
+
+<h2>conclusions</h2>
+<p>if we were to deem the low frequency trigrams as sips we'd have nearly nothing but sips!</br>
+as expected just considering trigram frequency is not enough. </p>
+
+<p>hmmm, lets try to improve by making use of <a href="take2_term_frequency.html">term frequencies</a></p>
+
+<p>
+<a href="intro.html">&lt;&lt;&nbsp;&nbsp;intro</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="take2_term_frequency.html">take 2: term frequency&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<p>sept 2009</p>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+<html>
+<head>
+<script language="Javascript">
+var map_width = 682;
+//var map_height = 1588;
+function draw_square(freq,left,top) {
+		var colour;
+		if (freq==1) colour = "#660000";
+		else if (freq==2) colour = "#880000";
+		else if (freq==3)	colour = '#aa0000';
+		else if (freq==4)	colour = '#cc0000';				
+		else colour = '#ff0000';		
+		size =  map_width * 0.01;
+    dot = '<div style="position:absolute;width:' + size + 'px;height:' + size + 'px;top:' + (top*map_width) + 'px;left:' + (left*map_width) + 'px;background:'+colour+'"></div>';
+    document.body.innerHTML += dot;
+}
+function plot() {
+draw_square(1,0.06,0.32);
+draw_square(1,0.15,0.27);
+draw_square(4,0.16,0.27);
+draw_square(4,0.17,0.28);
+draw_square(1,0.17,0.29);
+draw_square(2,0.18,0.28);
+draw_square(1,0.22,0.28);
+draw_square(1,0.22,0.3);
+draw_square(1,0.22,0.31);
+draw_square(1,0.22,0.33);
+draw_square(1,0.23,0.28);
+draw_square(1,0.24,0.25);
+draw_square(1,0.25,0.25);
+draw_square(1,0.25,0.26);
+draw_square(1,0.25,0.28);
+draw_square(2,0.26,0.25);
+draw_square(1,0.26,0.26);
+draw_square(1,0.26,0.27);
+draw_square(2,0.26,0.29);
+draw_square(1,0.26,0.35);
+draw_square(1,0.27,0.24);
+draw_square(2,0.27,0.25);
+draw_square(1,0.27,0.26);
+draw_square(2,0.27,0.28);
+draw_square(2,0.27,0.3);
+draw_square(1,0.27,0.31);
+draw_square(2,0.28,0.26);
+draw_square(1,0.29,0.24);
+draw_square(1,0.29,0.25);
+draw_square(7,0.29,0.26);
+draw_square(1,0.3,0.33);
+draw_square(1,0.35,0.47);
+draw_square(1,0.36,0.45);
+draw_square(2,0.38,0.45);
+draw_square(1,0.49,0.22);
+draw_square(1,0.5,0.21);
+draw_square(1,0.5,0.38);
+draw_square(2,0.51,0.21);
+draw_square(1,0.51,0.22);
+draw_square(1,0.53,0.26);
+draw_square(1,0.65,0.31);
+draw_square(2,0.79,0.4);
+draw_square(2,0.88,0.28);
+}
+</script>
+</head>
+<body onload="plot()">
+		<!-- jpg 2048px × 1588px -->
+    <img width="682" src="mercator.jpg" style="position:absolute;top:0px;left:0px">
+</body>
+</html>

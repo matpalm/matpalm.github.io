@@ -1,0 +1,303 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+	<title>diy statistically improbable phrases</title>
+</head>
+<body>
+
+<p>
+<a href="take2_term_frequency.html">&lt;&lt;&nbsp;&nbsp;take 2: term frequency</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="part4_but_does_it_scale.html">part 4: but does it scale?&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<h1>take 3: markov chains</h1>
+
+<h2>sip_markov</h2>
+
+<p>
+using term frequency was a good start but it relies too much on all the
+terms being infrequent which is not really that fair. for example given the 'stop your jibber and jabber man!' 
+we might like to conclude that 'jibber and jabber' is a reasonable sip even though it includes a common word
+like 'and'.
+</p>
+
+<p>
+what we need is a way to take into account the sequence of words, and
+<a href="http://en.wikipedia.org/wiki/Markov_chain">markov chains</a> are a great way
+to do this. i've talked about , before in other experiments
+(eg <a href="http://matpalm.com/rss.feed/p5/">this one</a>) so go have a read if you're new to them.
+</p>
+
+<p>
+let's ignore term frequencies completely and trying using a markov chain to find the sips
+</p>
+
+<p>
+consider the sequence of characters</br>
+<tt>abaabdabaabdabaabdacdbacd</tt></br>
+<small>
+( the astute reader might notice this is the string <tt>'abaabd'*3 + 'acdbacd'</tt> 
+contrived to have 'c' as a rare character and 'a' as a common one )
+</small>
+</p>
+
+<p>
+considering character to character transistion we can build the markov chain
+<pre>
+a -> a = 3/11 (0.27) <small>(ie 'a' appears 11 times and is followed by 'a' 3 of those times)</small>
+a -> b = 6/11 (0.55)
+a -> c = 2/11 (0.18)
+b -> a = 4/7 (0.57)
+b -> d = 3/7 (0.43)
+c -> d = 2/2 (1.00)
+d -> a = 3/4 (0.75)
+d -> b = 1/4 (0.25)
+</pre>
+here's a pic where edge thickness is proportional to the number of transistions</br>
+<img src="mc.png"/></br>
+</p>
+
+<p>
+we can define <tt>sip_markov(abc) = p(a->b) * p(b->c)</tt></br>
+eg from the above markov chain 
+<pre>
+p(dab) = p(d->a) * p(a->b) = 0.750 * 0.545 = 0.409
+p(bac) = p(b->a) * p(a->c) = 0.571 * 0.182 = 0.104 
+</pre>
+so <tt>bac</tt>, being less probable, is more of a sip than <tt>dab</tt>.
+</p>
+
+<p>
+calculating sip_markov for all trigram sequences we get...
+<pre>
+dab = da * ab = 0.750 * 0.545 = 0.409
+bda = bd * da = 0.429 * 0.750 = 0.321 
+aba = ab * ba = 0.545 * 0.571 = 0.312 
+cdb = cd * db = 1.000 * 0.250 = 0.250 
+abd = ab * bd = 0.545 * 0.429 = 0.234 
+acd = ac * cd = 0.182 * 1.000 = 0.182 
+baa = ba * aa = 0.571 * 0.273 = 0.156 
+aab = aa * ab = 0.273 * 0.545 = 0.149 
+dba = db * ba = 0.250 * 0.571 = 0.143 
+dac = da * ac = 0.750 * 0.182 = 0.136 
+bac = ba * ac = 0.571 * 0.182 = 0.104 
+</pre>
+</p>
+
+<p>
+it's interesting to note that <tt>acd</tt> and <tt>cdb</tt> are quite high when they shouldn't really be since both <tt>c</tt> and
+<tt>d</tt> are rarish characters. why is this?
+</p>
+
+<p>
+since <tt>c</tt> is always followed by <tt>d</tt> and markov chain's are only concerned with the transistions it
+results in a mulitplier of 1, even though <tt>c</tt> is very rare.
+</p>
+
+<p>
+so it looks like we need a combination of <em>both</em> the transistion probabilities from the markov chain <em>and</em> the term
+frequency probabilities.
+</p>
+
+<h2>combining sip_mle with sip_markov</h2>
+
+
+<p>
+how might we define a combined metric sip_combined(abc) in terms of sip_mle('abc') and sip_markov('abc')?
+</p>
+<p>
+recall sip_mle('abc') = p(a) * p(b) * p(c)
+and sip_markov('abc') = p(a -> b) * p(b -> c)
+</p>
+<p>
+i started by using <a href="http://en.wikipedia.org/wiki/Geometric_mean">the geometric mean</a> which seemed a natural choice.
+<pre>
+sip_combined('abc') = &#8730; ( sip_mle('abc') * sip_markov('abc') )
+</pre>
+it gave reasonable results but it turned out to be overwhelmed by the cases of three consecutive hapax legomemon which all result in 
+the same sip_combined value.
+</p>
+ 
+<p>
+here is the derivation of an variation on the geometric mean that weighted the components differently. i use <tt>==</tt> to denote
+an operation that produces a value that will retain order since we only really care about finding the <i>least</i> probable without
+caring about the exact values
+<pre>
+sip_combined('abc') 
+ = &#8730; ( sip_mle('abc') * sip_markov('abc') )
+== sip_mle('abc') * sip_markov('abc') 
+ = p(a) * p(b) * p(c) * p(a -> b) * p(b -> c)
+ = e ^ ( ln(p(a)) + ln(p(b)) + ln(p(c)) + ln(p(a -> b)) + ln(p(b -> c)) )
+== ln(p(a)) + ln(p(b)) + ln(p(c)) + ln(p(a -> b)) + ln(p(b -> c))  
+ = x + y + z + u + v   # save some writing
+== mean(x, y, z, u, v)
+</pre>
+now instead of treating the components (x,y,z,u,v) equally we can take more of a weighted sum approach by grouping the lme components (x,y,z) and
+the markov components (u,v) seperately first giving a new definition for sip_combined...
+<pre>
+sip_combined('abc') 
+ = mean( mean(x, y, z), mean(u, v) )
+== mean(x, y, z) + mean(u, v) 
+</pre>
+though it's not obvious from small scale testing whether this gives a fundamentally better result it doesn't seem any worse and it 
+doesn't suffer from the previously mentioned problem of hapax legomemon solutions banding the results.
+</p>
+
+<h2>an example, please....</h2>
+
+<p>
+term probabilities are 
+<pre>
+a 11/25 == ln(11/25) = -0.82
+b 7/25  == ln(7/25)  = -1.27
+d 5/25  == ln(5/25)  = -1.60
+c 2/25  == ln(2/25)  = -2.52
+</pre>
+
+<p>
+and recall markov chain probabilities are
+<pre>
+a -> a = 3/11 == ln(3/11) = -1.29
+a -> b = 6/11 == ln(6/11) = -0.60
+a -> c = 2/11 == ln(2/11) = -1.70
+b -> a = 4/7  == ln(4/7)  = -0.55
+b -> d = 3/7  == ln(3/7)  = -0.84
+c -> d = 2/2  == ln(2/2)  =  0.00
+d -> a = 3/4  == ln(3/4)  = -0.28
+d -> b = 1/4  == ln(1/4)  = -1.38
+</pre>
+
+</p>
+
+and combining sip_mle and sip_markov using the weighted geometric mean gives...
+<pre>
+bac = (-1.273 -0.821 -2.526)/3 + (-0.560 -1.705)/2 = -4.620/3 -2.264/2 = -2.672
+dac = (-1.609 -0.821 -2.526)/3 + (-0.288 -1.705)/2 = -4.956/3 -1.992/2 = -2.648
+acd = (-0.821 -2.526 -1.609)/3 + (-1.705 -0.000)/2 = -4.956/3 -1.705/2 = -2.504
+dba = (-1.609 -1.273 -0.821)/3 + (-1.386 -0.560)/2 = -3.703/3 -1.946/2 = -2.207
+abd = (-0.821 -1.273 -1.609)/3 + (-0.606 -0.847)/2 = -3.703/3 -1.453/2 = -1.961
+aab = (-0.821 -0.821 -1.273)/3 + (-1.299 -0.606)/2 = -2.915/3 -1.905/2 = -1.924
+baa = (-1.273 -0.821 -0.821)/3 + (-0.560 -1.299)/2 = -2.915/3 -1.859/2 = -1.901
+bda = (-1.273 -1.609 -0.821)/3 + (-0.847 -0.288)/2 = -3.703/3 -1.135/2 = -1.802
+dab = (-1.609 -0.821 -1.273)/3 + (-0.288 -0.606)/2 = -3.703/3 -0.894/2 = -1.681
+</pre>
+</p>
+
+<h2>building the markov chain</h2>
+
+<p>
+finally how did will we generate the markov chain using map reduce semantics?
+it's actually very similiar to the task required for building the term frequencies
+</p>
+
+<p>
+consider <tt>abacabc</tt></br>
+we want a markov chain
+<pre>
+a &gt; b 2/3
+a &gt; c 1/3
+b &gt; a 1/2
+b &gt; c 1/2
+c &gt; a 1/1
+</pre>
+
+<p>
+first off we need the frequencies of bigrams, and a version of them keyed by the first term.
+these values make up the nominators of the transistion probabilites in the chain
+<pre>
+bash&gt; rake bigrams
+bash&gt; rake cat dir=bigrams
+ab  2
+ac  1
+ba  1
+bc  1
+ca  1
+bash&gt; rake bigram_keyed_by_first_elem
+bash&gt; rake cat dir=bigram_keyed_by_first_elem
+a.1f  ab 2
+a.1f  ac 1
+b.1f  ba 1
+b.1f  bc 1
+c.1f  ca 1
+</pre>
+</p>
+
+<p>
+then we need the frequencies of the 'from' state.
+these values make up the denominators of the transistion probabilites in the chain
+<pre>
+bash&gt; rake bigram_first_elem
+bash&gt; rake cat dir=bigram_first_elem
+a.0p 3
+b.0p 2
+c.0p 1
+</pre>
+</p>
+
+<p>
+we can them join these last two
+<pre>
+bash&gt; rake markov_chain
+bash&gt; rake cat dir=markov_chain
+ab.0p  0.66
+ac.0p  0.33
+ba.0p  0.5
+bc.0p  0.5
+ca.0p  1
+</pre>
+</p>
+
+<p>
+once we have our markov chain model we can join it to the trigrams in a similiar fashion to 
+how we joined the term frequencies with the trigrams on the last page
+</p>
+
+<p>
+here's the new set of map reduce passes required...
+<a href="t3_passes.dot.txt"><img src="t3_passes.png"/></a>
+</p>
+
+<h2>the bigger example</h2>
+
+<p>
+how does the inclusion of markov_sip change the sips on our 8 document corpus?
+
+<table border="1">
+<tr><td>doc</td><td>sip1</td><td>sip2</td><td>sip3</td></tr>
+<tr><td>fbncc10</td><td>and numbers edited</td><td>university of quebec</td><td>structure in 2000</td></tr>
+<tr><td>8sknn10</td><td>think a scrimption</td><td>by she noiselessly</td><td>he been disgusted</td></tr>
+<tr><td>gm77v10</td><td>he the venom</td><td>the not colloquial</td><td>the not unamiable</td></tr>
+<tr><td>7hmvg10</td><td>for on dormant</td><td>and english morello</td><td>to deep carmine</td></tr>
+<tr><td>dwqoh10</td><td>thinks and nobobody</td><td>when one watches</td><td>the indifferent routinists</td></tr>
+<tr><td>7stir10</td><td>or la nouvelle</td><td>to poor ellen</td><td>poor of marlowe</td></tr>
+<tr><td>esper10</td><td>in out ow</td><td>a old maljunec</td><td>in day aye</td></tr>
+<tr><td>8prmt10</td><td>de by belmekhira</td><td>in die ferse</td><td>sie in feierlichem</td></tr>
+</table>
+</p>
+
+<p>
+sort of interesting... there are some further improvements that could be made; 
+<ol>
+<li>take an <a href="http://en.wikipedia.org/wiki/Tfidf">tfidf</a> approach in that you should favour combos that 
+appear a lot in a particular document</li>
+<li>allow bigrams not just trigrams, which with the previous approach will pluck out bits of terminology</li>
+</ol>
+but for now we've got something workable and for me this has
+turned more into a learning exercise on hadoop
+</p>
+
+<p>
+but does it scale?
+</p>
+
+<p>
+<a href="take2_term_frequency.html">&lt;&lt;&nbsp;&nbsp;take 2: term frequency</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="part4_but_does_it_scale.html">part 4: but does it scale?&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<p>sept 2009</p>
+
+</body></html>

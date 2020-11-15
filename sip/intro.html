@@ -1,0 +1,87 @@
+
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+	<title>diy statistically improbable phrases</title>
+</head>
+<body>
+
+<p>
+
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="take1_trigram_frequency.html">take 1: trigram frequency&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<h1>what is a statistically improbable phrase?</h1>
+
+<p>amazon has an interesting feature where for each book they calculate a number of small snippets
+that are representative of the text. they call these snippets statisically improbable 
+phrases (sips) and they are useful as a type of keyword phrase for a book to aid in searching for books
+on a certain topic.</p>
+
+<p>for example the great data mining book 
+<a href="http://www.amazon.com/Data-Mining-Practical-Techniques-Management/dp/0120884070/ref=pd_cp_b_3">data mining - 
+practical machine learning tools and techniques</a>
+had it's sips listed as...</p>
+
+<p>
+<small>informational loss function, category utility formula, generic object editor, synthetic binary attributes,
+multiresponse linear regression, replicated subtree problem, contact lens data, subtree raising, hypermetrope yes,
+arff file, myope yes, labor negotiations data, practical data mining, false yes rainy, numeric prediction, outlook attribute,
+kernel perceptron, subtree replacement, machine learning schemes, holdout set, iris dataset, relative squared error,
+numeric attributes, weighted instances, maximum margin hyperplane</small>
+</p>
+
+<h1>diy sip</h1>
+
+<p>
+at first i thought these would be pretty easy to calculate. after some more thinking it turns out
+it's not as simple as it might first appear (like a lot of things i guess).
+so like all good devs i've decided to roll my own as an exercise.</p>
+
+<p>
+and to be honest this is as much about trying hadoop as anything else..
+</p>
+
+<h1>the data source</h1>
+
+<p>
+firstly we need a corpus to work with and i decided to use a bunch of etexts taken from
+<a href="http://www.gutenberg.org">project gutenberg</a> (mainly cause it's so easy to get).
+the only bad thing i can see about it is that the books are quite old (out of copyright which is why
+they are free to download) and span a reasonable time frame so there will be some language drift.
+perhaps this drift itself could be an interesting thing to look another day? </p>
+
+<h1>cleaning the data</h1>
+
+<p>
+in general for any machine learning application a fair amount of work needs to go into 
+"cleaning" the data, whatever cleaning might mean...</p>
+
+<p>
+for the gutenberg texts some of the problems with the data include...
+<ul>
+<li>each text includes a project gutenberg header and footer which is just noise for our purpose</li>
+<li>a number of the files aren't even in english</li>
+<li>some texts are more reference like; eg 'the first 1001 fibonacci numbers' or 'a complete grammar of esperanto'
+and will have large chunks of "unnatural" speech</li>
+</ul>
+</p>
+
+<p>
+i ignored the first item for awhile but then decided to clean a little bit of the header info with <a href="http://github.com/matpalm/sip/tree/master/util">these scripts</a>. 
+it's not perfect but removes about 4e6 lines of header/footer guff.
+</p>
+
+<p>however i've decided to ignore these issues to see if i can determine how much of an effect it'll have (it's not
+at all because i'm lazy)</p>
+
+<p>
+let's take our first crack at diy sips with <a href="take1_trigram_frequency.html">trigram frequencies</a>
+</p>
+
+<p>sept 2009</p>
+
+</body>
+</html>
