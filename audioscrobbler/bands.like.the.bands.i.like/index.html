@@ -1,0 +1,51 @@
+ <head>
+	<title>bands like the bands i like</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+ </head>
+<body>
+
+<h1>audioscrobbler experiments</h1>
+<a href="http://matpalm.com">&lt;&lt; other nerdy projects</a></br></br>
+1. bands like the bands i like</br>
+<a href="../distance.from.celion.to.napalm">2. the shortest path from celine dion to napalm death</a></br>
+<a href="../multi.dimensional.tag.distance">3. multi dimensional tag distance</a>
+
+<h2>1. bands like the bands i like</h2>
+
+<p>was listening to nofx this afternoon and was wondering what similiar bands exist that i've never heard of? </p>
+
+<p>audioscrobbler, the back end for <a href="http://www.last.fm/">last.fm</a>, 
+has exposed a vast array of <a href="http://www.audioscrobbler.net/data/webservices/">recommendation data</a> as a webservice.<p/>
+
+<p>time to write some code to make use of it....</p>
+
+<p>wrote a ruby script <a href="http://github.com/matpalm/audioscrobbler-experiments/tree/master/bands.like/fetch.rb">fetch.rb</a> to mine the data 
+<small>(what did we do before <a href="http://code.whytheluckystiff.net/hpricot/">hpricot?</a>)</small></p>
+
+<p> run it as
+<tt>./fetch.rb nofx 75 20 &gt; nofx.yaml</tt>
+
+<ul>
+<li>will start at nofx</li>
+<li>extract artists that have a similiarity higher than 75 (on a scale of 1 to 100)</li>
+<li>for thoses artists, download their most similiar artists</li>
+<li>continue until 20 have been downloaded in total</li>
+</ul>
+</p>
+
+<p>this builds a <a href="http://yaml.org/">yaml</a> file of a graph where nodes represent artists and edges represent a similiar artist. </p>
+
+<p>now to draw it! another script <a href="http://github.com/matpalm/audioscrobbler-experiments/tree/master/bands.like/generate_dot_input.rb">generate_dot_input.rb</a> to do some collating of data and generate a .dot file for <a href="http://www.graphviz.org/">graph viz</a> to use.</p>
+
+<p>run it as <tt>./generate_dot_input.rb &lt; nofx.yaml | neato -Tpng &gt; nofx.png</tt></p>
+ 
+ <p>
+ here are two graphs centered around nofx generated at different depths/widths; </br>
+ a <a href="nofx.small.jpg">one small</a> <small>(150k)</small> generated with 75 min similiarity and 20 nodes max and </br>
+ a <a href="nofx.big.jpg">one big</a> <small>(1,300k)</small> generated with 60 min similiarity and 45 nodes max </a>
+ </p>
+ 
+ <small>june 14, 2008</small>
+ </body>
+ 

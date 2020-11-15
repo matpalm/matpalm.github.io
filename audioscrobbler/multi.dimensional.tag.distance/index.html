@@ -1,0 +1,88 @@
+ <head>
+	<title>multi dimensional tag distance</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+ </head>
+<body>
+
+<h1>audioscrobbler experiments</h1>
+<a href="http://matpalm.com">&lt;&lt; other nerdy projects</a></br></br>
+<a href="../bands.like.the.bands.i.like">1. bands like the bands i like</a></br>
+<a href="../distance.from.celion.to.napalm">2. the shortest path from celine dion to napalm death</a></br>
+3. multi dimensional tag distance</br>
+
+<h2>3. multi dimensional tag distance</h2>
+
+<p>we have the link-to shortest path from <a href="../distance.from.celion.to.napalm">celion dion to napalm death</a> as far as similiarily goes.</p>
+
+<p>but is it a straight line? similiarity doesnt give us this, 
+we need a pointwise measure that can be visualised</p>
+
+<p>lets try tags! another bit of data from <a href="http://www.audioscrobbler.net/data/webservices/">audioscrobbler</a> is tags against artists. 
+(it's appears the number of tags has been normalised so the values range from 0 to 100)</p>
+
+<p>but how do tags relate to points in space?</p>
+
+<p>consider the tag <i>glam rock</i>; 
+<ul>
+<li>w.a.s.p has a tag value of 4 </li>
+<li>twisted sister has a value of 28 </li>
+<li>and (apparent) glam masters kiss have a value of 37!</li>
+<li>both celion dion and napalm death haven't had the <i>glam rock</i> tag applied so we say they have glam rock values of 0</li>
+</ul>
+</p>
+
+<p>so in the <i>glam rock</i> dimension we can say kiss is closer to twisted sister than napalm death</p>
+
+<p>if we consider two dimensions; say, dance and soul, we can compare cher, tina turner and donna summer in two dimensions
+<img src="dance_vs_soul.png"/></p>
+
+<p>we can see that, considering just dance and soul, cher is "closer" to donna summer than to tina turner.</p>
+
+<p>by adding a 3rd tag to compare with and we get points in 3 dimensions; a 4th tag , 4 dimensional points and so on.</p>
+
+<p>in fact cher, tina turner and donna summer have 166 unique tags against them so these three could be compared 
+in 166 dimensional space. </p>
+
+<p>considering all 31 bands from celion dion to napalm death <small><small>(celion dion, cher, tina turner, donna summer, chic, rose royce, rufus, commodores, lionel richie, billy ocean, steve winwood, don henley, eddie money, loverboy, 
+night ranger, sammy hagar, van halen, kiss, twisted sister, w.a.s.p., saxon, metal church, overkill, exodus, death angel, dark angel, possessed, autopsy, 
+morbid angel, carcass, napalm death)</small></small> we have <a href="tags_vs_artists.csv">1004 unique tags</a></p>
+
+<p>the trouble is points in 3 dimensional space are hard enough to visualise on a computer so how on earth can we handle 1004 dimensions!
+one technique is <a href="http://en.wikipedia.org/wiki/Multidimensional_scaling">multi dimensional scaling</a></p> 
+
+<p>the idea is to pick points in a lower dimensional space (say 2 or 3) whos distances are as close as possible to the distances
+of the points in the higher dimensional space (in our case 1004 dimensions).</br> the rationale is that that points close in the 1004 dimensional space
+will be close in the 2 / 3 dimensional space and we'll be able to see any obvious relationships. </p>
+
+<p>it's not perfect though since the reduction of dimensions means a loss of information so there are cases where the distances can't be preserved...
+</br>consider in 2 dimensions the points of an equilateral triangle, all three points are equidistant from each other. 
+</br>we can't reduce this to 1 dimension (ie a line) since you can't have 3 points equidistant from each other (without a dose of 
+<a href="http://youtube.com/watch?v=Nwji4ho0o_Q">C20 H25 N3 O</a>)</p>
+
+<p>so the points and path from celion dion reduced from 1003 dimensions to 2 looks like this....
+</br><img src="2d.png"/></p>
+
+<p>it's an interesting coil, reminds me a bit of an <a href="http://en.wikipedia.org/wiki/Alpha_helix">alpha helix</a></p>
+
+<p>notice the dense clustering of points around the death metal bands who have lots of tags in common
+</br><img src="2d.zoom.png"/></p>
+
+<p>reducing to 3d instead gives 
+</br><img src="3d.png"/></p>
+
+<p><small>not suprisingly this is better visualised in a tool where you can rotate the dataset.
+</br>if you have gnuplot here's the <a href="out.3d">dat file</a> for the 3d projection. 
+</br>plot it with <tt>gnuplot> splot 'out.3d' with lines, 'out.3d' with labels</tt></small></p>
+
+<p>viewed from the top it's a simliar coil to the 2d reduction
+</br><img src="3d.top.png"</p>
+
+<p>and here's a 3d eye style version for those of us who like to cross their eyes...
+</br><img src="3d.eye.png"/></p>
+
+</body>
+
+
+
+
