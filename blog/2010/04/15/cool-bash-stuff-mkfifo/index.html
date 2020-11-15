@@ -1,0 +1,146 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="cool-bash-stuff;-mkfifo"></a>
+  <h2 class="blog_post_title"><a href="/blog/2010/04/15/cool-bash-stuff-mkfifo/" rel="bookmark" title="Permanent Link to cool bash stuff; mkfifo">cool bash stuff; mkfifo</a></h2>
+  <small>April 15, 2010 at 09:33 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p><a href="http://www.gnu.org/software/coreutils/manual/html_node/mkfifo-invocation.html">mkfifo</a> is one of those shell commands provided as part of <a href="http://www.gnu.org/software/coreutils/manual/html_node/">coreutils</a> that not many people seem to know about.
+</p>
+<p>here's an (semi contrived) example close to something i did the other day to show how awesome it is
+</p>
+<p>say you have a number of largish presorted files;<strong> </strong><em>run-00</em> to <em>run-03</em>; and you want to find the most frequent lines. you could do something like the following...
+</p>
+<pre>sort -m run-* | uniq -c | sort -nr | head</pre>
+
+<p>however you'll know that from <a href="http://matpalm.com/blog/2009/06/28/how-using-compressed-data-can-make-you-app-faster/">previous posts</a> i just loooove keeping all my data compressed on disk so instead i've got <em>run-00.gz</em> to <em>run-03.gz</em>
+</p>
+<p>without having to uncompress the files to disk i'd have to do something like this...
+</p>
+<pre>zcat run*gz | sort | uniq -c | sort -nr | head</pre>
+
+<p>but this pains me since it results in completely resorting the stream. i know the input files are sorted so i'd <strong>much</strong> prefer doing a <em>sort -m</em> than <em>sort</em>
+</p>
+<p>so how can i mix the combo of zcat and a pipe to sort with sort -m wanting the multiple inputs as file descriptors instead of STDIN?
+</p>
+<p>well, mkfifo of course!  it's a way of making a file that acts like a pipe ( a named pipe )
+</p>
+<pre>ls | sort</pre>
+
+<p>is sort-of, roughly, equivalent to
+</p>
+<pre>
+mkfifo bob
+ls > bob &
+sort < bob
+rm bob
+</pre>
+
+<p>( have to background the <em>ls</em> since the write to the named pipe blocks until the read starts )
+</p>
+<p>apart from being a cool way to get pipes working between totally seperate processes on a box this provides a solution for our original problem
+</p>
+<pre>mkfifo p0 p1 p2 p3
+zcat run-00.gz > p0 &
+zcat run-01.gz > p1 &
+zcat run-02.gz > p2 &
+zcat run-03.gz > p3 &
+sort -m p* | uniq -c | sort -nr | head
+rm p[0123]</pre>
+
+<p>and all four zcat can burn cpu while avoiding the need to resort.
+</p>
+<p>yay!
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2010/04/15/cool-bash-stuff-mkfifo/";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

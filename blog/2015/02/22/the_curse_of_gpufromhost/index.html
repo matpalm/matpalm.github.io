@@ -1,0 +1,381 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="theano-and-the-curse-of-gpufromhost"></a>
+  <h2 class="blog_post_title"><a href="/blog/2015/02/22/the_curse_of_gpufromhost" rel="bookmark" title="Permanent Link to theano and the curse of GpuFromHost">theano and the curse of GpuFromHost</a></h2>
+  <small>February 22, 2015 at 10:00 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <h3>brutually short intro to theano</h3>
+<p>i've been reviving some old <a href="http://deeplearning.net/software/theano/">theano</a> code recently and in 
+   case you haven't seen it theano is a pretty awesome python library that reads a lot like 
+   <a href="http://www.numpy.org/">numpy</a> but provides two particularly interesting features.
+</p>
+<ul>
+ <li>
+     <a href="http://deeplearning.net/software/theano/tutorial/gradients.html">symbolic differentiation</a>; not 
+something i'll talk about here, but super useful if you're tinkering with new models and you're using a gradient 
+descent method for learning (and these days, who's not..)
+ </li>
+
+ <li>
+     the ability to <a href="http://deeplearning.net/software/theano/tutorial/using_gpu.html">run transparently 
+on a gpu</a>; well, almost transparently, this'll be the main focus of this post...
+ </li>
+</ul>
+
+<h3>multiplying matrices</h3>
+<p>let's work through a very simple model that's kinda like a system of linear equations. 
+   we'll compare 1) numpy (our timing baseline) vs 2) theano on a cpu vs 3) theano on a gpu.
+   keep in mind this model is contrived and doesn't really represent anything useful, it's more to demonstrate 
+   some matrix operations.
+</p>
+
+<h4>in numpy</h4>
+<p>first consider the following numpy code 
+   (<a href="https://gist.github.com/matpalm/7b519c93ca6fb732dd17#file-speed_test_numpy-py">speed_test_numpy.py</a>)
+   which does a simple y=mx+b like calculation a number
+   of times in a tight loop. this looping isn't just for benchmarking, lots of learning algorithms operate on a tight
+   loop.
+</p>
+<pre class="prettyprint linenums">
+# define data
+# square matrices will do for a demo
+np.random.seed(123)
+m = np.random.randn(1000, 1000).astype('float32')
+x = np.random.randn(1000, 1000).astype('float32')
+b = np.random.randn(1000, 1000).astype('float32')
+
+# run tight loop
+start = time.time()
+for i in range(500):
+    y = np.add(np.dot(m, x), b)
+print "numpy", time.time()-start, "sec"
+</pre>
+
+<p>this code on a 6 core 3.8Ghz AMD runs in a bit over 2min
+</p>
+<pre class="prettyprint linenums">
+$ python speed_test_numpy.py
+numpy 135.350140095 sec
+</pre>
+
+
+<h4>in theano</h4>
+<p>now consider the same thing in theano 
+   (<a href="https://gist.github.com/matpalm/7b519c93ca6fb732dd17#file-speed_test_theano-py">speed_test_theano.py</a>)
+</p>
+<pre class="prettyprint linenums">
+import theano
+import theano.tensor as T
+
+# define data                                                                                                                                                                           
+np.random.seed(123)
+m = np.random.randn(1000, 1000).astype('float32')
+x = np.random.randn(1000, 1000).astype('float32')
+b = np.random.randn(1000, 1000).astype('float32')
+
+# define a symbolic expression of the equations in theano                                                                                                                               
+tm = T.matrix("m")
+tx = T.matrix("x")
+tb = T.matrix("b")
+ty = T.add(T.dot(tm, tx), tb)
+# and compile it
+line = theano.function(inputs=[tx, tm, tb], outputs=[ty])
+
+# then run same loop as before                                                                                                                                                          
+start = time.time()
+for i in range(500):
+    y, = line(m, x, b)
+print "theano", time.time()-start, "sec"
+</pre>
+
+<p>hopefully it's clear enough what is happening here at a high level but just briefly the tm, tx, tb and ty variables represent
+   a symbolic representation of what we want to do and the theano.function call compiles this into actual executable code.
+   there is lots of <a href="http://deeplearning.net/software/theano/tutorial/adding.html#baby-steps-algebra">gentle intro material</a> that introduces this notation on the theano site.
+</p>
+<p>when run on the cpu it takes about the same time as the numpy version
+</p>
+<pre class="prettyprint linenums">
+$ THEANO_FLAGS=device=cpu python speed_test_theano.py
+numpy 136.371109009 sec
+</pre>
+
+<p>but when "magically" run on the gpu it's quite a bit faster.
+</p>
+<pre class="prettyprint linenums">
+$ THEANO_FLAGS=device=gpu python speed_test_theano.py
+Using gpu device 0: GeForce GTX 970
+theano 3.16091990471 sec
+</pre>
+
+<p>awesome! a x40 speed up! so we're done right? not quite, we can do better.
+</p>
+
+<h3>profiling</h3>
+<p>let's drill into what's actually happening; we can do this in two ways, 
+   <a href="http://deeplearning.net/software/theano/tutorial/printing_drawing.html#debug-printing">debugging the compiled graph</a> and 
+   <a href="http://deeplearning.net/software/theano/tutorial/profiling.html">theano profiling.</a>
+</p>
+<p>debugging allows us to see what a function has been compiled to. for the cpu case it's just a
+   single <a href="http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms#Level_3">blas gemm (general matrix mulitplication)</a> call. that's
+   exactly what'd we want, so great!
+</p>
+<pre class="prettyprint linenums">
+Gemm{no_inplace} [@A] ''   0
+ |b [@B]
+ |TensorConstant{1.0} [@C]
+ |m [@D]
+ |x [@E]
+ |TensorConstant{1.0} [@C]
+</pre>
+
+<p>profiling allows to see where time is spent. 100% in this single op, no surprise.
+</p>
+<pre class="prettyprint linenums">
+$ THEANO_FLAGS=device=cpu,profile=True python speed_test_theano.py
+...
+&lt;% time&gt; &lt;sum %&gt; &lt;apply time&gt; &lt;time per call&gt; &lt;#call&gt; &lt;id&gt; &lt;Apply name&gt;
+  100.0%   100.0%     136.282s       2.73e-01s    500     0   Gemm{no_inplace}
+...
+</pre>
+
+<p>looking at the gpu version though things are a little different...
+</p>
+<pre class="prettyprint linenums">
+HostFromGpu [@A] ''   4
+ |GpuGemm{inplace} [@B] ''   3
+   |GpuFromHost [@C] ''   2
+   | |b [@D]
+   |TensorConstant{1.0} [@E]
+   |GpuFromHost [@F] ''   1
+   | |m [@G]
+   |GpuFromHost [@H] ''   0
+   | |x [@I]
+   |TensorConstant{1.0} [@E]
+</pre>
+
+<p>we can see a GpuGemm operation, the gpu equivalent of Gemm, but now there's a bunch of GpuFromHost &amp; HostFromGpu operations too? what are these? 
+</p>
+<p>i'll tell you what they are, they are the bane of your existence! these represent transferring data to/from the gpu which is slow and, if we're not
+   careful, can add up to a non trivial amount. if we review the profiling output we can see that, though we're faster
+   than the non gpu version, we're spending &gt;70% of the time just moving data.
+</p>
+<p>(though remember this example is contrived, we'd expect to be doing more in our overall computation that just a single general matrix mulitply)
+</p>
+<pre class="prettyprint linenums">
+$ THEANO_FLAGS=device=gpu,profile=True python speed_test_theano.py
+...
+&lt;% time&gt; &lt;sum %&gt; &lt;apply time&gt; &lt;time per call&gt; &lt;#call&gt; &lt;id&gt; &lt;Apply name&gt;
+  26.4%    26.4%       0.776s       1.55e-03s    500     3   GpuGemm{inplace}
+  19.5%    45.9%       0.573s       1.15e-03s    500     0   GpuFromHost(x)
+  19.5%    65.4%       0.572s       1.14e-03s    500     1   GpuFromHost(m)
+  19.3%    84.7%       0.565s       1.13e-03s    500     2   GpuFromHost(b)
+  15.3%   100.0%       0.449s       8.99e-04s    500     4   HostFromGpu(GpuGemm{inplace}.0)
+...
+</pre>
+
+<p>ouch!
+</p>
+
+<h3>shared variables</h3>
+<p>the crux of this problem is that we actually have two types of variables in this model; the parameterisation of the model (m &amp; b) and 
+   those related to examples (x &amp; y). so, though it's realistic to do a speed test with a tight loop over the same function many times,
+   what is <i>not</i> realistic is that we are passing the model parameters to/from the gpu
+   each and every input example. this is a complete waste; it's much more sensible to send them over to the gpu once at the
+   start of the loop and retreive them once at the end. this is an important and very common pattern.
+</p>
+<p>how do we fix this? it's actually pretty simple; 
+   <a href="http://deeplearning.net/software/theano/tutorial/examples.html#using-shared-variables">shared variables</a>. yay!
+</p>
+<p>consider the following; <a href="https://gist.github.com/matpalm/7b519c93ca6fb732dd17#file-speed_test_theano_shared-py">speed_test_theano_shared.py</a>
+</p>
+<pre class="prettyprint linenums">
+# define data                                                                                                                                                                           
+np.random.seed(123)
+m = np.random.randn(1000, 1000).astype('float32')
+x = np.random.randn(1000, 1000).astype('float32')
+b = np.random.randn(1000, 1000).astype('float32')
+
+# define a symbolic expression of the equations in theano                                                                                                                               
+tm = theano.shared(m)  # copy m over to gpu once explicitly
+tx = T.matrix("x")
+tb = theano.shared(b)  # copy b over to gpu once explicitly
+ty = T.add(T.dot(tm, tx), tb)
+line = theano.function(inputs=[tx], outputs=[ty])  # don't pass m & b each call
+
+# then run same loop as before                                                                                                                                                          
+start = time.time()
+for i in range(500):
+    y, = line(x)
+
+print tm.get_value().shape  # note: we can get the value back at any time
+</pre>
+
+<p>reviewing the debug we can see this removes a stack of the GpuFromHost calls.
+</p>
+<pre class="prettyprint linenums">
+HostFromGpu [@A] ''   2
+ |GpuGemm{no_inplace} [@B] ''   1
+   |<CudaNdarrayType(float32, matrix)> [@C]
+   |TensorConstant{1.0} [@D]
+   |<CudaNdarrayType(float32, matrix)> [@E]
+   |GpuFromHost [@F] ''   0
+   | |x [@G]
+   |TensorConstant{1.0} [@D]
+</pre>
+
+<p>and we're down to &lt; 2s
+</p>
+<pre class="prettyprint linenums">
+$ THEANO_FLAGS=device=gpu,profile=True python speed_test_theano_shared.py
+Using gpu device 0: GeForce GTX 970
+theano 1.93515706062 sec
+...
+&lt;% time&gt; &lt;sum %&gt; &lt;apply time&gt; &lt;time per call&gt; &lt;#call&gt; &lt;id&gt; &lt;Apply name&gt;
+  44.7%    44.7%       0.804s       1.61e-03s    500     1   GpuGemm{no_inplace}
+  30.2%    74.9%       0.543s       1.09e-03s    500     0   GpuFromHost(x)
+  25.1%   100.0%       0.451s       9.01e-04s    500     2   HostFromGpu(GpuGemm{no_inplace}.0)
+...
+</pre>
+
+<p>what's even crazier is we can go further by moving the x and y matrices onto the gpu too. it turns out this isn't <i>too</i>
+   far fetched since if x and y were representing training examples we'd be iterating over them anyways (and if we could fit them
+   all onto the gpu that'd be great )
+</p>
+<pre class="prettyprint linenums">
+#define data
+np.random.seed(123)
+m = np.random.randn(1000, 1000).astype('float32')
+x = np.random.randn(1000, 1000).astype('float32')
+b = np.random.randn(1000, 1000).astype('float32')
+
+# define a symbolic expression of the equations in theano
+tm = theano.shared(m)
+tx = theano.shared(x)
+tb = theano.shared(b)
+ty = theano.shared(np.zeros((1000, 1000)).astype('float32'))  # we need a shared var for y now
+mx_b = T.add(T.dot(tm, tx), tb)
+# and compile it
+train = theano.function(inputs=[], updates={ty: mx_b})  # update y on gpu
+
+# then run same loop as before
+start = time.time()
+for i in range(500):
+    train()  # now there's no input/output
+print tm.get_value().shape
+print "theano", time.time()-start, "sec"
+</pre>
+
+<p>the debug graph is like the cpu graph now, just one gemm call.
+</p>
+<pre class="prettyprint linenums">
+GpuGemm{no_inplace} [@A] ''   0
+ |<CudaNdarrayType(float32, matrix)> [@B]
+ |TensorConstant{1.0} [@C]
+ |<CudaNdarrayType(float32, matrix)> [@D]
+ |<CudaNdarrayType(float32, matrix)> [@E]
+ |TensorConstant{1.0} [@C]
+</pre>
+
+<p>and runs in under a second. x150 the numpy version. nice! :)
+</p>
+<pre class="prettyprint linenums">
+$ THEANO_FLAGS=device=gpu,profile=True python speed_test_theano_shared2.py
+theano 0.896003007889 sec
+...
+&lt;% time&gt; &lt;sum %&gt; &lt;apply time&gt; &lt;time per call&gt; &lt;#call&gt; &lt;id&gt; &lt;Apply name&gt;
+  100.0%   100.0%       0.800s       1.60e-03s     C      500        1   GpuGemm{no_inplace}
+...
+</pre>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2015/02/22/the_curse_of_gpufromhost";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

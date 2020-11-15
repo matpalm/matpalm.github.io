@@ -1,0 +1,144 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="e10.6-community-detection-for-my-twitter-network"></a>
+  <h2 class="blog_post_title"><a href="/blog/2010/04/04/375/" rel="bookmark" title="Permanent Link to e10.6 community detection for my twitter network">e10.6 community detection for my twitter network</a></h2>
+  <small>April 04, 2010 at 12:58 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p>last night i applied my network decomposition algorithm to a graph of some of the people near me in twitter.
+</p>
+<p>first i build a friend graph for 100 people 'around' me (taken from a <a href="http://matpalm.com/blog/2009/09/29/e10-3-twitter-crawl-progress/">crawl</a> i did last year). by 'friend' i mean that if alice follows bob then bob also follows alice.
+</p>
+<p>here the graph, some things to note though; it was an unfinished crawl (can a crawl of twitter EVER be finished) and was done october last year so is a bit out of date.
+</p>
+<p><a href="/blog/imgs/2010/04/friends.jpg"><img class="aligncenter size-large wp-image-377" title="friends" src="/blog/imgs/2010/04/friends-1024x204.jpg" alt="friends" width="1024" height="204" /></a>&lt;!--more--&gt;
+</p>
+<p>and here is the dendrogram decomposition
+</p>
+<p><a href="/blog/imgs/2010/04/dendrogram.vert_.600.jpg"><img class="aligncenter size-full wp-image-391" title="dendrogram.vert.600" src="/blog/imgs/2010/04/dendrogram.vert_.600.jpg" alt="dendrogram.vert.600" width="600" height="1500" /></a>some interesting clusterings come out..
+</p>
+<p>right at the bottom we have a small clique (ie everyone following everyone else) of people i've known from when i was in <em>sydney</em>
+</p>
+<p><a href="/blog/imgs/2010/04/sydney.nokia_.jpg"><img class="aligncenter size-full wp-image-387" title="sydney.nokia" src="/blog/imgs/2010/04/sydney.nokia_.jpg" alt="sydney.nokia" width="185" height="98" /></a>
+</p>
+<p>this small group connects to the group i'm in; <a href="http://twitter.com/tinybuddha">tinybuddha</a> down to <a href="http://twitter.com/evanbottcher">evanbottcher</a>; which roughly describes the group of people i've met in <em>melbourne</em>.
+</p>
+<p>the order of the single breakaways in the melbourne group is pretty arbitrary. i get quite different ordering if i run the decomposition multiple times due to the random tie breaking involved. i could either run the decomposition multiple times and work out some kind of averaging or choose another more granular way of deciding how to break ties.
+</p>
+<p>the next connector after <em>syndey</em> and <em>melbourne</em> are unified is <a href="http://twitter.com/deanemorrow">deanemorrow</a> a coworker when i was at <a href="http://twitter.com/distra">distra</a>. this one sticks out for me as being the biggest flaw in the clustering since it would have made more sense to have him placed near distra at the bottom.
+</p>
+<p>another interesting clique is near me..
+</p>
+<p><a href="/blog/imgs/2010/04/twers.jpg"><img class="aligncenter size-full wp-image-393" title="twers" src="/blog/imgs/2010/04/twers.jpg" alt="twers" width="115" height="123" /></a>it has four thoughtworkers; <a href="http://twitter.com/markryall">mark</a>, <a href="http://twitter.com/grillp">gill</a>, <a href="http://twitter.com/debbiecheong">debs</a> and <a href="http://twitter.com/evanbottcher">evan</a> and one sensiser; <a href="http://twitter.com/kornys">korny</a>. did korny perhaps work for thoughtworks in a previous life ;)
+</p>
+<p>another interesting note is there exists a path from me to <a href="http://twitter.com/norvig">peter norvig</a> (who is too busy for twitter it seems) but only because of the huge connector nodes that exist in twitter. an example in this case is <a href="http://twitter.com/tuaw">TUAW</a> who follow 30,000+ people and have even more followers. these nodes cause a bit of noise in the system since they are slightly false representations of what a 'friend' means in my mind. not sure how to take these numbers into account...
+</p>
+<p>things to do...
+</p>
+<ul>
+ <li>
+     the biggest oversimplification in this system is how i break ties for deciding which edge to cut out next if multiple exist with the same betweenness. currently it chooses the one that would make the most even sized break (based on smallest standard deviation of the connected components). though this is good for breaking a group into even sizes it's bad since it favours breaking a single element off a large group. this is what has caused the 'laddering' we see in the melbourne group.
+ </li>
+
+ <li>
+     the shortest path algorithm used to calculate edge betweenness is stochastic and if multiple shortest paths exist only one of them is chosen. it'd be better if all were considered with a weighting scheme.
+ </li>
+
+ <li>
+     it might be better to consider vertex betweenness instead of edge betweenness since one person could exist in multiple groups. if i started down this path though i think i'd rather just rewrite the lot using something like  the <a href="http://en.wikipedia.org/wiki/Clique_percolation_method">clique percolation method</a>
+ </li>
+</ul>
+<p><a href="http://github.com/matpalm/tgraph">all the code is on github</a>
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2010/04/04/375/";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

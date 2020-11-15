@@ -1,0 +1,752 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed
+  xmlns="http://www.w3.org/2005/Atom"
+  xmlns:thr="http://purl.org/syndication/thread/1.0"
+  xml:lang="en"
+   >
+  <title type="text">brain of mat kelcey</title>
+  <subtitle type="text">thoughts from a data scientist wannabe</subtitle>
+
+  <generator uri="http://blogofile.com/">Blogofile</generator>
+
+  <link rel="alternate" type="text/html" href="http://matpalm.com/blog" />
+  <id>http://matpalm.com/blog/feed/atom/</id>
+  <link rel="self" type="application/atom+xml" href="http://matpalm.com/blog/feed/atom/" />
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[an illustrative einsum example]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/einsum_example" />
+    <id>http://matpalm.com/blog/einsum_example</id>
+    <published>2020-05-27T00:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="talk" />
+    <category scheme="http://matpalm.com/blog" term="short_tute" />
+    <summary type="html"><![CDATA[an illustrative einsum example]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/einsum_example"><![CDATA[<h1>intro</h1>
+<p>recently i changed what was quite clumsy looking code in something more
+   elegant using a cool function in numpy called
+   <a href="https://numpy.org/doc/stable/reference/generated/numpy.einsum.html">einsum</a>
+   and felt it was worth writing up.
+</p>
+<p>this example is just going to be using numpy, but einsum is also provided in
+   <a href="https://www.tensorflow.org/api_docs/python/tf/einsum">tensorflow</a>,
+   <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.einsum.html">jax</a>
+   and <a href="https://pytorch.org/docs/master/generated/torch.einsum.html">pytorch</a>
+</p>
+<p>there's also <a href="https://colab.research.google.com/drive/1kmt2cNFK7IGRhY1rXgqLVX3GsNc4Ybsh?usp=sharing">a terser colab version</a> of this post if you're prefer to walk through
+   that.
+</p>
+<p>and for a video walkthrough of this see...
+</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/SOaYrnQtd9g" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+
+<h1>example walkthrough</h1>
+<p>the only user defined function we are going to use is this little <code>rnd</code>
+   one to make random arrays of various sizes.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; import numpy as np
+
+&gt;&gt;&gt; def rnd(*args):
+&gt;&gt;&gt;     return np.random.random(args)
+</code></pre>
+
+<p>let's start with a fundamental operation, the matrix multiply.
+   numpy provides it through <code>matmul</code> function which in this case is taking
+   an <code>(i, j)</code> sized matrix and a <code>(j, k)</code> sized one and producing an
+   <code>(i, k)</code> result; the classic 2d matrix multiply.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; np.matmul(rnd(4, 5), rnd(5, 6)).shape
+
+(4, 6)
+</code></pre>
+
+<p>there's a number of interpretations of what a matrix multiply
+   represents and a common one i use a lot is calculating,
+   in batch, a bunch of pairwise dot products. if we have <code>S1</code> and <code>S2</code>,
+   both of which represent some set of embeddings, in this case
+   32d embeddings, 5 for <code>S1</code> and 10 for <code>S2</code>, if we want to calculate all pairwise
+   combos we can use a matrix multiply. but note we need to massage
+   <code>S2</code> a bit; a matrix multiple wants the inner dimension to match so
+   we need to transpose <code>B</code> to make it (32, 10)
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; S1 = rnd(5, 32)
+&gt;&gt;&gt; S2 = rnd(10, 32)
+&gt;&gt;&gt; np.matmul(S1, S2.T).shape
+
+(5, 10)
+</code></pre>
+
+<p>an important thing to note about <code>matmul</code> is that it automatically handles
+   the idea of batching. for example a leading dimension of 10 makes
+   it equivalent to 10 independent matrix multiplies. we could do this
+   in a for loop but expressing it in a single <code>matmul</code> will most likely
+   be faster as the underlying linear algebra libraries can kick in with
+   a bunch of optimisations.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> np.matmul(rnd(10, 4, 5),
+>>>           rnd(10, 5, 6)).shape
+
+(10, 4, 6)
+</code></pre>
+
+<p>and note that it can be multiple leading dimensions.
+   all that matters it the last two axis follow the <code>i,j,k</code> rule.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> np.matmul(rnd(10, 20, 30, 4, 5),
+>>>           rnd(10, 20, 30, 5, 6)).shape
+
+(10, 20, 30, 4, 6)
+</code></pre>
+
+<p>so let's talk about the real use case that led me to write
+   this post. we have a <code>query</code> that i want to compare to 10 <code>keys</code> by
+   using a dot product; basically an unnormalised attention / soft map lookup.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> E = 32
+>>> query_embedding = rnd(E)
+>>> keys_embeddings = rnd(10, E)
+</code></pre>
+
+<p>even though <code>query</code> is a vector we can use <code>matmul</code> to do this because
+   <code>matmul</code> can interpret the vector as either a row vector as below in v1
+   ( i.e. a matrix of shape <code>(1, E)</code> ) or a column vector as in v2
+   ( a matrix of shape <code>(E, 1)</code> ) where, note, that <code>keys</code> and <code>query</code>
+   are swapped)
+</p>
+<pre class="prettyprint"><code class="language-python">>>> v1 = np.matmul(query_embedding, keys_embeddings.T)
+>>> v2 = np.matmul(keys_embeddings, query_embedding)
+>>> v1.shape, v2.shape, np.all(np.isclose(v1, v2))
+
+((10,), (10,), True)
+</code></pre>
+
+<p>my actual use case though is wanting to do the <code>query</code> to 10 <code>keys</code>
+   comparison, but across a "batch" of 100 independant sets. so if we
+   want to use <code>matmul</code> in the batched form we need to do a bit
+   of massaging of these two since the assumed behaviour of <code>matmul</code> will
+   no longer work.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> N = 100
+>>> E = 32
+>>> query_embeddings = rnd(N, E)
+>>> keys_embeddings = rnd(N, 10, E)
+</code></pre>
+
+<p>firstly we need to be more explicit that the <code>query</code> embeddings
+   represent N row vectors.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> query_embeddings.reshape(N, 1, E).shape
+
+(100, 1, 32)
+</code></pre>
+
+<p>secondly we need to do the transpose for <code>keys</code>, but this time we
+   can't just use <code>.T</code>, we need to be explicit about keeping the
+   leading axis the same, swapping only the final two.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> keys_embeddings.transpose(0, 2, 1).shape
+
+(100, 32, 10)
+</code></pre>
+
+<p>after doing these two transforms we get the matrices that will trigger the
+   batch matrix multiply behaviour we want. note that we end
+   up with that inner dimension of 1 still around.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> np.matmul(query_embeddings.reshape(N, 1, E),
+>>>           keys_embeddings.transpose(0, 2, 1)).shape
+
+(100, 1, 10)
+</code></pre>
+
+<p>and if we don't want that inner axis, we can explicitly <code>squeeze</code> it away.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> np.squeeze(np.matmul(query_embeddings.reshape(N, 1, E),
+>>>                      keys_embeddings.transpose(0, 2, 1))).shape
+
+(100, 10)
+</code></pre>
+
+<p>this all works but it felt clumsy to me. so let's go back through
+   these examples but using <code>einsum</code> which gives us more explicit ways to
+   define the calculation without the massaging of <code>query</code> and <code>keys</code> to
+   make <code>matmul</code> work.
+</p>
+<p>we'll redo the matmul versions again first (denoted
+   by <code>m</code>) followed by the einsum equivalents (denoted by <code>e</code>)
+</p>
+<p>let's start with matrix multiply. <code>einsum</code> take a <code>subscript</code> arg
+   which describes the computation we want to do. the first part <code>ij,jk</code> is a
+   comma seperated list of the dimensions of the inputs, in this case <code>A</code> and <code>B</code>
+</p>
+<p>the first input, <code>A</code>, is 2d with axis we're naming <code>i</code> and <code>j</code>.
+   the second input, <code>B</code>, is 2d also, with axis we're naming <code>j</code> and <code>k</code>.
+</p>
+<p>the output we want <code>-&gt;ik</code> is 2d and takes the axis <code>i</code> and <code>k</code> with a reduction
+   along <code>j</code>. this is exactly a matrix multiply.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> A, B = rnd(4, 5), rnd(5, 6)
+>>>
+>>> m = np.matmul(A, B)
+>>>
+>>> e = np.einsum('ij,jk->ik', A, B)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((4, 6), (4, 6), True)
+</code></pre>
+
+<p>consider again the case of two sets of 32d embeddings <code>S1</code> and <code>S2</code> and
+   wanting to get all the pairwise products. since the <code>j</code> is now the
+   second axis we don't need to have the transpose.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> S1, S2 = rnd(5, 32), rnd(10, 32)
+>>>
+>>> m = np.matmul(S1, S2.T)
+>>>
+>>> e = np.einsum('ij,kj->ik', S1, S2)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((5, 10), (5, 10), True)
+</code></pre>
+
+<p>in fact in <code>einsum</code> we can use whatever letters we like, so we're
+   free to try to use the character subscripts as a weak form of documentation.
+   we've basically got one letter to describe what the axis represents.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> S1, S2 = rnd(5, 32), rnd(10, 32)
+>>>
+>>> m = np.matmul(S1, S2.T)
+>>>
+>>> e = np.einsum('ae,be->ab', S1, S2)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((5, 10), (5, 10), True)
+</code></pre>
+
+<p>next let's consider the batch form of a matrix multiply. recall: <code>matmul</code>
+   handles this by default, but with <code>einsum</code> we have to be
+   explicit about it. even still it's arguably clearer since we end up not
+   having to understand the assumed behaviour of <code>matmul</code>.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> A, B = rnd(10, 4, 5), rnd(10, 5, 6)
+>>>
+>>> m = np.matmul(A, B)
+>>>
+>>> e = np.einsum('nij,njk->nik', A, B)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((10, 4, 6), (10, 4, 6), True)
+</code></pre>
+
+<p>going back to our <code>query</code> vs <code>keys</code> comparison, let's consider the
+   single instance case. one main thing that is different is we don't need
+   to have any assumption about <code>query</code> being interpretable as a row
+   or column matrix, we can just explictly describe the axis
+   ( in this case it's just the 1d <code>e</code> ).
+</p>
+<pre class="prettyprint"><code class="language-python">>>> E = 32
+>>>
+>>> query_embedding = rnd(E)
+>>> keys_embeddings = rnd(10, E)
+>>>
+>>> m = np.matmul(query_embedding, keys_embeddings.T)
+>>>
+>>> e = np.einsum('e,ke->k', query_embedding, keys_embeddings)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((10,), (10,), True)
+</code></pre>
+
+<p>and finally consider the batched version where we see the <code>einsum</code> version ends
+   up being much simpler. we don't rely on any behaviour of <code>matmul</code> that forces
+   us to change things to particular shapes. as before because we need to be
+   explict about what we want in terms of reduction we finish with a much
+   simpler expression that is much more direct.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> N = 100
+>>> E = 32
+>>>
+>>> query_embeddings = rnd(N, E)
+>>> keys_embeddings = rnd(N, 10, E)
+>>>
+>>> m = np.squeeze(np.matmul(query_embeddings.reshape(N, 1, E),
+>>>                          keys_embeddings.transpose(0, 2, 1)))
+>>>
+>>> e = np.einsum('ne,nke->nk', query_embeddings, keys_embeddings)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((100, 10), (100, 10), True)
+</code></pre>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[measuring baseline random performance for an N way classifier]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/measuring_baseline_performance_for_an_n_way_classifier" />
+    <id>http://matpalm.com/blog/measuring_baseline_performance_for_an_n_way_classifier</id>
+    <published>2020-04-11T12:34:56Z</published>
+    <category scheme="http://matpalm.com/blog" term="short_tute" />
+    <category scheme="http://matpalm.com/blog" term="three_strikes_rule" />
+    <summary type="html"><![CDATA[measuring baseline random performance for an N way classifier]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/measuring_baseline_performance_for_an_n_way_classifier"><![CDATA[<p><i>this post is part of my three-strikes-rule series; the third time someone asks
+   me about something, i have to write it up</i>
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.metrics import *
+</code></pre>
+
+<p>consider an 5 way classifier with varying level of support per class;
+   specifically 100 examples of class0, class1 and 20 examples of class2, 3 and 4.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; training_data_support = [100, 100, 20, 20, 20]
+</code></pre>
+
+<p>what's the simplest way to measure what baseline performance is from a random classifier is?
+   We often want to know this value to ensure we don't have silly bugs and/or we are getting some signal from the data beyond random choice.
+</p>
+<p>firstly let's expand things to a dense set of labels (since sklearn metrics don't work with a sparse set)
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; y_true = np.concatenate([np.repeat(i, n) for i, n in enumerate(training_data_support)])
+&gt;&gt;&gt; y_true
+
+array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+       3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4,
+       4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4])
+
+</code></pre>
+
+<p>we can do random predictions proportional to the support in the training data
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; training_data_proportions = training_data_support / np.sum(training_data_support)
+&gt;&gt;&gt; y_pred = np.random.choice(range(len(training_data_support)),
+&gt;&gt;&gt;                           p=training_data_proportions,
+&gt;&gt;&gt;                           size=sum(training_data_support))
+&gt;&gt;&gt; y_pred
+
+array([1, 0, 0, 1, 1, 1, 0, 3, 1, 1, 3, 1, 1, 1, 2, 0, 1, 4, 1, 1, 1, 1,
+       0, 2, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 4, 2, 1, 4, 0, 2, 1, 0, 1,
+       1, 0, 1, 4, 0, 2, 0, 0, 1, 1, 0, 1, 2, 4, 3, 0, 1, 1, 2, 1, 2, 3,
+       0, 0, 0, 2, 1, 0, 0, 0, 1, 1, 0, 0, 1, 3, 3, 1, 1, 1, 3, 1, 0, 1,
+       0, 0, 1, 0, 1, 1, 4, 1, 3, 3, 1, 1, 1, 0, 0, 1, 0, 2, 1, 0, 1, 0,
+       4, 0, 2, 0, 3, 1, 0, 1, 1, 2, 1, 1, 1, 3, 0, 2, 0, 0, 0, 1, 1, 0,
+       2, 0, 0, 0, 1, 0, 0, 1, 2, 1, 1, 0, 1, 1, 4, 1, 0, 3, 2, 0, 2, 0,
+       1, 3, 4, 1, 2, 0, 1, 0, 0, 1, 4, 0, 1, 3, 4, 1, 0, 1, 0, 1, 1, 4,
+       0, 0, 3, 0, 1, 1, 1, 2, 2, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0,
+       0, 4, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 3, 1, 1, 2, 1, 3,
+       1, 1, 0, 1, 3, 0, 4, 3, 0, 2, 0, 0, 3, 4, 0, 1, 0, 4, 2, 1, 1, 1,
+       0, 1, 0, 1, 2, 1, 3, 0, 2, 0, 1, 1, 1, 0, 0, 0, 1, 1])
+
+</code></pre>
+
+<p>from this we can calculate standard metrics; if we can't beat these, we've done
+   something realllllly wrong :/
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; confusion_matrix(y_true, y_pred)
+
+array([[29, 47,  9,  9,  6],
+       [40, 36, 11,  6,  7],
+       [ 7, 10,  1,  2,  0],
+       [ 7,  5,  2,  3,  3],
+       [ 7, 10,  2,  1,  0]])
+
+&gt;&gt;&gt; print(classification_report(y_true, y_pred))
+
+precision    recall  f1-score   support
+               0       0.32      0.29      0.31       100
+               1       0.33      0.36      0.35       100
+               2       0.04      0.05      0.04        20
+               3       0.14      0.15      0.15        20
+               4       0.00      0.00      0.00        20
+        accuracy                           0.27       260
+       macro avg       0.17      0.17      0.17       260
+    weighted avg       0.27      0.27      0.27       260
+
+</code></pre>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[deriving class_weights from validation data]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/derive_class_weights_from_validation_data" />
+    <id>http://matpalm.com/blog/derive_class_weights_from_validation_data</id>
+    <published>2020-03-03T18:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="short_tute" />
+    <category scheme="http://matpalm.com/blog" term="three_strikes_rule" />
+    <summary type="html"><![CDATA[deriving class_weights from validation data]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/derive_class_weights_from_validation_data"><![CDATA[<p><i>this post is part of my three-strikes-rule series; the third time someone asks
+   me about something, i have to write it up</i>
+</p>
+<p>when training a model we often want to weight instances differently to reflect either
+</p>
+<ol>
+ <li>
+     an imbalance in the <em>amount</em> of data per class or
+ </li>
+
+ <li>
+     an imbalance in the <em>difficulty</em> across classes
+ </li>
+</ol>
+<p>the required weights for
+   case 1) can be done by checking ratios in training data;
+   case 2) though requires checking how a model does against validation data.
+</p>
+<p>this post walks through a simple example of 2)
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.metrics import log_loss
+</code></pre>
+
+<p>consider a 4-way classification problem with 10 examples
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; K = 4
+&gt;&gt;&gt; y_true = [3,1,1,0,2,0,1,2,3,3]
+&gt;&gt;&gt; N = len(y_true)
+</code></pre>
+
+<p>pretend the model produces the following predictions.
+   we can see that the model does well for classes 2 &amp; 3, but 0 &amp; 1 are confused a bit.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt;                                           # y_true
+&gt;&gt;&gt; y_pred = np.array([[0.0, 0.1, 0.1, 0.8],  # 3
+&gt;&gt;&gt;                    [0.4, 0.5, 0.0, 0.1],  # 1
+&gt;&gt;&gt;                    [0.5, 0.3, 0.1, 0.1],  # 1
+&gt;&gt;&gt;                    [0.4, 0.3, 0.1, 0.2],  # 0
+&gt;&gt;&gt;                    [0.1, 0.1, 0.8, 0.0],  # 2
+&gt;&gt;&gt;                    [0.7, 0.1, 0.1, 0.1],  # 0
+&gt;&gt;&gt;                    [0.3, 0.6, 0.1, 0.0],  # 1
+&gt;&gt;&gt;                    [0.0, 0.1, 0.9, 0.0],  # 2
+&gt;&gt;&gt;                    [0.1, 0.0, 0.0, 0.9],  # 3
+&gt;&gt;&gt;                    [0.0, 0.1, 0.1, 0.8]]) # 3
+</code></pre>
+
+<p>we can use the sklearn api to calculate the per class loss.
+   for a softmax based classifier <code>log_loss</code> is what we want (since it's what is being directly
+   optimised).( though the formulation is simple it's worth using a lib to avoid weird
+   numerical instabilities. note: though for a reasonable number of classes might need to
+   set a higher epsilon in the <code>log_loss</code> call )
+</p>
+<p>as expected we can see the loss for confused classes 0 &amp; 1 are higher than classes 2 &amp; 3.
+</p>
+<p>( note: sklearn <code>log_loss</code> doesn't work on a sparse version of <code>y_true</code>
+   so we need to convert to a one_hot representation for the call )
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; y_true_one_hot = np.zeros((N, K))
+&gt;&gt;&gt; y_true_one_hot[np.arange(N), y_true] = 1.0
+&gt;&gt;&gt;
+&gt;&gt;&gt; losses = []
+&gt;&gt;&gt; for clazz in range(K):
+&gt;&gt;&gt;     losses.append(log_loss(y_true=y_true_one_hot[:, clazz],
+&gt;&gt;&gt;                            y_pred=y_pred[:, clazz]))
+&gt;&gt;&gt;
+&gt;&gt;&gt; losses
+
+[0.3044334455393211,
+     0.3291423130879737,
+     0.09606671609189957,
+     0.10908727165739374]
+
+</code></pre>
+
+<p>next we need to convert these to values suitable for <code>class_weights</code>.
+   one way to do this is with a smoothing (via an exponentiation) followed by a normalisation.
+</p>
+<p>as expected, each smoothing value puts more class weights on the confused classes 0 &amp; 1.
+</p>
+<p>the degenerate <code>smoothing=0</code> case results in a uniform weighting as expected.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; def class_weights_for(losses, smoothing):
+&gt;&gt;&gt;   # smoothing -> 0.0 => uniform class weights; acts as a noop, i.e. class weights are all 1.0
+&gt;&gt;&gt;   # smoothing -> 1.0 => uses log loss value for class weights; probably too destructive ...
+&gt;&gt;&gt;   smoothed_losses = np.power(losses, smoothing)           # smooth values
+&gt;&gt;&gt;   normalised = smoothed_losses / np.sum(smoothed_losses)
+&gt;&gt;&gt;   return normalised * len(normalised)                     # rescale all to (0, 1)
+&gt;&gt;&gt;
+&gt;&gt;&gt; for smoothing in [0, 0.001, 0.01, 0.1, 1.0]:
+&gt;&gt;&gt;   print("smoothing=%0.3f => class_weights=%s" % (smoothing, class_weights_for(losses, smoothing)))
+
+smoothing=0.000 => class_weights=[1. 1. 1. 1.]
+    smoothing=0.001 => class_weights=[1.0005254  1.00060348 0.99937205 0.99949908]
+    smoothing=0.010 => class_weights=[1.00525187 1.00603665 0.9937238  0.99498768]
+    smoothing=0.100 => class_weights=[1.05225581 1.0604995  0.93762546 0.94961924]
+    smoothing=1.000 => class_weights=[1.45187861 1.56971809 0.45815338 0.52024992]
+
+</code></pre>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[initing the biases in a classifer to closer match training data]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/initing_the_biases_in_a_classifer_to_closer_match_training_data" />
+    <id>http://matpalm.com/blog/initing_the_biases_in_a_classifer_to_closer_match_training_data</id>
+    <published>2020-02-27T12:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="short_tute" />
+    <category scheme="http://matpalm.com/blog" term="three_strikes_rule" />
+    <summary type="html"><![CDATA[initing the biases in a classifer to closer match training data]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/initing_the_biases_in_a_classifer_to_closer_match_training_data"><![CDATA[<p><i>this post is part of my three-strikes-rule series; the third time someone asks
+   me about something, i have to write it up</i>
+</p>
+<p>if we start with a simple model and run some data through it before it's trained
+   we very roughly get a uniform distribution of outputs. this is since the layers are
+   setup to generally output around zero and the biases of the denses layers are init'd as zero.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; from tensorflow.keras.layers import *
+&gt;&gt;&gt; from tensorflow.keras.models import Model
+&gt;&gt;&gt;
+&gt;&gt;&gt; inp = Input(shape=(4,), name='input')
+&gt;&gt;&gt; out = Dense(units=5, activation='softmax')(inp)
+&gt;&gt;&gt;
+&gt;&gt;&gt; model = Model(inputs=inp, outputs=out)
+&gt;&gt;&gt;
+&gt;&gt;&gt; X = np.random.random(size=(16, 4)).astype(np.float32)
+&gt;&gt;&gt; model(X)
+
+array([[0.27802917, 0.21119164, 0.13478227, 0.13102761, 0.24496922],
+       [0.24828927, 0.2713407 , 0.17112398, 0.17032027, 0.13892575],
+       [0.15432678, 0.37243405, 0.18875667, 0.18821105, 0.09627141],
+       [0.22438918, 0.3494182 , 0.16165043, 0.1623524 , 0.10218978],
+       [0.36323798, 0.1736943 , 0.11997112, 0.11338428, 0.22971232],
+       [0.21113336, 0.2970533 , 0.19298542, 0.18329948, 0.11552842],
+       [0.18894033, 0.3023035 , 0.17413773, 0.17320155, 0.16141686],
+       [0.25081626, 0.24333045, 0.17587633, 0.17023188, 0.15974507],
+       [0.28999767, 0.2593622 , 0.13038006, 0.13167746, 0.18858269],
+       [0.28792346, 0.21455322, 0.17145245, 0.1603238 , 0.16574705],
+       [0.3028727 , 0.20455441, 0.11584676, 0.11711189, 0.2596142 ],
+       [0.19915669, 0.34796396, 0.1685621 , 0.17137761, 0.1129396 ],
+       [0.36104262, 0.20813489, 0.12217646, 0.11595868, 0.1926873 ],
+       [0.34652707, 0.20086858, 0.13397619, 0.12669212, 0.191936  ],
+       [0.31914416, 0.1853605 , 0.1266775 , 0.12235387, 0.24646394],
+       [0.21416464, 0.29376236, 0.17110644, 0.17128557, 0.14968103]], dtype=float32)
+
+</code></pre>
+
+<p>but if we know the expected distribution of class labels (e.g. from training data)
+   we can seed the bias values in the classifier layer (<code>out</code>) to have it reproduce
+   these proportions at the start of training.
+</p>
+<p>we do this with a <code>bias_initializer</code>.
+</p>
+<p>this can sometimes speed training up.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; from scipy.special import logit
+&gt;&gt;&gt;
+&gt;&gt;&gt; def observed_proportion_logits(shape, dtype=None, partition_info=None):
+&gt;&gt;&gt;     # assume following counts of labels in training data
+&gt;&gt;&gt;     class_counts = np.array([10, 5, 5, 100, 100])
+&gt;&gt;&gt;     # normalise them and return as logits
+&gt;&gt;&gt;     class_proportions = class_counts / np.sum(class_counts)
+&gt;&gt;&gt;     return logit(class_proportions)
+&gt;&gt;&gt;
+&gt;&gt;&gt; inp = Input(shape=(4,), name='input')
+&gt;&gt;&gt; out = Dense(units=5,
+&gt;&gt;&gt;             bias_initializer=observed_proportion_logits,
+&gt;&gt;&gt;             activation='softmax')(inp)
+&gt;&gt;&gt;
+&gt;&gt;&gt; model = Model(inputs=inp, outputs=out)
+&gt;&gt;&gt;
+&gt;&gt;&gt; X = np.random.random(size=(16, 4)).astype(np.float32)
+&gt;&gt;&gt; np.around(model(X), decimals=3)
+
+array([[0.024, 0.024, 0.02 , 0.404, 0.528],
+       [0.032, 0.027, 0.015, 0.326, 0.6  ],
+       [0.025, 0.017, 0.014, 0.404, 0.54 ],
+       [0.028, 0.021, 0.019, 0.348, 0.585],
+       [0.037, 0.019, 0.023, 0.419, 0.502],
+       [0.029, 0.019, 0.025, 0.445, 0.481],
+       [0.033, 0.026, 0.024, 0.335, 0.582],
+       [0.016, 0.02 , 0.013, 0.413, 0.537],
+       [0.027, 0.016, 0.022, 0.501, 0.434],
+       [0.037, 0.026, 0.027, 0.432, 0.478],
+       [0.022, 0.017, 0.025, 0.532, 0.404],
+       [0.028, 0.025, 0.021, 0.433, 0.493],
+       [0.019, 0.013, 0.017, 0.48 , 0.471],
+       [0.035, 0.021, 0.023, 0.397, 0.524],
+       [0.036, 0.016, 0.014, 0.294, 0.64 ],
+       [0.015, 0.014, 0.018, 0.45 , 0.504]], dtype=float32)
+
+</code></pre>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[minimal example of running pybullet under google cloud dataflow]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/pybullet_on_dataflow" />
+    <id>http://matpalm.com/blog/pybullet_on_dataflow</id>
+    <published>2020-01-29T00:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="short_tute" />
+    <summary type="html"><![CDATA[minimal example of running pybullet under google cloud dataflow]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/pybullet_on_dataflow"><![CDATA[<p>i wrote a super minimal example
+   (<a href="https://github.com/matpalm/minimal_pybullet_on_dataflow_eg">github</a>)
+   of running <a href="https://pybullet.org/">pybullet</a>
+   on <a href="https://cloud.google.com/dataflow">google cloud dataflow</a>
+</p>
+<p>i think pybullet is great for generating interesting synthetic
+   data and have used it for lots of projects; most recently
+   my reproduction (<a href="http://matpalm.com/blog/pybullet_tcn_grasping/">blog</a>, <a href="https://github.com/matpalm/tcn_grasping">github</a>)
+   of some ideas from time constrastive networks (<a href="https://arxiv.org/abs/1704.06888">arxiv</a>)
+</p>
+<p>check it out!
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[fully convolutional networks]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/fully_conv" />
+    <id>http://matpalm.com/blog/fully_conv</id>
+    <published>2018-04-06T18:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="short_tute" />
+    <summary type="html"><![CDATA[fully convolutional networks]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/fully_conv"><![CDATA[<h1>the standard convolutional classifier</h1>
+<p>the most familiar form of a convolutional network to most people is the type used for classifying images.
+</p>
+<p>we can think of these types of networks as being made up of two halves.
+</p>
+<p>the first is a sequence of convolutional layers with some form of spatial downsampling; e.g. pooling or having a stride &gt; 1 ...
+</p>
+<table class="data">
+<tr><td> some input                             </td><td> (64, 64, 3)  </td></tr>
+<tr><td> a convolution; stride 2, kernel size 8 </td><td> (32, 32, 8)  </td></tr>
+<tr><td> and another (kernel size 16)           </td><td> (16, 16, 16) </td></tr>
+<tr><td> and another (kernel size 32)           </td><td> (8, 8, 32)   </td></tr>
+</table>
+
+<p>... followed by a second half which is a sequence of fully connected layers ...
+</p>
+<table class="data">
+<tr><td> output from convolutions </td><td>   (8, 8, 32) </td></tr>
+<tr><td> flattened                </td><td>   (2048)     </td></tr>
+<tr><td> fully connected to 128   </td><td>   (128)      </td></tr>
+<tr><td> fully connected to 10    </td><td>   (10)       </td></tr>
+</table>
+
+<p>(note: here, and following, we're going to ignore any leading batch dimension)
+</p>
+<p>in these networks the first half "squeezes" spatial information into depth information while the second half acts as a standard classifier.
+</p>
+<p>one property of any fully connected layer is that the number of parameters is dictated by the input size;
+   in this example of a classifier it's the flattened size of the final volume of the first half (the 2048d vector)
+</p>
+<p>this idea of the number of parameters being linked to the input size is <b>not</b> the case for the layers in
+   the first half though; there the number of parameters is not dictated by the input size but instead by the kernel size
+   and number of output channels. specifically the spatial size of the input doesn't matter.
+</p>
+<p>e.g. using pooling for downsampling for any arbitrary (H, W) ...
+</p>
+<table class="data">
+<tr><td> input                              </td><td> (H, W, 3)        </td></tr>
+<tr><td> convolution, stride=1, #kernels=5  </td><td> (H, W, 5)        </td></tr>
+<tr><td> pooling, size=2                    </td><td> (H//2, W//2, 5)  </td></tr>
+</table>
+
+<p>... vs stride &gt; 1 for downsampling.
+</p>
+<table class="data">
+<tr><td> input                             </td><td> (H, W, 3)       </td></tr>
+<tr><td> convolution, stride=2, #kernels=5 </td><td> (H//2, W//2, 5) </td></tr>
+</table>
+
+<p>so in our original example the first half of the network going from <code>(64, 64, 4)</code> to <code>(8, 8, 32)</code>
+   <em>could</em> actually be applied to an input of any spatial size. if for example we gave an input
+   of <code>(128, 128, 4)</code> we'd get an output of <code>(16, 16, 32)</code>. <b>but!</b> you wouldn't though be able to run
+   this <code>(16, 16, 32)</code> through the second classifier half, since the size of the flattened tensor would now
+   be the wrong size.
+</p>
+
+<h1>fully convolutional networks</h1>
+<p>now let's consider the common architecture for an image to image network. again it has two halves.
+</p>
+<p>the first half is like the prior example; some convolutions with a form of downsampling as a way of
+   trading spatial information for channel information.
+</p>
+<p>but the second half isn't a classifier, it's the reverse of the first half; a sequence of convolutions with some form of upsampling;
+</p>
+<p>this upsampling can can either deconvolutions with a stride&gt;1 or something like nearest neighbour upsampling
+</p>
+<p>e.g.
+</p>
+<table class="data">
+<tr><td>some input                       </td><td> (64, 64, 3)  </td></tr>
+<tr><td>convolution                      </td><td> (64, 64, 8)  </td></tr>
+<tr><td>pooling                          </td><td> (32, 32, 8)  </td></tr>
+<tr><td>convolution                      </td><td> (32, 32, 16) </td></tr>
+<tr><td>pooling                          </td><td> (16, 16, 16) </td></tr>
+<tr><td>nearest neigbour upsample resize </td><td> (32, 32, 16) </td></tr>
+<tr><td>convolution                      </td><td> (32, 32, 8)  </td></tr>
+<tr><td>nearest neigbour upsample resize </td><td> (64, 64, 8)  </td></tr>
+<tr><td>convolution                      </td><td> (64, 64, 3)  </td></tr>
+</table>
+
+<p>we can see that <em>none</em> of these operations require a fixed spatial size, so it's fine to apply them to an image of whatever size,
+   even something like <code>(128000, 128000, 3)</code> which would produce an output of <code>(128000, 128000, 3)</code>. this ability to apply to huge images
+   is a great trick for when you're dealing with huge image data like medical scans.
+</p>
+<p>so what does it mean then for a network to be "fully convolutional"? for me it's basically not using any
+   operations that require a fixed tensor size as input.
+</p>
+<p>in this above example we'd say we're training on "patches" on <code>(64, 64)</code>. these would probably be random crops within a larger image
+   and, note, that means that each training image doesn't even need to be the same resolution or aspect (as long as it's larger than 64x64)
+</p>
+
+<h2>1x1 convolutions</h2>
+<p>a 1x1 kernel in a convolutional layer at first appears a bit strange. why would you bother?
+</p>
+<p>consider a volume of <code>(1, 1, 3)</code> that we apply a 1x1 convolution to. with a kernel size of 5 we'd end up getting a volume of <code>(1, 1, 5)</code>.
+   an interesting interpretation of this is that it's exactly equivalent to having a fully connected layer between 3 inputs and 5 outputs.
+</p>
+<p>a volume then of, say, <code>(10, 20, 3)</code> that we apply this same convolution to gives a volume of <code>(10, 20, 5)</code>
+   so what what we're doing is equivalent to applying the same fully connected "layer" <em>per pixel</em> to the <code>(10, 20)</code> input.
+</p>
+<p>tie this in with the idea of the fully convolutional network...
+</p>
+<table class="data">
+<tr><td> some input                                                      </td><td> (64, 64, 3)  </td></tr>
+<tr><td> some convolutions + downsampling                                </td><td> (32, 32, 8)  </td></tr>
+<tr><td> more convolutions + downsampling                                </td><td> (16, 16, 16) </td></tr>
+<tr><td> more convolutions + downsampling                                </td><td> (8, 8, 32)   </td></tr>
+<tr><td> a 1x1 convolution, stride=1 & kernel size 10                    </td><td> (8, 8, 10)   </td></tr>
+<tr><td> a 1x1 convolution, stride=1, kernel size 1 & sigmoid activation </td><td> (8, 8, 1)    </td></tr>
+</table>
+
+<p>what we've got is like our original classifier example but that's operating in a fully convolutional way; the last three layers
+   are the same as a sequence of fully connected layers going from 32 to 10 to 1 output, but across an 8x8 grid in parallel.
+</p>
+<p>and as before we'd be able to train this on an input of <code>(64, 64, 3)</code> with an output of <code>(8, 8, 1)</code> but apply it to whatever
+   multiple of in the input size we'd like. e.g. an input <code>(640, 320, 3)</code> would result in output of <code>(80, 40, 1)</code>
+</p>
+<p>we can think of this final <code>(80, 40, 1)</code> as kind of similar to a 10x5 heat map across whatever is being captured by the <code>(8, 8, 1)</code> output.
+</p>
+<p>the papers were i first saw these ideas were
+   <a href="https://arxiv.org/abs/1312.6229">OverFeat (Sermanet et al)</a> &amp;
+   <a href="https://arxiv.org/abs/1312.4400">Network in Network (Lin et al)</a>
+</p>]]></content>
+  </entry>
+</feed>

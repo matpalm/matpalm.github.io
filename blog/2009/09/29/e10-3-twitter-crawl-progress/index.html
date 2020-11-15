@@ -1,0 +1,163 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="e10.3-twitter-crawl-progress"></a>
+  <h2 class="blog_post_title"><a href="/blog/2009/09/29/e10-3-twitter-crawl-progress/" rel="bookmark" title="Permanent Link to e10.3 twitter crawl progress">e10.3 twitter crawl progress</a></h2>
+  <small>September 29, 2009 at 08:43 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p>since the twitter api is rate limited it's quite slow to crawl twitter and after a most of a week i've still only managed to get info on 8,000 users. i probably should subscribe to get a 20,000 an hr limit instead of the 150 i'm on now. i'll just let it chug along in the background of my pvr.
+</p>
+<p>while the crawl has been going on i've been trying some things on the data to decide what to do with it.
+</p>
+<p>i've managed to write a version of pagerank using <a href="http://hadoop.apache.org/pig/">pig</a> which has been very interesting. (for those who haven't seen it before pig is a query language that sits on top of hadoop's mapreduce). my initial feel for pig is that it's pretty awesome. it was <em>much</em> quicker to write this script than to write the <a href="http://matpalm.com/sip/">statistically improbable phrases</a>. in fact i'm reinspired to have another crack at the sip stuff using pig. my final result wasn't great for the performance of hadoop and after some <a href="http://mail-archives.apache.org/mod_mbox/hadoop-general/200909.mbox/%3C93d501de0909141814vaa8c9c0wc5a47ee05baae7de@mail.gmail.com%3E">great feedback on the hadoop mailing list</a> i've got a number of other things to try including writing my joins in pig.
+</p>
+<p>anyways, here's my pagerank in pig
+</p>
+<!--more-->
+
+<p>done once
+</p>
+<table class="pygments_murphytable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="pygments_murphy"><pre><span></span>edges <span class="o">=</span> <span class="k">load</span> <span class="s">&#39;edges&#39;</span> <span class="k">as</span> <span class="p">(</span>from:<span class="kt">chararray</span><span class="o">,</span> to:<span class="kt">chararray</span><span class="p">);</span>
+nodes <span class="o">=</span> <span class="k">group</span> edges <span class="k">by</span> from;
+node_contribs <span class="o">=</span> <span class="k">foreach</span> nodes <span class="k">generate</span> <span class="k">group</span><span class="o">,</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="nb">SIZE</span><span class="p">(</span>edges<span class="p">)</span> <span class="k">as</span> contrib;
+<span class="k">store</span> node_contribs <span class="k">into</span> <span class="s">&#39;node_contribs&#39;</span><span class="p">;</span>
+zero_contribs <span class="o">=</span> <span class="k">foreach</span> nodes <span class="k">generate</span> <span class="k">group</span><span class="o">,</span> <span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="mi">0</span> <span class="k">as</span> contrib;
+<span class="k">store</span> zero_contribs <span class="k">into</span> <span class="s">&#39;zero_contribs&#39;</span><span class="p">;</span>
+</pre></div>
+</td></tr></table>
+
+<p>done until convergence
+</p>
+<table class="pygments_murphytable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16</pre></div></td><td class="code"><div class="pygments_murphy"><pre><span></span>page_rank <span class="o">=</span> <span class="k">load</span> <span class="s">&#39;$input&#39;</span> <span class="k">as</span> <span class="p">(</span>node:<span class="kt">chararray</span><span class="o">,</span> rank:<span class="kt">float</span><span class="p">);</span>
+node_contribs <span class="o">=</span> <span class="k">load</span> <span class="s">&#39;node_contribs&#39;</span> <span class="k">as</span> <span class="p">(</span>node:<span class="kt">chararray</span><span class="o">,</span> contrib:<span class="kt">double</span><span class="p">);</span>
+nodes_page_rank <span class="o">=</span> <span class="k">join</span> node_contribs <span class="k">by</span> node, page_rank <span class="k">by</span> node;
+contribs <span class="o">=</span> <span class="k">foreach</span> nodes_page_rank <span class="p">{</span>
+  <span class="k">generate</span> node_contribs::node, <span class="p">(</span><span class="kt">double</span><span class="p">)</span>node_contribs::contrib*<span class="p">(</span><span class="kt">double</span><span class="p">)</span>page_rank::rank <span class="k">as</span> contrib;
+<span class="p">}</span>
+edges <span class="o">=</span> <span class="k">load</span> <span class="s">&#39;edges&#39;</span> <span class="k">as</span> <span class="p">(</span>from:<span class="kt">chararray</span><span class="o">,</span> to:<span class="kt">chararray</span><span class="p">);</span>
+joined_divy_groups <span class="o">=</span> <span class="k">join</span> edges <span class="k">by</span> from, contribs <span class="k">by</span> node_contribs::node;
+page_rank_contributions <span class="o">=</span> <span class="k">foreach</span> joined_divy_groups <span class="k">generate</span> edges::to, contribs::contrib;
+zero_contribs <span class="o">=</span> <span class="k">load</span> <span class="s">&#39;zero_contribs&#39;</span> <span class="k">as</span> <span class="p">(</span>node:<span class="kt">chararray</span><span class="o">,</span> contrib:<span class="kt">double</span><span class="p">);</span>
+page_rank_contributions_with_zero <span class="o">=</span> <span class="k">union</span> page_rank_contributions, zero_contribs;
+group_page_ranks <span class="o">=</span> <span class="k">group</span> page_rank_contributions_with_zero <span class="k">by</span> edges::to;
+next_page_rank <span class="o">=</span> <span class="k">foreach</span> group_page_ranks <span class="p">{</span>
+  <span class="k">generate</span> <span class="k">group</span><span class="o">,</span> <span class="mf">0.15</span><span class="o">+</span><span class="p">(</span><span class="mf">0.85</span>*SUM<span class="p">(</span>page_rank_contributions_with_zero.contribs::contrib<span class="p">));</span>
+<span class="p">}</span>
+<span class="k">store</span> next_page_rank <span class="k">into</span> <span class="s">&#39;$output&#39;</span><span class="p">;</span>
+</pre></div>
+</td></tr></table>
+
+<p>as for all my projects code is on <a href="http://github.com/matpalm/tgraph">github</a>
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2009/09/29/e10-3-twitter-crawl-progress/";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

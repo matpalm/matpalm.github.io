@@ -1,0 +1,119 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="e10.2-tgraph-crawl-order-example"></a>
+  <h2 class="blog_post_title"><a href="/blog/2009/09/21/e10-2-tgraph-crawl-order-example/" rel="bookmark" title="Permanent Link to e10.2 tgraph crawl order example">e10.2 tgraph crawl order example</a></h2>
+  <small>September 21, 2009 at 09:58 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p>let's consider an example of the crawl order for tgraph...
+</p>
+<p>we seed our frontier with 'a' and bootstrap cost of 0.
+</p>
+<p>fetching the info for 'a' shows 2 outedges to 'b' and 'c', from our cost formula these all have cost 0 + 1 + Log10(2+1) = 1.6
+</p>
+<p>our frontier becomes [ {b,1.6}, {c,1.6} ]
+</p>
+<p>next is 'b' and see it has an outdegree of 3, these nodes, b1 -&gt; b3, all have a cost of 1.6 + 1 + Log10(3+1) = 3.2
+</p>
+<p>our frontier becomes [ {c,1.6}, {b1,3.2}, {b2,3.2}, {b3,3.2} ]
+</p>
+<p>next is 'c' with an outdegree of 15. these 15 nodes, c1 -&gt; c15, have cost 1.6 + 1 + Log10(16) = 3.8
+</p>
+<p>our frontier is now [ {b1,3.2}, {b2,3.2}, {b3,3.2}, {c1,3.8} ... {c15,3.8} ]
+</p>
+<p>we would then continue with the 'b' nodes before the 'c' ones
+</p>
+<p>note that this cost system is more than just an ordering, it allows an element at depth n+1 to be checked an element at depth n, if the cost of the latter is high enough.
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2009/09/21/e10-2-tgraph-crawl-order-example/";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

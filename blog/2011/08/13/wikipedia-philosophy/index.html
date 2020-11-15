@@ -1,0 +1,347 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="do-all-first-links-on-wikipedia-lead-to-philosophy-"></a>
+  <h2 class="blog_post_title"><a href="/blog/2011/08/13/wikipedia-philosophy" rel="bookmark" title="Permanent Link to do all first links on wikipedia lead to philosophy?">do all first links on wikipedia lead to philosophy?</a></h2>
+  <small>August 13, 2011 at 03:00 PM | categories:
+
+<a href='/blog/tag/projects'>projects</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <hr>
+
+
+<h2>questions</h2>
+<p>a <a href="http://xkcd.com/903/">recent</a> xkcd posed the idea...
+</p>
+<p><i>wikipedia trivia: if you take any article, click on the first link in the article text not in parentheses or italics, and then repeat, you will eventually end up at Philosophy.</i>
+</p>
+<p>this raises a number of questions
+</p>
+<ol>
+ <li>
+     Q: though i wouldn't be surprised if it's true for <em>most</em> articles it can't be true for <em>all</em> articles. can it?
+ </li>
+
+ <li>
+     Q: what's the distribution of distances (measured in "number of clicks away") from 'Philosophy'?
+ </li>
+
+ <li>
+     Q: by this same measure what's the furthest article from 'Philosophy'?
+ </li>
+
+ <li>
+     Q: are there any other articles that are more common than 'Philosophy'?
+ </li>
+
+ <li>
+     Q: what are the common paths to 'Philosophy'?
+ </li>
+</ol>
+<p>there's only one way to find out!
+</p>
+<ol>
+ <li>
+     grab a wikipedia dump
+ </li>
+
+ <li>
+     build the graph of 'article' to 'first link to next article' (not in parentheses or italics)
+ </li>
+
+ <li>
+     do breadth first search backwards from 'Philosophy' and see what things look like
+ </li>
+</ol>
+<hr>
+
+
+<h2>getting and processing the data</h2>
+<p>for my first attempt i tried to use the <a href="http://wiki.freebase.com/wiki/WEX">freebase wikipedia dump</a>. my thought was it'd be easier
+   to deal with a preparsed dataset but it didn't turn out.
+</p>
+<p>two big problems....
+</p>
+<ol>
+ <li>
+     lots of information has been lost in the preparsing (eg. it was sometimes hard to determine if the first links were from the main body of text or from a sidebar )
+ </li>
+
+ <li>
+     some pages weren't parsed properly at all and were just blank; included ones like <a href="http://en.wikipedia.org/wiki/Greeks">Greeks</a>
+which ended up being pretty important.
+ </li>
+</ol>
+<p>instead i went for a <a href="http://dumps.wikimedia.org/enwiki/latest/">raw wikimedia dump</a>, in particular enwiki-latest-pages-articles.xml.bz2.
+   the version at the time of writing this blog was 7gb compressed &amp; 30gb uncompressed. it's already up to 9gb as of Feb 2013!
+</p>
+<p>for preprocessing there were a number of steps
+</p>
+<ol>
+ <li>
+     split the dataset into pages that represent redirects and the actual articles themselves
+ </li>
+
+ <li>
+     dereference all the redirects (to avoid redirects that redirect to other redirects)
+ </li>
+
+ <li>
+     parse all the articles; the crux of this is done with <a href="http://code.pediapress.com/wiki/wiki/mwlib">mwlib</a>
+and <a href="https://github.com/matpalm/wikipediaPhilosophy/blob/master/article_parser.py">article_parser.py</a>; to make a big list of edges of 'from' nodes (the article) and 'to' nodes (the first applicable link on the article page)
+ </li>
+
+ <li>
+     dereference the edges to make sure all redirects have been followed
+ </li>
+</ol>
+<p>some general statements before we go further
+</p>
+<ol>
+ <li>
+     wikipedia is under heavy edit churn. i've been doing this project in 15-30 minutes chunks for a few weeks and it's amazing
+      how often i'd compare the parsing to live wikipedia and find out a page had already subtely changed. god knows what it looks like currently.
+ </li>
+
+ <li>
+     i wrote all the code for this in python as i'm trying to move away from ruby to get better data related library support. everything in fact <em>except</em> for
+the depth first search which i did in java. the full graph as a dict was <em>insanely</em> slow to access, i must be doing something wrong.
+for the full details see
+<a href="http://www.github.com/matpalm/wikipediaPhilosophy">the code on this project</a>. git cloning the project and executing the README
+as a shell script may [1] do something close to all the steps from start to finish. <small>[1] or it might not</small>
+ </li>
+</ol>
+<p>the end result of the parsing is a list of 3.6e6 edges of the form 'article' -&gt; 'first link to next article' (after following redirects).
+</p>
+<p>all the 'article's are unique but there are only 500e3 distinct 'next article's which is already very interesting; it means less than 15% of articles
+   on wikipedia are represented by one of these first links; this graph is very "bushy" (ie lots of leaf nodes).
+</p>
+<p>to calculate the distance from 'Philosophy' for all articles it's a straight forward
+   <a href="http://en.wikipedia.org/wiki/Breadth_first_search">breadth first search</a> and
+   because this search doesnt <a href="http://en.wikipedia.org/wiki/Graph_cycle">cycle</a> back to 'Philosophy' again it ends
+   up building a <a href="http://en.wikipedia.org/wiki/Tree_(graph_theory)">tree</a>.
+</p>
+<hr>
+
+
+<h2>the results</h2>
+<p>with this tree we can start answering some of our original questions ...
+</p>
+<hr>
+
+
+<h3>Q: though i wouldn't be surprised if it's true for <em>most</em> articles it can't be true for <em>all</em> articles. can it?</h3>
+<p>seems it's not true for all articles; 3.5e6 articles lead to 'Philosophy' but 100e3 don't.
+</p>
+<p>these 100e3 fall into two types
+</p>
+<p>1) 50e3 of them end up in cycles. this is a remarkably low count given 3.5e6 make it to 'Philosophy'.
+</p>
+<p>the vast majority of the cycles are of length 2; eg <strong>Waste management -&gt; Waste collection -&gt; Waste management</strong>
+</p>
+<p>( my favorite that i stumbled across is <strong>Sand fence -&gt; Snow fence -&gt; Sand fence</strong></br>
+   the first sentence of Snow fence being "A snow fence is a structure, similar to a sand fence ..."</br>
+   the first sentence of Sand fence being "A sand fence is a structure similar to a snow fence ..." )
+</p>
+<p>2) the other 50e3 are dead ends; all sorts of examples for this, mainly around pages that were never written or have been deleted.
+</p>
+<p>eg <strong>Windsurfing -&gt; Surface water sports -&gt; Discing</strong> (which has deleted)
+</p>
+<hr>
+
+
+<h3>Q: what's the distribution of distances of articles from 'Philosophy'?</h3>
+<p>the bulk of the articles are between 10 to 30 clicks away...
+</p>
+<img src="http://matpalm.com/wikipediaPhilosophy/num_articles__number_clicks__philosophy.png"/>
+
+<p>i've trimmed this graph at 70 clicks away since there's a long tail of one single path that is 1001 articles long.
+</p>
+<p><strong>List of state leaders in 1977 -&gt; List of state leaders in 1976 -&gt; List of state leaders in 1975 -&gt;
+.... -&gt; List of state leaders in 1001 -&gt; List of state leaders in 1000 -&gt; Fatimid Caliphate -&gt; Arab people
+-&gt; Panethnicity -&gt; Ethnic group -&gt; Social group -&gt; Social sciences -&gt; List of academic disciplines
+-&gt; Academia -&gt; Community -&gt; Living -&gt; Life -&gt; Physical body -&gt; Physics -&gt; Natural science -&gt; Science
+-&gt; Knowledge -&gt; Fact -&gt; Information -&gt; Sequence -&gt; Mathematics -&gt; Quantity -&gt; Property (philosophy)
+-&gt; Modern philosophy -&gt; Philosophy</strong>
+</p>
+<p>seems a bit of a "meta article" outlier we can ignore.
+</p>
+<p>( there's an interesting dip at a distance of 19 too; wonder what's going on there? )
+</p>
+<hr>
+
+
+<h3>Q: what's the furthest article from 'Philosophy'?</h3>
+<p>'Violet &amp; Daisy' is the longest chain i found that didn't include "meta" pages with some kind of sequence number in it. it's 36 articles from 'Philosophy'.
+</p>
+<p><strong>Violet &amp; Daisy -&gt; Saoirse Ronan -&gt; BAFTA Award for Best Actress in a Supporting Role -&gt; British Academy Film Awards -&gt;
+ British Academy of Film and Television Arts -&gt; David Lean -&gt; Order of the British Empire -&gt; Chivalric order -&gt; Knight -&gt;
+ Warrior -&gt; Combat -&gt; Violence -&gt; Psychological manipulation -&gt; Social influence -&gt; Conformity -&gt; Unconscious mind -&gt;
+ Germans -&gt; Germanic peoples -&gt; Proto-Indo-Europeans -&gt; Proto-Indo-European language -&gt; Linguistic reconstruction -&gt;
+ Internal reconstruction -&gt; Language -&gt; Human -&gt; Extant taxon -&gt; Biology -&gt; Natural science -&gt; Science -&gt; Knowledge -&gt;
+ Fact -&gt; Information -&gt; Sequence -&gt; Mathematics -&gt; Quantity -&gt; Property (philosophy) -&gt; Modern philosophy -&gt; Philosophy</strong>
+</p>
+<hr>
+
+
+<h3>Q: are there any other articles that are "more common" than 'Philosophy'?</h3>
+<p>with 95+% of articles clicking through to 'Philosophy' it's not possible for there to be another unconnected graph with an article more represented than
+   'Philosophy'.
+</p>
+<p>but if we <em>continue</em> to click through past 'Philosophy' we see we're in a short cycle of 12 articles...
+</p>
+<p><strong>Philosophy -&gt; Reason -&gt; Natural science -&gt; Science -&gt; Knowledge -&gt; Fact -&gt; Information -&gt; Sequence -&gt; Mathematics -&gt;
+ Quantity -&gt; Property (philosophy) -&gt; Modern philosophy -&gt; Philosophy</strong>
+</p>
+<p>so really <em>any</em> of these are reasonable candidates and are equally good as 'Philosophy' itself for this game.
+</p>
+<hr>
+
+
+<h3>Q: what are the common paths into 'Philosophy'?</h3>
+<p>as mentioned the breadth first search builds a tree of articles with 'Philosophy' at it's root.
+</p>
+<p>one metric we can assign to each article in this tree is the number of descendant articles it has.</br>
+   'Philosophy', as the root, has all articles as descendants so it's number is 3.5e6 and it's rank 1.</br>
+   the next ranked by number of descendants is 'Modern philosophy' with 3.4e6 descendants;
+   ( ie of the 3.5e6 articles that eventually led to 'Philosophy' only 100e3 of them <em>didn't</em> click through 'Modern Philosophy').
+</p>
+<p>by ranking articles by this metric we can observe the core structure of the tree.
+</p>
+<p><hr>
+   in fact for the top 10 ranked articles it's hardly a tree, just the chain ...
+</p>
+<p><a href="http://matpalm.com/wikipediaPhilosophy/top10.png"><img src="http://matpalm.com/wikipediaPhilosophy/top10.png" width="100%"/></a>
+</p>
+<p><small>(width of the edge is proportional to the number of descendants)</small>
+</p>
+<p>it turns out that 3e6 articles (85% of the lot) get to 'Philosophy' through 'Science'.
+</p>
+<p><hr>
+   in fact it's not until we consider up to the 20th ranked item, 'Biology', before it actually becomes a tree structure ...
+</p>
+<p><a href="http://matpalm.com/wikipediaPhilosophy/top20.png"><img src="http://matpalm.com/wikipediaPhilosophy/top20.png" width="100%"/></a>
+</p>
+<p><small>(click for a bigger version)</small>
+</p>
+<p><hr>
+   when we consider the top 200 things start to look a bit more interesting ...
+</p>
+<script src="http://zoom.it/adTw.js?width=auto&height=500px"></script>
+
+<p><hr>
+   and by the top 1000 things are starting to lose an obvious core structure ...
+</p>
+<script src="http://zoom.it/QyGA.js?width=auto&height=500px"></script>
+
+<p>( though dot's a pretty poor layout engine for this one, i should redo this one )
+</p>
+
+<h2>conclusions</h2>
+<p>so i managed to answer the main questions i had, but it's a fun dataset so there's lots more to do yet!
+</p>
+<p>todos include
+</p>
+<ol>
+ <li>
+     a better layout for the top 1000 or so
+ </li>
+
+ <li>
+     redo with a more recent wiki dump to see what's changed
+ </li>
+
+ <li>
+     what happened at a depth of 19 articles?
+ </li>
+</ol>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2011/08/13/wikipedia-philosophy";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

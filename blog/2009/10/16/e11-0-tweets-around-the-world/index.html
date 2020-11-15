@@ -1,0 +1,128 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="e11.0-tweets-around-the-world"></a>
+  <h2 class="blog_post_title"><a href="/blog/2009/10/16/e11-0-tweets-around-the-world/" rel="bookmark" title="Permanent Link to e11.0 tweets around the world">e11.0 tweets around the world</a></h2>
+  <small>October 16, 2009 at 08:47 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p>was discussing the <a href="http://apiwiki.twitter.com/Streaming-API-Documentation">streaming twitter api</a> with <a href="http://github.com/srbartlett">steve</a> and though i knew about the private firehose i didn't know there was a lighter weight public gardenhose interface!
+</p>
+<p>since discovering this my pvr has basically been running
+   <pre>curl -u mat_kelcey:XXX http://stream.twitter.com/1/statuses/sample.json |
+      gzip -9 - &gt; sample.json.gz</pre>
+   but what am i going to do with all this data?
+</p>
+<p>while poking around i noticed there was a fair number of iPhone: and ÜT: lat long tagged locations (eg iPhone: 35.670086,139.740766) so as a first hack let's do some work extracing lat longs and displaying them as heat map points on a map.
+</p>
+<p>all the code is on <a href="http://github.com/matpalm/rtw_tweet/tree/master/v1/">github</a>
+</p>
+<p>as a test then let's take a <a href="http://github.com/matpalm/rtw_tweet/tree/master/v1/">sample.bz2</a> of 1,300 tweets between Oct 14 22:01:41 and 22:03:24
+</p>
+<p>from this let's just extract the location part of the tweet
+   <pre>bzcat sample.bz2 | ./extract_locations.pl &gt; locations</pre>
+   of these 1,300 there are 30 examples of iphone lat longs (eg iPhone: -23.492420,-46.846916)
+   <pre>cat locations | ./extract_lat_longs_from_locations.rb iphone &gt; locations.iphone</pre>
+   and 36 examples of ut lat longs (eg UT: 51.503212,5.478329)
+   <pre>cat locations | ./extract_lat_longs_from_locations.rb ut &gt; locations.ut</pre>
+   on a side note, does anyone have any idea what ÜT is ? a phone type, maybe a carrier?
+</p>
+<p>we need to convert these lat/longs to x/y points so we can plot onto a map and we'll use the standard <a href="http://en.wikipedia.org/wiki/Mercator_projection">mercator projection</a> to do this
+   <pre>cat locations.{ut,iphone} | ./lat_long_to_merc.rb &gt; x_y_points</pre>
+   for the heat map we want to aggregate into buckets so the pixels are nice and big. finally we'll output some simple javascript we can cut and paste into some map html
+   <pre>cat x_y_points | ./bucket.rb | sort | uniq -c | ./as_draw_square.rb</pre>
+   the final result is <a href="http://www.matpalm.com/rtw_tweet/v1/map.html">this map</a> !
+</p>
+<p>a good start. next to do the same over a much larger sample using hadoop streaming and pig and then work towards an animation by aggregating on time slices
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2009/10/16/e11-0-tweets-around-the-world/";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

@@ -1,0 +1,337 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="smoothing-low-support-cases-using-confidence-intervals"></a>
+  <h2 class="blog_post_title"><a href="/blog/2012/12/confidence_interval_smoothing" rel="bookmark" title="Permanent Link to smoothing low support cases using confidence intervals">smoothing low support cases using confidence intervals</a></h2>
+  <small>December 08, 2012 at 10:50 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <h2>problem</h2>
+<p>say you have three items; item1, item2 and item3 and you've somehow associated a count for each against one of five labels; A, B, C, D, E
+</p>
+<pre class="prettyprint">
+> data
+          A   B     C    D   E
+item1 23700  20  1060   11   4
+item2  1581 889 20140 1967 200
+item3     1   0     1   76   0
+</pre>
+
+<p>depending on what you're doing it'd be reasonable to normalise these values and an l1-normalisation 
+   (ie rescale so they are the same proportion but add up to 1) gives us the following...
+</p>
+<pre class="prettyprint">
+> l1_norm = function(x) x / sum(x)
+> l1 = t(apply(data, 1, l1_norm))
+> l1
+             A          B        C          D          E
+item1 0.955838 0.00080661 0.042751 0.00044364 0.00016132
+item2 0.063809 0.03588005 0.812851 0.07938814 0.00807200
+item3 0.012821 0.00000000 0.012821 0.97435897 0.00000000
+</pre>
+
+<p>great... but you know it's fair enough if you think things don't feel right...
+</p>
+<p>according to these normalised values item3 is 
+   "more of" a D (0.97) than item1 is an A (0.95) even though we've only collected 1/300th of the data for it. this just isn't right. 
+</p>
+<p>purely based on these numbers i'd think it's more sensible to expect item3 to be A or a C (since that's what we've seen 
+   with item1 and item2) but we just haven't seen enough data for it yet. what makes sense then is to smooth the value 
+   of item3 out and make it more like some sort of population average.
+</p>
+
+<h2>an average item</h2>
+<p>so firstly what makes a sensible population average? ie if we didn't know anything at all about a new item what would we want the proportions
+   of labels to be? alternatively we can ask what do we think item3 is likely to look like later on as we gather more data for it? 
+   i think an l1-norm of the sums of all the values makes sense ...
+</p>
+<pre class="prettyprint">
+> column_totals = apply(data, 2, sum)
+> population_average = l1_norm(column_totals)
+> population_average
+        A         B         C         D         E 
+0.5094218 0.0183000 0.4268199 0.0413513 0.0041069 
+</pre>
+
+<p>... and it seems fair. without any other info it's reasonable to "guess" a new item is likely to be somewhere between an A (0.50) and a C (0.42)
+</p>
+
+<h2>mixing</h2>
+<p>so now we have our item3, and our population average, and we want to mix them together in some way... how might we do this?
+</p>
+<pre class="prettyprint">
+         A         B         C         D         E 
+item3    0.012821 0.000000 0.012821 0.974358 0.000000
+pop_aver 0.509421 0.018300 0.426819 0.041351 0.004106 
+</pre>
+
+<p>a linear weighted sum is nice and easy; ie a classic <code>item3 * alpha + pop_aver * (1-alpha)</code> 
+</p>
+<p>but then how do we pick alpha? 
+</p>
+<p>if we were to do this reweighting for item1 or item2 we'd want alpha to be large, ie nearer 1.0, to reflect the confidence 
+   we have in their current values since we have lots of data for them. for item3 we'd want alpha to be small, ie nearer 0, 
+   to reflect the lack of confidence we have in it.
+</p>
+<p>enter <a href="http://en.wikipedia.org/wiki/Confidence_interval">the confidence interval</a>, a way of testing how confident we are in a set of values.
+</p>
+
+<h2>diversion</h2>
+<p>firstly, a slight diversion re: confidence intervals...
+</p>
+<p>consider three values, 100, 100 and 200. running <a href="http://www.rforge.net/doc/packages/NCStats/gofCI.html">this goodness of fit test</a>
+   gives the following result.
+</p>
+<pre class="prettyprint">
+> library(NCStats)
+> gofCI(chisq.test(c(100, 100, 200)), conf.level=0.95)
+     p.obs   p.LCI   p.UCI 
+[1,]  0.25 0.21008 0.29468
+[2,]  0.25 0.21008 0.29468
+[3,]  0.50 0.45123 0.54877
+</pre>
+
+<p>you can read the first row of this table as "the count 100 was observed to be 0.25 (p.obs) of the total and i'm 95%
+   confident (conf.level) that the <em>true</em> value is between 0.21 (p.LCI = lower confidence interval) and 0.29 (p.UCI = upper confidence interval).
+</p>
+<p>there are two important things to notice that can change the range of confidence interval...
+</p>
+<p>1) upping the confidence level results in a wider confidence interval. ie "i'm 99.99% confident the value is true value
+   is between 0.17 and 0.34, but only 1% confident it's between 0.249 and 0.2502"
+</p>
+<pre class="prettyprint">
+> gofCI(chisq.test(c(100, 100, 200)), conf.level=0.9999)
+     p.obs   p.LCI   p.UCI
+[1,]  0.25 0.17593 0.34230
+[2,]  0.25 0.17593 0.34230
+[3,]  0.50 0.40452 0.59548
+
+> gofCI(chisq.test(c(100, 100, 200)), conf.level=0.01)
+     p.obs   p.LCI   p.UCI
+[1,]  0.25 0.24973 0.25027
+[2,]  0.25 0.24973 0.25027
+[3,]  0.50 0.49969 0.50031
+</pre>
+
+<p>2) getting more data results in a narrower confidence interval. ie "even though the proportions stay the same as i gather x10, then x100, my
+   original data i can narrow my confidence interval around the observed value"
+</p>
+<pre class="prettyprint">
+> gofCI(chisq.test(c(10, 10, 20)), conf.level=0.95)
+     p.obs   p.LCI   p.UCI
+[1,]  0.25 0.14187 0.40194
+[2,]  0.25 0.14187 0.40194
+[3,]  0.50 0.35200 0.64800
+
+> gofCI(chisq.test(c(100, 100, 200)), conf.level=0.95)
+     p.obs   p.LCI   p.UCI
+[1,]  0.25 0.21008 0.29468
+[2,]  0.25 0.21008 0.29468
+[3,]  0.50 0.45123 0.54877
+
+> gofCI(chisq.test(c(1000, 1000, 2000)), conf.level=0.95)
+     p.obs   p.LCI   p.UCI   p.exp
+[1,]  0.25 0.23683 0.26365
+[2,]  0.25 0.23683 0.26365
+[3,]  0.50 0.48451 0.51549
+</pre>
+
+<p>so it turns out this confidence interval is exactly what we're after; a way of estimating a pessimistic value (the lower bound) that gets closer to
+   the observed value as the size of the observed data grows.
+</p>
+<p>note: there's a lot of discussion on how best to do these calculations. there is a more "correct" and principled version
+   of this calculation that is provided by <a href="http://cran.r-project.org/web/packages/MultinomialCI/index.html">MultinomialCI</a> but 
+   i found it's results weren't as good for my purposes.
+</p>
+
+<h2>back to alpha</h2>
+<p>awesome, so back to the problem at hand; how do we pick our mixing parameter alpha?
+</p>
+<p>let's extract the lower bound of the confidence interval value for our items using a very large confidence (99.99%)
+   (to enforce a wide interval). the original l1-normalised values are shown here again for comparison.
+</p>
+<pre class="prettyprint">
+> l1
+            A       B       C       D       E
+item1 0.95583 0.00080 0.04275 0.00044 0.00016
+item2 0.06380 0.03588 0.81285 0.07938 0.00807
+item3 0.01282 0.00000 0.01282 0.97435 0.00000
+
+> library(NCStats)
+> gof_ci_lower = function(x) gofCI(chisq.test(x), conf.level=0.9999)[,2]
+> gof_chi_ci = t(apply(data, 1, gof_ci_lower))
+> gof_chi_ci
+            A       B       C       D       E
+item1 0.95048 0.00035 0.03803 0.00015 0.00003
+item2 0.05803 0.03156 0.80302 0.07296 0.00614
+item3 0.00000 0.00000 0.00000 0.79725 0.00000
+</pre>
+
+<p>we see that item1, which had a lot of support data, has dropped it's A value only slightly from 0.955 to 0.950 whereas item3 which had very little
+   support, has had it's D value drop drastically from 0.97 to 0.79. by using a conf.level closer and closer 1.0 we see make this drop more and more
+   drastic.
+</p>
+<p>because each of the values in the <code>gof_chi_ci matrix</code> are lower bounds the rows no longer add up to 1.0 (as they do in the l1-value
+   matrix). we can calculate how much we've "lost" with <code>1 - sum(rows)</code> and it turns out this residual is pretty much
+   exactly what we were after when we were for our mixing parameter alpha!
+</p>
+<pre class="prettyprint">
+> gof_chi_ci$residual = as.vector(1 - apply(gof_chi_ci, 1, sum))
+> gof_chi_ci
+            A       B       C       D       E residual
+item1 0.95048 0.00035 0.03803 0.00015 0.00003  0.01096
+item2 0.05803 0.03156 0.80302 0.07296 0.00614  0.02829
+item3 0.00000 0.00000 0.00000 0.79725 0.00000  0.20275
+</pre>
+
+<p>in the case of item1 the residual is low, ie the confidence interval lower bound was close to the observed value so we shouldn't mix in much
+   of the population average. but in the case of item3 the residual is high, we lost a lost by the confidence interval being very wide, so we might
+   as well mix in more of the population average.
+</p>
+<p>now what i've said here is completely unprincipled. i just made it up and the maths work because everything is normalised. but having said that the
+   results are really good so i'm going with it :)
+</p>
+
+<h2>smoothing things out then</h2>
+<p>putting it all together then we have the following bits of data...
+</p>
+<pre class="prettyprint">
+> l1  # our original estimates
+            A       B       C       D       E
+item1 0.95583 0.00080 0.04275 0.00044 0.00016
+item2 0.06380 0.03588 0.81285 0.07938 0.00807
+item3 0.01282 0.00000 0.01282 0.97435 0.00000
+
+> population_average  # the population average
+            A       B       C       D       E 
+item1 0.50942 0.01830 0.42681 0.04135 0.00410
+
+> gof_chi_ci  # lower bound of our confidences
+            A       B       C       D       E
+item1 0.95048 0.00035 0.03803 0.00015 0.00003
+item2 0.05803 0.03156 0.80302 0.07296 0.00614
+item3 0.00000 0.00000 0.00000 0.79725 0.00000
+
+> gof_chi_ci_residual = as.vector(1 - apply(gof_chi_ci, 1, sum))
+> gof_chi_ci_residual  # how much we should mix in the population average
+[1] 0.01096 0.02829 0.20275 0.40759
+</pre>
+
+<p>since there's lots of support for item1 the residual is small, only 0.01, so we smooth only a little of the population average in and
+   end up not changing the values that much
+</p>
+<pre class="prettyprint">
+> l1[1,]
+            A       B       C       D       E
+item1 0.95583 0.00080 0.04275 0.00044 0.00016
+
+> gof_chi_ci[1,] + population_average * gof_chi_ci_residual[1]
+            A       B       C       D       E
+item1 0.95606 0.00055 0.04270 0.00060 0.00007
+</pre>
+
+<p>but item3 has a higher residual and so we smooth more of the population average in and it's shifted more much strongly from D towards A and B
+</p>
+<pre class="prettyprint">
+> l1[3,]
+            A       B       C       D       E
+item3 0.01282 0.00000 0.01282 0.97435 0.00000
+
+> gof_chi_ci[3,] + population_average * gof_chi_ci_residual[3]
+            A       B       C       D       E
+item3 0.10329 0.00371 0.08653 0.80563 0.00083
+</pre>
+
+<p><a href="http://www.youtube.com/watch?v=PvgleM10MDg">great success!</a>
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2012/12/confidence_interval_smoothing";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

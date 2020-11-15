@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+     xmlns:atom="http://www.w3.org/2005/Atom"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+     >
+  <channel>
+    <title>brain of mat kelcey</title>
+    <link>http://matpalm.com/blog</link>
+    <description>thoughts from a data scientist wannabe</description>
+    <generator>Blogofile</generator>
+    <sy:updatePeriod>hourly</sy:updatePeriod>
+    <sy:updateFrequency>1</sy:updateFrequency>
+    <item>
+      <title>natural questions a benchmark for question answering research</title>
+      <link>http://matpalm.com/blog/natural_questions</link>
+      <category><![CDATA[paper]]></category>
+      <guid>http://matpalm.com/blog/natural_questions</guid>
+      <description>natural questions a benchmark for question answering research</description>
+      <content:encoded><![CDATA[<p>the last paper i was involved in at google has been released! congrats to
+   <a href="https://ai.google/research/people/105075/">tom</a> and the team!
+</p>
+<p>check it out at ...
+   <a href="https://ai.google/research/pubs/pub47761">Natural Questions: a Benchmark for Question Answering Research</a>
+</p>]]></content:encoded>
+    </item>
+    <item>
+      <title>using simulation and domain adaptation to improve efficiency of deep robotic grasping</title>
+      <link>http://matpalm.com/blog/grasp_gan</link>
+      <category><![CDATA[paper]]></category>
+      <guid>http://matpalm.com/blog/grasp_gan</guid>
+      <description>using simulation and domain adaptation to improve efficiency of deep robotic grasping</description>
+      <content:encoded><![CDATA[<p>a paper i helped with at google robotics has been released!
+   congrats to <a href="https://ai.google/research/people/KonstantinosBousmalis">konstantinos</a> and the team!
+</p>
+<p>check it out at ...
+   <a href="https://arxiv.org/abs/1709.07857">Using Simulation and Domain Adaptation to Improve Efficiency of Deep Robotic Grasping</a>
+</p>]]></content:encoded>
+    </item>
+    <item>
+      <title>wikireading a novel large-scale language understanding task over wikipedia</title>
+      <link>http://matpalm.com/blog/wiki_reading</link>
+      <category><![CDATA[paper]]></category>
+      <guid>http://matpalm.com/blog/wiki_reading</guid>
+      <description>wikireading a novel large-scale language understanding task over wikipedia</description>
+      <content:encoded><![CDATA[<p>our wikireading paper is out!
+   congrats to <a href="https://ai.google/research/people/DanielHewlett">daniel</a> and the team!
+</p>
+<p>check it out at on arxiv...
+   <a href="https://arxiv.org/abs/1608.03542">WikiReading: A Novel Large-scale Language Understanding Task over Wikipedia</a>
+</p>]]></content:encoded>
+    </item>
+  </channel>
+</rss>

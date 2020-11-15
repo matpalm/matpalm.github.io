@@ -1,0 +1,946 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+     xmlns:atom="http://www.w3.org/2005/Atom"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+     >
+  <channel>
+    <title>brain of mat kelcey</title>
+    <link>http://matpalm.com/blog</link>
+    <description>thoughts from a data scientist wannabe</description>
+    <generator>Blogofile</generator>
+    <sy:updatePeriod>hourly</sy:updatePeriod>
+    <sy:updateFrequency>1</sy:updateFrequency>
+    <item>
+      <title>ensemble networks</title>
+      <link>http://matpalm.com/blog/ensemble_nets</link>
+      <category><![CDATA[projects]]></category>
+      <category><![CDATA[ensemble_nets]]></category>
+      <category><![CDATA[jax]]></category>
+      <guid>http://matpalm.com/blog/ensemble_nets</guid>
+      <description>ensemble networks</description>
+      <content:encoded><![CDATA[<h1>overview</h1>
+<p>ensemble nets are a method of representing an ensemble of
+   models as one single logical model. we use
+   <a href="https://github.com/google/jax">jax's</a>
+   <a href="https://github.com/google/jax#auto-vectorization-with-vmap">vmap</a>
+   operation to batch over not
+   just the inputs but additionally sets of model parameters.
+   we propose some
+   approaches for training ensemble nets and introduce logit dropout as
+   a way to improve ensemble generalisation as well as provide
+   a method of calculating model confidence.
+</p>
+
+<h1>background</h1>
+<p>as part of my "embedding the chickens" project i wanted to use
+   random projection embedding networks to generate pairs of similar
+   images for weak labelling. since this technique works really well
+   in an ensemble i did some playing around and got the ensemble
+   running pretty fast in jax. i wrote it up in
+   <a href="/blog/jax_random_embedding_ensemble_network/">this blog post</a>.
+   since doing that i've been wondering how to not just run an
+   ensemble net forward pass but how you might <em>train</em> one too...
+</p>
+
+<h1>dataset &amp; problem</h1>
+<p>for this problem we'll work with the
+   <a href="https://github.com/phelber/eurosat">eurosat/rgb dataset</a>.
+   eurosat/rgb is a 10 way classification task across 27,000 64x64 RGB images
+</p>
+<p>here's a sample image from each of the ten classes...
+</p>
+<img src="/blog/imgs/2020/en/sample_images.png" />
+
+
+<h1>base line model</h1>
+
+<h2>architecture</h2>
+<p>as a baseline we'll start with a simple non ensemble network. it'll consist of
+   a pretty vanilla convolutional stack, global spatial pooling, one dense layer
+   and a final 10 way classification layer.
+</p>
+<table class='data'>
+<tr><td><b>layer</b></td><td><b>shape</b></td></tr>
+<tr><td>input</td><td>(B, 64, 64, 3)</td></tr>
+<tr><td>conv2d</td><td>(B, 31, 31, 32)</td></tr>
+<tr><td>conv2d</td><td>(B, 15, 15, 64)</td></tr>
+<tr><td>conv2d</td><td>(B, 7, 7, 96)</td></tr>
+<tr><td>conv2d</td><td>(B, 3, 3, 96)</td></tr>
+<tr><td>global spatial pooling</td><td>(B, 96)</td></tr>
+<tr><td>dense</td><td>(B, 96)</td></tr>
+<tr><td>logits (i.e. dense with no activation)</td><td>(B, 10)</td></tr>
+</table>
+
+<p>all convolutions use 3x3 kernels with a stride of 2. the conv layers and the single
+   dense layer use a gelu activation. batch size is represented by <code>B</code>.
+</p>
+<p>we use no batch norm, no residual connections, nothing fancy at all.
+   we're more interested in the training than getting the absolute best value.
+   this network is small enough that we can train it fast but it still gives
+   reasonable results. residual connections would be trivial to add but batch
+   norm would be a bit more tricky given how we'll build the ensemble net later.
+</p>
+<p>we'll use <a href="https://github.com/google/objax">objax</a> to manage the model params
+   and orchestrate the training loops.
+</p>
+
+<h2>training setup</h2>
+<p>training for the baseline will be pretty standard but let's walk through it
+   so we can call out a couple of specific things for comparison with an ensemble
+   net later...
+</p>
+<p>( we'll use 2 classes in these diagrams for ease of reading though
+   the eurosat problem has 10 classes. )
+</p>
+<img src="/blog/imgs/2020/en/d.non_ensemble.png" />
+
+<p>walking through left to right...
+</p>
+<ol>
+ <li>
+     input is a batch of images; <code>(B, H, W, 3)</code>
+ </li>
+
+ <li>
+     the output of the first convolutional layers with stride=2 &amp; 32 filters will be <code>(B, H/2, W/2, 32)</code>
+ </li>
+
+ <li>
+     the network output for an example two class problem are logits shaped <code>(B, 2)</code>
+ </li>
+
+ <li>
+     for prediction probabilities we apply a softmax to the logits
+ </li>
+
+ <li>
+     for training we use cross entropy, take the mean loss and apply backprop
+ </li>
+</ol>
+<p>we'll train on 80% of the data, do hyperparam tuning on 10% (validation set) and
+   report final results on the remaining 10% (test set)
+</p>
+<p>for hyperparam tuning we'll use <a href="https://ax.dev/">ax</a> on very short runs of 30min
+   for all trials.
+   for experiment tracking we'll use <a href="https://www.wandb.com/">wandb</a>
+</p>
+<p>the hyperparams we'll tune for the baseline will be...
+</p>
+<table class='data'>
+<tr><td><b>param</b></td><td><b>description</b></td></tr>
+<tr>
+<td>max_conv_size</td>
+<td>conv layers with be sized as [32, 64, 128, 256]</br>
+up to a max size of max_conv_size.</br>
+i.e. a max_conv_size of 75 would imply sizes [32, 64, 75, 75]</br></td>
+</tr>
+<tr>
+<td>dense_kernel_size</td>
+<td>how many units in the dense layer before the logits</td>
+</tr>
+<tr>
+<td>learning_rate</td>
+<td>learning rate for optimiser</td>
+</tr>
+</table>
+
+<p>we'd usually make choices like the conv sizes being powers of 2 instead of a smooth value but
+   i was curious about the behaviour of ax for tuning.
+   also we didn't bother with a learning rate schedule; we just use simple early
+   stopping (against the validation set)
+</p>
+<img src="/blog/imgs/2020/en/single_model.all_runs.png" />
+
+<p>the best model of this group gets an accuracy of 0.913 on the validation set
+   and 0.903 on the test set. ( usually not a fan of accuracy but the classes
+   are pretty balanced so accuracy isn't a terrible thing to report. )
+</p>
+<table class='data'>
+<tr><td><b>model</td><td><b>validation</b></td><td><b>test</b></td></tr>
+<tr><td>baseline</td><td>0.913</td><td>0.903</td></tr>
+</table>
+
+
+<h1>ensemble net model</h1>
+<p>so what then is an ensemble net?
+</p>
+<p>logically we can think about our models as being functions that take two
+   things 1) the parameters of the model and 2) an input example. from
+   these they return an output.
+</p>
+<pre class="prettyprint"><code class="language-python"># pseudo code
+model(params, input) -> output
+</code></pre>
+
+<p>we pretty much always though run a batch of <code>B</code> inputs at once.
+   this can be easily represented as a leading axis on the input and allows us to
+   make better use of accelerated hardware as well as providing some benefits regarding
+   learning w.r.t gradient variance.
+</p>
+<p>jax's
+   <a href="https://github.com/google/jax#auto-vectorization-with-vmap">vmap</a>
+   function makes this trivial to implement by vectorising a call to the model
+   across a vector of inputs to return a vector of outputs.
+</p>
+<pre class="prettyprint"><code class="language-python"># pseudo code
+vmap(partial(model, params))(b_inputs) -> b_outputs
+</code></pre>
+
+<p>interestingly we can use this same functionality to batch not across independent
+   inputs but instead batch across independent sets of <code>M</code> model params. this effectively
+   means we run the <code>M</code> models in parallel. we'll call these <code>M</code> models sub models
+   from now on.
+</p>
+<pre class="prettyprint"><code class="language-python"># pseudo code
+vmap(partial(model, input))(m_params) -> m_outputs
+</code></pre>
+
+<p>and there's no reason why we can't do both batching across both a set of inputs
+   as well as a set of model params at the same time.
+</p>
+<pre class="prettyprint"><code class="language-python"># pseudo code
+vmap(partial(model)(b_inputs, m_params) -> b_m_outputs
+</code></pre>
+
+<p>for a lot more specifics on how i use jax's vmap to support this
+   see my prior post on
+   <a href="http://matpalm.com/blog/jax_random_embedding_ensemble_network/">jax random embedding ensemble nets</a>.
+</p>
+<p>and did somebody say TPUs? turns out we can make ensemble nets run
+   super fast on TPUs by simply swapping the vmap calls for pmap ones!
+   using pmap on a TPU will have each ensemble net run in parallel! see
+   <a href="https://colab.research.google.com/drive/1ijI77AlYqGOEXm5BqtnNomtUPnFr26o0?usp=sharing">this colab</a>
+   for example code running pmap on TPUs
+</p>
+
+<h2>single_input ensemble</h2>
+<p>let's walk through this in a bit more detail with an ensemble net with two sub models.
+</p>
+<img src="/blog/imgs/2020/en/d.single_input.png" />
+
+<ol>
+ <li>
+     our input is the same as for the baseline; a batch of images <code>(B, H, W, 3)</code>
+ </li>
+
+ <li>
+     the output of the first conv layer now though has an additional <code>M</code> axis to
+represent the outputs from the <code>M</code> models and results in <code>(M, B, H/2, W/2, 32)</code>
+ </li>
+
+ <li>
+     this additional <code>M</code> axis is carried all the way through to the logits <code>(M, B, 2)</code>
+ </li>
+
+ <li>
+     at this point we have <code>(M, B, 2)</code> logits but we need <code>(B, 2)</code>
+to compare against <code>(B,)</code> labels. with logits this reduction is
+very simple; just sum over the <code>M</code> axis!
+ </li>
+
+ <li>
+     for prediction probabilities we again apply a softmax
+ </li>
+
+ <li>
+     for training we again use cross entropy to calculate the mean loss and apply backprop
+ </li>
+</ol>
+<p>this gives us a way to train the sub models to act as a single ensemble unit as well as
+   a way to run inference on the ensemble net in a single forward pass.
+</p>
+<p>we'll refer to this approach as <strong>single_input</strong> since we are starting with a single
+   image for all sub models.
+</p>
+
+<h2>multi_input ensemble</h2>
+<p>an alternative approach to training is to provide a separate image per sub model.
+   how would things differ if we did that?
+</p>
+<img src="/blog/imgs/2020/en/d.multi_input.png" />
+
+<ol>
+ <li>
+     now our input has an additional <code>M</code> axis since it's a different batch per sub model.
+<code>(M, B, H, W, 3)</code>
+ </li>
+
+ <li>
+     the output of the first conv layers carries this <code>M</code> axis through <code>(M, B, H/2, W/2, 32)</code>
+ </li>
+
+ <li>
+     which is carried to the logits <code>(M, B, 2)</code>
+ </li>
+
+ <li>
+     in this case though we have <code>M</code> seperate labels for the <code>M</code> inputs so we don't have to combine the logits at all, we can just calculate the mean loss across the <code>(M, B)</code> training instances.
+ </li>
+</ol>
+<p>we'll call this approach <strong>multi_input</strong>.
+   note that this way of feeding separate images only really applies to training;
+   for inference if we want the representation of the ensemble it only really makes
+   sense to send a batch of <code>(B)</code> images, not <code>(M, B)</code>.
+</p>
+
+<h2>training the ensemble net</h2>
+<p>let's do some tuning as before but with a couple of additional hyper
+   parameters that this time we'll sweep across.
+</p>
+<p>we'll do each of the six combos of <code>[(single, 2), (single, 4), (single, 8),
+(multi, 2), (multi, 4), (multi, 8)]</code> and tune for 30 min for each.
+</p>
+<img src="/blog/imgs/2020/en/single_multi_sweeps.png" />
+
+<p>when we poke around and facet by the various params there's only one that makes
+   a difference; single_input mode consistently does better than multi_input.
+</p>
+<p>in hindsight this is not surprising i suppose since single_input mode
+   is effectively training one network with xM parameters
+   (with an odd summing-of-logits kind of bottleneck)
+</p>
+<img src="/blog/imgs/2020/en/validation_boxplot.png" />
+
+
+<h1>confusion matrix per sub model</h1>
+
+<h2>single_input ensemble</h2>
+<p>when we check the best single_input 4 sub model ensemble net we get an accuracy of 0.920
+   against the validation set and 0.901 against the test set
+</p>
+<table class='data'>
+<tr><td><b>model</td><td><b>validation</b></td><td><b>test</b></td></tr>
+<tr><td>baseline</td><td>0.913</td><td>0.903</td></tr>
+<tr><td>single_input</td><td>0.920</td><td>0.901</td></tr>
+</table>
+
+<p>looking at the confusion matrix the only
+   really thing to note is the slight confusion between 'Permanent Crop' and
+   'Herbaceous Vegetation' which is reasonable given the similarity in RGB.
+</p>
+<img src="/blog/imgs/2020/en/cm.simo.ensemble.png" />
+
+<p>we can also review the confusion matrices of each of the 4 sub models run as
+   individuals; i.e. not working as an ensemble. we observe the quality of each isn't
+   great with accuracies of [0.111, 0.634, 0.157, 0.686].
+   again makes sense since they had been trained only to work together. that first model
+   really loves 'Forests', but don't we all...
+</p>
+<table>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.simo.model_0.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.simo.model_1.png" /></td>
+</tr>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.simo.model_2.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.simo.model_3.png" /></td>
+</tr>
+</table>
+
+
+<h2>multi_input ensemble</h2>
+<p>the performance of the multi_input ensemble isn't quite as good with
+   a validation accuracy of 0.902 and test accuracy of 0.896.
+   the confusion matrix looks similar to the single_input mode version.
+</p>
+<table class='data'>
+<tr><td><b>model</td><td><b>validation</b></td><td><b>test</b></td></tr>
+<tr><td>baseline</td><td>0.913</td><td>0.903</td></tr>
+<tr><td>single_input</td><td>0.920</td><td>0.901</td></tr>
+<tr><td>multi_input</td><td>0.902</td><td>0.896</td></tr>
+</table>
+
+<img src="/blog/imgs/2020/en/cm.mimo.ensemble.png" />
+
+<p>this time though the output of each of the 4 sub models individually is much stronger
+   with accuracies of [0.842, 0.85, 0.84, 0.83, 0.86]. this makes sense
+   since they were trained to not predict as one model.
+   it is nice to see at least that the ensemble result is higher than any one model.
+   and reviewing their confusion matrices they seem to specialise in different
+   aspects with differing pairs of confused classes.
+</p>
+<table>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.mimo.model_0.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.mimo.model_1.png" /></td>
+</tr>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.mimo.model_2.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.mimo.model_3.png" /></td>
+</tr>
+</table>
+
+
+<h1>dropping logits</h1>
+<p>the main failing of the single_input approach is that the sub models
+   are trained to always operate together; that breaks some of
+   the core ideas of why we do ensembles in the first place. as i was
+   thinking about this i was reminded that the core idea of dropout is
+   quite similar; when nodes in a dense layer are running together
+   we can drop some out to ensure other nodes don't overfit to
+   expecting them to always behave in a particular way.
+</p>
+<p>so let's do the same with the sub models of the ensemble. my first thought
+   around this was that the most logical place would be at the logits. we can
+   zero out the logits of a random half of the models during training and,
+   given the ensembling is implemented by summing the logits, this effectively
+   removes those models from the ensemble.
+   the biggest con though is the waste of the forward pass of running those sub
+   models in the first place.
+   during inference we don't have to do anything in terms of masking &amp; there's no
+   need to do any rescaling ( that i can think of ).
+</p>
+<p>so how does it do? accuracy is 0.914 against the validation set and 0.911 against
+   the test set; the best result so far! TBH though, these numbers are pretty
+   close anyways so maybe we were just lucky ;)
+</p>
+<table class='data'>
+<tr><td><b>model</td><td><b>validation</b></td><td><b>test</b></td></tr>
+<tr><td>baseline</td><td>0.913</td><td>0.903</td></tr>
+<tr><td>single_input</td><td>0.920</td><td>0.901</td></tr>
+<tr><td>multi_input</td><td>0.902</td><td>0.896</td></tr>
+<tr><td>logit drop</td><td>0.914</td><td>0.911</td></tr>
+</table>
+
+<img src="/blog/imgs/2020/en/cm.simo_ld.ensemble.png" />
+
+<p>the sub models are all now doing OK with accuracies of
+   [0.764, 0.827, 0.772, 0.710]. though the sub models aren't as
+   strong as the sub models of the multi_input mode, the overall
+   performance is the best. great! seems like a nice compromise
+   between the two!
+</p>
+<table>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.simo_ld.model_0.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.simo_ld.model_1.png" /></td>
+</tr>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.simo_ld.model_2.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.simo_ld.model_3.png" /></td>
+</tr>
+</table>
+
+
+<h1>wait! don't drop logits, drop models instead!</h1>
+<p>the main problem i had with dropping logits is that there
+   is a wasted forward pass for half the sub models. then i realised
+   why run the models at all? instead of dropping logits we can just
+   choose, through advanced indexing, a random half of the models to
+   run a forward pass through. this has the same effect of running a random
+   half of the models at a time but only requires half the forward pass
+   compute. this approach of dropping models is what the code currently does.
+   (though the dropping of logits is in the git history)
+</p>
+
+<h1>using the sub models to measure confidence</h1>
+<p>ensembles also provide a clean way of measuring confidence of
+   a prediction. if the variance of predictions across sub models is low
+   it implies the ensemble as a whole is confident.
+   alternatively if the variance is high it implies the ensemble is not confident.
+</p>
+<p>with the ensemble model that has been trained with logit dropout we can
+   get an idea of this variance by considering the ensemble in a hold-one-out
+   fashion; we can obtain <code>M</code> different predictions from the ensemble
+   by running it as if each of the <code>M</code> sub models was not present (using the same
+   idea as the logit dropout).
+</p>
+<p>consider a class that the ensemble is very good at; e.g. 'Sea &amp; Lake'.
+   given a batch of 8 of these images across an ensemble net with 4 sub
+   models we get the following prediction mean and stddevs.
+</p>
+<table class='data'>
+<tr><td><b>idx</b></td>
+<td><b>y_pred</b></td>
+<td><b>mean(P(class))</b></td>
+<td><b>std(P(class))</td></b></tr>
+<tr><td>0</td><td>Sea & Lake</td><td>0.927</td><td>0.068</td></tr>
+<tr><td>1</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+<tr><td>2</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+<tr><td>3</td><td>Sea & Lake</td><td>0.999</td><td>0.001</td></tr>
+<tr><td>4</td><td>Sea & Lake</td><td>0.989</td><td>0.019</td></tr>
+<tr><td>5</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+<tr><td>6</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+<tr><td>7</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+</table>
+
+<p>whereas when we look at a class the model is not so sure of,
+   e.g. 'Permanent Crop', we can see that for the lower probability cases
+   have a higher variance across the models.
+</p>
+<table class='data'>
+<tr><td><b>idx</b></td>
+<td><b>y_pred</b></td>
+<td><b>mean(P(class))</b></td>
+<td><b>std(P(class))</td></b></tr>
+<tr><td>0</td><td>Industrial Buildings</td><td>0.508</td><td>0.282</td></tr>
+<tr><td>1</td><td>Permanent Crop</td><td>0.979</td><td>0.021</td></tr>
+<tr><td>2</td><td>Permanent Crop</td><td>0.703</td><td>0.167</td></tr>
+<tr><td>3</td><td>Herbaceous Vegetation</td><td>0.808</td><td>0.231</td></tr>
+<tr><td>4</td><td>Permanent Crop</td><td>0.941</td><td>0.076</td></tr>
+<tr><td>5</td><td>Permanent Crop</td><td>0.979</td><td>0.014</td></tr>
+<tr><td>6</td><td>Permanent Crop</td><td>0.833</td><td>0.155</td></tr>
+<tr><td>7</td><td>Permanent Crop</td><td>0.968</td><td>0.025</td></tr>
+</table>
+
+
+<h1>conclusions</h1>
+<ul>
+ <li>
+     jax vmap provides a great way to represent an ensemble in a single ensemble net.
+ </li>
+
+ <li>
+     we have a couple of options on how to train an ensemble net.
+ </li>
+
+ <li>
+     the single_input approach gives a good result, but each sub model is poor by itself.
+ </li>
+
+ <li>
+     multi_input trains each model to predict well, and the ensemble gets a bump.
+ </li>
+
+ <li>
+     logit dropout gives a way to stop the single_input ensemble from overfitting by
+     preventing sub models from specialising.
+ </li>
+
+ <li>
+     variance across the sub models predictions gives a hint of prediction confidence.
+ </li>
+</ul>
+
+<h1>TODOs</h1>
+<ul>
+ <li>
+     compare the performance of single_input mode vs multi_input mode normalising for
+     the number of effective parameters ( recall; single_input mode, without logit dropout,
+     is basically training a single xM param large model )
+ </li>
+
+ <li>
+     what is the effect of sharing an optimiser? would it be better to train each with
+     seperate optimisers? can't see why; but might be missing something..
+ </li>
+</ul>
+
+<h1>code</h1>
+<p><a href="https://github.com/matpalm/ensemble_net">all on github</a>
+</p>]]></content:encoded>
+    </item>
+    <item>
+      <title>a jax random embedding ensemble network</title>
+      <link>http://matpalm.com/blog/jax_random_embedding_ensemble_network</link>
+      <category><![CDATA[ensemble_nets]]></category>
+      <category><![CDATA[jax]]></category>
+      <guid>http://matpalm.com/blog/jax_random_embedding_ensemble_network</guid>
+      <description>a jax random embedding ensemble network</description>
+      <content:encoded><![CDATA[<h1>tl;dr</h1>
+<p>random embedding networks can be used to generate weakly labelled data for metric learning and
+   they see a large benefit from being run in ensembles.
+</p>
+<p>can we represent these ensembles as a single forward pass in jax?
+   why yes! yes we can!
+</p>
+
+<h1>overview</h1>
+<p>a fundamental question when training embedding models is deciding how to specify
+   the examples we want to be close vs examples we want to be far apart.
+</p>
+<p>consider a collection of renders of random synthetic objects that look something like...
+</p>
+<img src="/blog/imgs/2020/jreen/5x5_sample.png" />
+
+<p><i>( check out my
+   <a href="https://github.com/matpalm/minimal_pybullet_on_dataflow_eg">minimal example of running pybullet under google cloud dataflow</a>
+   if you'd like to generate a large amount of your own )</i>
+</p>
+<p>can we train an model that learns embeddings for these objects without explicit labels?
+   i.e. is there a way of weakly labelling these?
+   yes! by using random embedding networks.
+</p>
+<p>it turns out if we just initialise (don't train!) an embedding network
+   that images of the same object will <em>sometimes</em> be embedded
+   closest to each other.
+   we can use this as a form of weak labelling; it just has to occur more often than random.
+</p>
+<p>consider a collage of 3 "test examples" with each example consisting of 11 images.
+</p>
+<ul>
+ <li>
+     first column: an <b>anchor</b> image which is a random render of a random object.
+ </li>
+
+ <li>
+     second column: a <b>positive</b> image which is another render of the same object.
+ </li>
+
+ <li>
+     9 remaining column: <b>negative</b> images which are renders of other objects.
+ </li>
+</ul>
+<p>though this collage shows 3 examples the full test set we'll be using will contain <code>N=100</code> examples
+</p>
+<img src="/blog/imgs/2020/jreen/3_test_eg_sample.png" />
+
+<p>we can quantify the quality of a random embedding network by embedding all 11 of these
+   images and seeing how often the anchor is closer to the positive than any of the negatives.
+   given there are 9 negatives for each positive we know that random choice accuracy would
+   be 0.1.
+   the question is then, can we do better with random embeddings?
+</p>
+
+<h1>code</h1>
+<p><i>to repro all this have a look at this far less commented
+   <a href="https://colab.research.google.com/drive/1FOWuvaWjiq7_PW_Lno09aUMHDPMfoYyz?usp=sharing">colab</a></i>
+</p>
+<p>first let's get some pre cooked test data ...
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; !wget "https://github.com/matpalm/shared_data/blob/master/test_set_array.npy.gz?raw=true" -O test_set_array.npy.gz --quiet
+&gt;&gt;&gt; !gunzip -f test_set_array.npy.gz
+&gt;&gt;&gt;
+&gt;&gt;&gt; test_set_array = np.load("test_set_array.npy")
+&gt;&gt;&gt; N = test_set_array.shape[0]  # number of examples in test set
+</code></pre>
+
+<p>this array is shaped <code>(N, 11, HW, HW, 3)</code>; and again, as before
+</p>
+<ul>
+ <li>
+     <code>N = 100</code> represents the 100 test set examples.
+ </li>
+
+ <li>
+     11 represents the anchor, positive &amp; 9 negatives.
+ </li>
+
+ <li>
+     <code>(HW, HW, 3)</code> represents the image tensor
+ </li>
+</ul>
+
+<h2>a random embedding keras model</h2>
+<p>let's start with a basic <a href="https://keras.io/">keras</a> model.
+   this model is taken from another one of my projects and forms the basis of a fully convolutional network.
+   in this form it is structured to have a convolutional stack that takes an input of <code>(32, 32, 3)</code> and outputs a <code>(1, 1, 256)</code> spatial feature map.
+   this feature map is passed through a Dense layer with ReLU activation (implemented as a 1x1 convolution)
+   followed by a linear projection to a <code>E</code> dimensional embedding.
+   we normalise the embeddings to unit length for ease of the upcoming similarity calculations.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; E = 32   # output embedding dimension used for all models
+&gt;&gt;&gt;
+&gt;&gt;&gt; class NormaliseLayer(Layer):
+&gt;&gt;&gt;     def call(self, x):
+&gt;&gt;&gt;         return tf.nn.l2_normalize(x, axis=-1)
+&gt;&gt;&gt;
+&gt;&gt;&gt; def conv(x, filters):
+&gt;&gt;&gt;     return Conv2D(filters=filters, kernel_size=3, strides=2,
+&gt;&gt;&gt;                   padding='VALID', kernel_initializer='orthogonal',
+&gt;&gt;&gt;                   activation='relu')(x)
+&gt;&gt;&gt;
+&gt;&gt;&gt; def construct_model():
+&gt;&gt;&gt;     inputs = Input(shape=(HW, HW, 3))
+&gt;&gt;&gt;     model = conv(inputs, 32)
+&gt;&gt;&gt;     model = conv(model, 64)
+&gt;&gt;&gt;     model = conv(model, 128)
+&gt;&gt;&gt;     model = conv(model, 256)
+&gt;&gt;&gt;     model = Dense(units=32, kernel_initializer='orthogonal',
+&gt;&gt;&gt;                   activation='relu')(model)
+&gt;&gt;&gt;     embeddings = Dense(units=E, kernel_initializer='orthogonal',
+&gt;&gt;&gt;                       activation=None, name='embedding')(model)
+&gt;&gt;&gt;     embeddings = NormaliseLayer()(embeddings)
+&gt;&gt;&gt;     return Model(inputs, embeddings)
+&gt;&gt;&gt;
+&gt;&gt;&gt; model = construct_model()
+&gt;&gt;&gt; model.summary()
+
+</code></pre>
+
+<pre class="prettyprint">
+    _________________________________________________________________
+    Layer (type)                 Output Shape              Param #
+    =================================================================
+    input_1 (InputLayer)         [(None, 32, 32, 3)]       0
+    conv2d (Conv2D)              (None, 15, 15, 32)        896
+    conv2d_1 (Conv2D)            (None, 7, 7, 64)          18496
+    conv2d_2 (Conv2D)            (None, 3, 3, 128)         73856
+    conv2d_3 (Conv2D)            (None, 1, 1, 256)         295168
+    dense (Dense)                (None, 1, 1, 32)          8224
+    embedding (Dense)            (None, 1, 1, 32)          1056
+    normalise_layer (NormaliseLa (None, 1, 1, 32)          0
+    =================================================================
+    Total params: 397,696
+    Trainable params: 397,696
+    Non-trainable params: 0
+</pre>
+
+<p>we'll need some utility functions to
+</p>
+<ol>
+ <li>
+     run images through this model...
+ </li>
+
+ <li>
+     calculate the cosine sims between the different types of the embeddings and
+ </li>
+
+ <li>
+     calculate an overall accuracy for the 100 test examples.
+ </li>
+</ol>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; def embeddings_for(model, imgs):
+&gt;&gt;&gt;     embeddings = model.predict(imgs.reshape(N*11, HW, HW, 3))
+&gt;&gt;&gt;     return embeddings.reshape(N, 11, E)
+&gt;&gt;&gt;
+&gt;&gt;&gt; def anc_pos_neg_sims(embeddings):
+&gt;&gt;&gt;     # slice anchors, positives and negatives out of embeddings
+&gt;&gt;&gt;     # and calculate pair wise sims using dot product similarity.
+&gt;&gt;&gt;     # returns (N, 10) representing N examples of anchor compared to
+&gt;&gt;&gt;     # positives / negatives.
+&gt;&gt;&gt;     anchor_embeddings = embeddings[:, 0]              # (N, E)
+&gt;&gt;&gt;     positive_negative_embeddings = embeddings[:, 1:]  # (N, 10, E)
+&gt;&gt;&gt;     return np.einsum('ne,npe->np', anchor_embeddings,
+&gt;&gt;&gt;                      positive_negative_embeddings)    # (N, 10)
+&gt;&gt;&gt;
+&gt;&gt;&gt; def accuracy(sims):
+&gt;&gt;&gt;     # given a set of (N, 10) sims calculate accuracy. note that the data has
+&gt;&gt;&gt;     # been prepared such that correct element is the 0th element so accuracy
+&gt;&gt;&gt;     # is simply the times the most similar is the 0th.
+&gt;&gt;&gt;     most_similar = np.argmax(sims, axis=1)
+&gt;&gt;&gt;     times_correct = sum(most_similar == 0)
+&gt;&gt;&gt;     return times_correct / N
+&gt;&gt;&gt;
+&gt;&gt;&gt; accuracy(anc_pos_neg_sims(embeddings_for(model, test_set_array)))
+
+0.26
+</code></pre>
+
+<p><i>( note: if you're new to <a href="https://numpy.org/doc/stable/reference/generated/numpy.einsum.html">einsum</a>
+   check out my <a href="https://www.youtube.com/watch?v=SOaYrnQtd9g">illustrative einsum example</a> explainer video where i walk through what
+   the einsum operations in this post are doing )</i>
+</p>
+<p>great! this model does (slightly) better than random (which would have been 0.1). hooray!
+</p>
+<p>since this model isn't even trained, we should expect a degree of variance across a number of differently initialised models.
+   let's build <code>M=10</code> models and see how things vary.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; M = 10  # number of models to run in ensemble
+&gt;&gt;&gt;
+&gt;&gt;&gt; models = [construct_model() for _ in range(M)]
+&gt;&gt;&gt; per_model_sims = np.stack([anc_pos_neg_sims(embeddings_for(m, test_set_array)) for m in models])  # (M, N, 10)
+&gt;&gt;&gt; accuracies = [accuracy(sims) for sims in per_model_sims]
+&gt;&gt;&gt;
+&gt;&gt;&gt; print("accuracies", accuracies)
+&gt;&gt;&gt; print("mean", np.mean(accuracies), "std", np.std(accuracies))
+
+accuracies [0.2, 0.29, 0.26, 0.29, 0.29, 0.26, 0.29, 0.26, 0.27, 0.32]
+mean 0.273 std 0.03034798181098703
+</code></pre>
+
+
+<h2>an ensemble?</h2>
+<p>given this amount of variance we can ask, how would an ensemble do?
+   a great thing about the way this model is structured is that we can do a weighted ensemble in a really simple way.
+</p>
+<p>note that the prediction is based on the argmax of these similarities,
+   this means to combine them in an ensemble all we need to do is sum them before the argmax!
+</p>
+<p>since the embeddings are unit length the cosine similarity is being constrained to (-1, 1).
+   so when we sum them what we're doing is taking a form of weighted vote. nice!
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; accuracy(np.sum(per_model_sims, axis=0))
+
+0.4
+</code></pre>
+
+<p>great! the weighted ensemble does noticably better than any of the individual random models (which in turn did better than random choice)
+</p>
+<p>but it feels a bit clumsy to have to run these <code>M</code> models sequentially.
+   could we model this directly in a pass of a <em>single</em> network?
+</p>
+
+<h2>what is input batching doing?</h2>
+<p>let's think about what batching inputs does;
+</p>
+<p>the simplest form of a model takes an input,
+   applies some layers parameterised in some way (by theta here)
+   to calculate some hidden layer values
+   and finally produces an output.
+</p>
+<p>\( I \rightarrow f^1(\theta^1) \rightarrow H \rightarrow f^2(\theta^2) \rightarrow O \)
+</p>
+<p>what we almost always do though is run a batch of <code>B</code> examples through at a time.
+   batching inputs allows us to make the best use of hardware acceleration,
+   as well as getting use some theoretical benfits regarding optimisation.
+   since we're using the same model we have a single set of thetas and we produce a batch of <code>B</code> outputs.
+</p>
+<p>\( I_B \rightarrow f^1(\theta^1) \rightarrow H_B \rightarrow f^2(\theta^2) \rightarrow O_B \)
+</p>
+<p>but what we want to do now is to not just have a batch of <code>B</code> inputs, but also a batch of <code>M</code> models as well.
+</p>
+<p>\( I_B \rightarrow f^1(\theta^1_M) \rightarrow H_{B,M} \rightarrow f^2(\theta^2_M) \rightarrow O_{B,M} \)
+</p>
+<p>though the algebra is no different this idea of having multiple sets of theta for a layer
+   isn't something that naturally fits in the standard frameworks. :(
+   maybe this is something you <em>could</em> get going with keras but the couple of attempts i tried met heavy framework resistance :/
+   perhaps this functionality of arbitrary mapping seems a good fit for
+   <a href="https://jax.readthedocs.io/en/latest/#">jax's</a>
+   <a href="https://github.com/google/jax#auto-vectorization-with-vmap">vmap</a>; but how would it work?
+</p>
+
+<h2>a random embedding jax model</h2>
+<p>first let's rebuild this network in a minimal way with jax but without any layer framework.
+   not using a layer framework means we'll need to maintain our own set of model parameters.
+   note that we for this model we're not going to bother with bias terms, they would be zero by initialisation anyways
+   (we're remember not training at all, just building and running these networks)
+</p>
+<p>note we also more explicitly refer to the dense layer here as using a 1x1 kernel convolution.
+   this is actually equivalent to what's happening the above keras model where a <code>Dense</code> layer on a <code>(H, W, C)</code>
+   input automagically does things as a <code>1x1</code> convolution.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; key = random.PRNGKey(0)
+&gt;&gt;&gt; _key, *subkeys = random.split(key, 7)
+&gt;&gt;&gt;
+&gt;&gt;&gt; conv1_kernel = orthogonal()(subkeys[0], (3, 3, 3, 32))
+&gt;&gt;&gt; conv2_kernel = orthogonal()(subkeys[1], (3, 3, 32, 64))
+&gt;&gt;&gt; conv3_kernel = orthogonal()(subkeys[2], (3, 3, 64, 128))
+&gt;&gt;&gt; conv4_kernel = orthogonal()(subkeys[3], (3, 3, 128, 256))
+&gt;&gt;&gt; dense_kernel = orthogonal()(subkeys[4], (1, 1, 256, 32))
+&gt;&gt;&gt; embedding_kernel = orthogonal()(subkeys[5], (1, 1, 32, 32))
+&gt;&gt;&gt;
+&gt;&gt;&gt; conv_dimension_numbers = lax.conv_dimension_numbers((1, HW, HW, 3),  # input shape prototype
+&gt;&gt;&gt;                                                     (3, 3, 1, 1),    # 2d kernel shape prototype
+&gt;&gt;&gt;                                                     ('NHWC',         # input
+&gt;&gt;&gt;                                                      'HWIO',         # kernel
+&gt;&gt;&gt;                                                      'NHWC'))        # output
+&gt;&gt;&gt;
+&gt;&gt;&gt; def conv_block(stride, with_relu, input, kernel):
+&gt;&gt;&gt;     no_dilation = (1, 1)
+&gt;&gt;&gt;     block = lax.conv_general_dilated(input, kernel, (stride, stride), 'VALID',
+&gt;&gt;&gt;                                      no_dilation, no_dilation,
+&gt;&gt;&gt;                                      conv_dimension_numbers)
+&gt;&gt;&gt;     if with_relu:
+&gt;&gt;&gt;         block = relu(block)
+&gt;&gt;&gt;     return block
+&gt;&gt;&gt;
+&gt;&gt;&gt; @jit
+&gt;&gt;&gt; def model(input):                                                       # (N, 32, 32, 3)
+&gt;&gt;&gt;     conv1_output = conv_block(2, True, input, conv1_kernel)             # (N, 15, 15, 32)
+&gt;&gt;&gt;     conv2_output = conv_block(2, True, conv1_output, conv2_kernel)      # (N, 7, 7, 64)
+&gt;&gt;&gt;     conv3_output = conv_block(2, True, conv2_output, conv3_kernel)      # (N, 3, 3, 128)
+&gt;&gt;&gt;     conv4_output = conv_block(2, True, conv3_output, conv4_kernel)      # (N, 1, 1, 256)
+&gt;&gt;&gt;     dense1_output = conv_block(1, True, conv4_output, dense_kernel)     # (N, 1, 1, E)
+&gt;&gt;&gt;     embeddings = conv_block(1, False, dense1_output, embedding_kernel)  # (N, 1, 1, E)
+&gt;&gt;&gt;     embeddings /= jnp.linalg.norm(embeddings, axis=-1, keepdims=True)   # (N, 1, 1, E)
+&gt;&gt;&gt;     return embeddings
+</code></pre>
+
+<p>in terms of utility functions we can reuse the above <code>anc_pos_neg_sims</code> and <code>accuracy</code> from before
+   but we'll need to change the <code>embeddings_for</code> slightly based on how jax and keras models are called differently.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; def embeddings_for(imgs):
+&gt;&gt;&gt;     embeddings = model(imgs.reshape(N*11, HW, HW, 3))
+&gt;&gt;&gt;     return embeddings.reshape(N, 11, E)
+&gt;&gt;&gt;
+&gt;&gt;&gt; accuracy(anc_pos_neg_sims(embeddings_for(test_set_array)))
+
+0.27
+</code></pre>
+
+
+<h2>a single network ensemble?</h2>
+<p>ok, a single random model does about the same.
+   that helps give us confidence there's no weird behaviour difference the keras and the jax model.
+   next, how do we handle the ensemble idea in a single network?
+</p>
+<p>firstly we need to remake all the kernels but with a leading <code>M</code> dimension that represents the
+   <code>M</code> models we want to run in parallel.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; key = random.PRNGKey(0)
+&gt;&gt;&gt; _key, *subkeys = random.split(key, 7)
+&gt;&gt;&gt;
+&gt;&gt;&gt; conv1_kernels = orthogonal()(subkeys[0], (M, 3, 3, 3, 32))
+&gt;&gt;&gt; conv2_kernels = orthogonal()(subkeys[1], (M, 3, 3, 32, 64))
+&gt;&gt;&gt; conv3_kernels = orthogonal()(subkeys[2], (M, 3, 3, 64, 128))
+&gt;&gt;&gt; conv4_kernels = orthogonal()(subkeys[3], (M, 3, 3, 128, 256))
+&gt;&gt;&gt; dense_kernels = orthogonal()(subkeys[4], (M, 1, 1, 256, 32))
+&gt;&gt;&gt; embedding_kernels = orthogonal()(subkeys[5], (M, 1, 1, 32, 32))
+</code></pre>
+
+<p>and then all we have to do is run the same model as before, but using <code>vmap</code> for the calls.
+</p>
+<p>note: that the very first call vmaps over <em>only</em> the <code>conv1</code> layer parameters; that's since the input
+   is just batched with <code>B</code>. this results in <code>conv1_output_m</code> picking up the additional <code>M</code> leading dimension.
+   subsequent vmap calls are over <em>both</em> the prior layer inputs, and the layer parameters.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; @jit
+&gt;&gt;&gt; def vmap_model(input):                                                                    # (N, 32, 32, 3)
+&gt;&gt;&gt;     conv1_output_m = vmap(partial(conv_block, 2, True, input))(conv1_kernels)             # (M, N, 7, 7, 64)
+&gt;&gt;&gt;     conv2_output_m = vmap(partial(conv_block, 2, True))(conv1_output_m, conv2_kernels)    # (M, N, 15, 15, 32)
+&gt;&gt;&gt;     conv3_output_m = vmap(partial(conv_block, 2, True))(conv2_output_m, conv3_kernels)    # (M, N, 1, 1, 256)
+&gt;&gt;&gt;     conv4_output_m = vmap(partial(conv_block, 2, True))(conv3_output_m, conv4_kernels)    # (M, N, 1, 1, E)
+&gt;&gt;&gt;     dense1_output_m = vmap(partial(conv_block, 1, True))(conv4_output_m, dense_kernels)   # (M, N, 1, 1, E)
+&gt;&gt;&gt;     embeddings = vmap(partial(conv_block, 1, False))(dense1_output_m, embedding_kernels)  # (M, N, 1, 1, E)
+&gt;&gt;&gt;     embeddings /= jnp.linalg.norm(embeddings, axis=-1, keepdims=True)
+&gt;&gt;&gt;     return embeddings
+</code></pre>
+
+<p>for the final example of running this model we forgo the previous utility functions and run each step explicitly.
+</p>
+<p>first we run the images through the model. this produces a <code>(M, N, 11, E)</code> output instead of a <code>(N, 11, E)</code> output as before.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; embeddings = vmap_model(test_set_array.reshape(N*11, HW, HW, 3)).reshape(M, N, 11, E)
+&gt;&gt;&gt; embeddings.shape
+
+(10, 100, 11, 32)
+</code></pre>
+
+<p>next we slice out the anchors from the positives and negatives
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; anchor_embeddings = embeddings[:, :, 0]                         # (M, N, E)
+&gt;&gt;&gt; positive_negative_embeddings = embeddings[:, :, 1:]             # (M, N, 10, E)
+</code></pre>
+
+<p>we can calculate the per model accuracy by doing the reducing and explicitly keeping <code>m</code> in the output.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; per_model_sims = jnp.einsum('mne,mnpe->mnp',
+&gt;&gt;&gt;                             anchor_embeddings,
+&gt;&gt;&gt;                             positive_negative_embeddings)        # (M, N, 10)
+&gt;&gt;&gt;
+&gt;&gt;&gt; most_similar = jnp.argmax(per_model_sims, axis=2)    # (10, N)
+&gt;&gt;&gt; times_correct = jnp.sum(most_similar == 0, axis=1)   # (10,)
+&gt;&gt;&gt; accuracies = times_correct / N                       # (10,)
+&gt;&gt;&gt; accuracies
+
+array([0.25, 0.29, 0.24, 0.23, 0.21, 0.25, 0.3 , 0.25, 0.27, 0.31])
+</code></pre>
+
+<p>cool. so each model has some degree of variance, as the keras models did.
+</p>
+<p>finally we can represent the ensemble by simply doing a further reduction over <code>m</code> in the einsum calculation.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; ensemble_sims = jnp.einsum('mne,mnpe->np',
+&gt;&gt;&gt;                            anchor_embeddings,
+&gt;&gt;&gt;                            positive_negative_embeddings)       # (N, 10)
+&gt;&gt;&gt;
+&gt;&gt;&gt; most_similar = jnp.argmax(ensemble_sims, axis=1)  # (N,)
+&gt;&gt;&gt; times_correct = jnp.sum(most_similar == 0)        # (1,)
+&gt;&gt;&gt; accuracy = times_correct / N                      # (1,)
+&gt;&gt;&gt; accuracy
+
+DeviceArray(0.4, dtype=float32)
+</code></pre>
+
+<p>all this required only one forward pass through a single model,
+   and with the weighted voting idea of the ensemble, we only required an extra <code>m</code> reduction in einsum sims call.
+   so elegant!
+</p>]]></content:encoded>
+    </item>
+  </channel>
+</rss>

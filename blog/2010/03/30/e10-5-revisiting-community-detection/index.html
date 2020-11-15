@@ -1,0 +1,119 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="e10.5-revisiting-community-detection"></a>
+  <h2 class="blog_post_title"><a href="/blog/2010/03/30/e10-5-revisiting-community-detection/" rel="bookmark" title="Permanent Link to e10.5 revisiting community detection">e10.5 revisiting community detection</a></h2>
+  <small>March 30, 2010 at 08:42 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p>i've decided to switch back to <a href="http://matpalm.com/blog/2009/10/06/e10-4-communities-in-social-graphs/">some previous work</a> i did on community detection in (social) graphs
+</p>
+<p>the <a href="http://github.com/matpalm/tgraph/tree/master/girvan_newman">last chunk of code</a> i wrote which tried to deal with weighted directed graphs was terribly, terribly, broken but it seems that simplifying to undirected graphs is giving me much saner results. yay!
+</p>
+<p>here's an example of my work in progress generated from <a href="http://github.com/matpalm/tgraph/tree/master/girvan_newman_2">the new version of the code</a>
+</p>
+<p>consider the graph
+</p>
+<img class="aligncenter size-medium wp-image-358" title="p97" src="/blog/imgs/2010/03/p97-214x300.png" alt="p97" width="214" height="300" />
+
+<p>and it's corresponding decomposition
+</p>
+<img class="aligncenter size-full wp-image-360" title="p97.dendrogram" src="/blog/imgs/2010/03/p97.dendrogram.jpg" alt="p97.dendrogram" width="400" height="400" />
+
+<p>the results are reasonable; the initial breaking of clusters [1,2,3,4,5,6] and [7,8,9,10,11,12] is the most obvious but some of the others are not as intuitive
+</p>
+<p>[1,2,5] and [7,8,10] remain as unbreakable <a href="http://en.wikipedia.org/wiki/Clique_(graph_theory)">cliques</a> though it's arbitrary that 11 was broken off from [7,8,10] instead of 10 (arbitrary but an artifact related to my shortest path calculation for the edge betweenness)
+</p>
+<p>the idea of identifying the edge to remove using <a href="http://en.wikipedia.org/wiki/Betweenness#Betweenness_centrality">edge betweenness</a> works well but it is often the case there are many edges with the same maximal betweeness and you have to choose only one. i think my current implementation of picking one is a bit naive and i'm not sure if i should move to a stochastic / <a href="http://en.wikipedia.org/wiki/Monte_Carlo_method">monte carlo style approach</a> or focus more on <a href="http://en.wikipedia.org/wiki/Community_structure#Modularity_maximization">modularity maximisation</a>
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2010/03/30/e10-5-revisiting-community-detection/";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

@@ -1,0 +1,198 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="tokenising-the-visible-english-text-of-common-crawl"></a>
+  <h2 class="blog_post_title"><a href="/blog/2011/12/10/common_crawl_visible_text" rel="bookmark" title="Permanent Link to tokenising the visible english text of common crawl">tokenising the visible english text of common crawl</a></h2>
+  <small>December 10, 2011 at 04:00 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <h2>The common crawl dataset</h2>
+<p><a href="http://www.commoncrawl.org/">Common crawl</a> is a publically available 30TB web crawl taken between September 2009 and September 2010. 
+   As a small project I decided to extract and tokenised the visible text of the web pages in this dataset. All the code to do this is 
+   <a href="https://github.com/matpalm/common-crawl/">on github</a>.
+</p>
+
+<h2>1. Getting the data</h2>
+<p>The first thing was to get the data into a hadoop cluster. 
+   It's made up of 300,000 100mb gzipped <a href="http://www.archive.org/web/researcher/ArcFileFormat.php">arc files</a> stored in S3.
+   I wrote a dead simple 
+   <a href="https://github.com/matpalm/common-crawl/blob/master/java/src/cc/SimpleDistCp.java">distributed copy</a> to do this.
+</p>
+<p>Only a few things of note about this job...
+</p>
+<ol>
+ <li>
+     The data in S3 is marked as <a href="http://docs.amazonwebservices.com/AmazonS3/latest/dev/index.html?RequesterPaysBuckets.html">requester pays</a>
+which, even though it's a no-op if you're accessing the data from EC2, needs the "x-amz-request-payer" header to be set.
+ </li>
+
+ <li>
+     Pulling from S3 to EC2 is network bound so I ran using the 
+     <a href="http://hadoop.apache.org/common/docs/current/api/org/apache/hadoop/mapred/lib/MultithreadedMapRunner.html">MultithreadedMapRunner</a> to ensure I could get as much throughput as possible.
+ </li>
+
+ <li>
+     The code includes lots of retry logic but also sets 
+     <a href="http://hadoop.apache.org/common/docs/r0.20.2/api/org/apache/hadoop/mapred/JobConf.html#setMaxMapTaskFailuresPercent(int)">mapred.max.map.failures.percent=100</a> to
+allow tasks to fail without killing the entire job (Eg there was one s3 object which had bad ACLs that couldn't be read, no amount of retries would have helped)
+ </li>
+</ol>
+
+<h2>2. Filtering text/html</h2>
+<p>The next step was to filter out everything that didn't have a mime type of 'text/html'. This is pretty straightforward since the arc file format specifies the mime type in a header.
+   I used the <a href="http://nutch.apache.org/apidocs-1.2/org/apache/nutch/tools/arc/ArcInputFormat.html">ArcInputFormat</a> from 
+   <a href="http://nutch.apache.org">Apache Nutch</a> to actually generate the hadoop map input records.
+</p>
+<p>Across the 3,000,000,000 objects in the crawl there ended up being 2,000 distinct mime types, 700 of each occuring only once, with about 90% of them being nonsense. 
+</p>
+<p>The top five mime types were ...
+</p>
+<table class="data">
+<tr><td><b>rank</b></td><td><b>mime type</b></td><td><b>freq</b></td><td><b>overall</br>%</b></td></tr>
+<tr><td>1</td><td>text/html</td><td>2,970,000,000</td><td>91%</td></tr>
+<tr><td>2</td><td>text/plain</td><td>79,000,000</td><td>2%</td></tr>
+<tr><td>3</td><td>text/xml</td><td>52,000,000</td><td>1%</td></tr>
+<tr><td>4</td><td>application/pdf</td><td>48,000,000</td><td>1%</td></tr>
+<tr><td>5</td><td>application/x-javascript</td><td>26,000,000</td><td><1%</td></tr>
+<tr><td>6</td><td>text/css</td><td>25,000,000</td><td><1%</td></tr>
+</table>
+
+<p>Even though there's probably interesting content in the non text/html object types it seemed that just handling text/html would get me the biggest bang for my buck.
+</p>
+<p>Initially I had some problems with encoding. Though http response headers include an encoding
+   field that is <i>meant</i> to indicate what encoding the payload is I found it to be wrong about 30% of the time :( I just ignored what the header said and
+   used the <a href="http://tika.apache.org/1.0/api/org/apache/tika/parser/txt/CharsetDetector.html">CharsetDetector</a> 
+   provided in <a href="http://tika.apache.org/">Apache Tika</a>. CharsetDetector inspects a chunk of bytes, uses heuristics to guess the encoding, decodes and reencodes as UTF-8. 
+</p>
+
+<h2>3. Extracting visible text</h2>
+<p>Next was to extract the visible text from this raw html. After playing with a few libraries I ended up going with 
+   <a href="http://code.google.com/p/boilerpipe/">boilerpipe</a>. In particular I ended up using the 
+   <a href="http://boilerpipe.googlecode.com/svn/trunk/boilerpipe-core/javadoc/1.0/de/l3s/boilerpipe/extractors/KeepEverythingWithMinKWordsExtractor.html">KeepEverythingWithMinKWordsExtractor</a>
+   extractor. Boilerpipe, roughly, returns a single line per block element of the html.
+</p>
+
+<h2>4. Filtering for english content</h2>
+<p>I then used 
+   <a href="http://tika.apache.org/1.0/api/org/apache/tika/language/LanguageIdentifier.html">LanguageIdentifier</a>, again a part of Tika, to filter out everything but english text. 
+   It didn't seem to have any false positives but looking at the top 5 languages something seems amiss... 
+</p>
+<table class="data">
+<tr><td><b>rank</b></td><td><b>language</b></td><td><b>freq</b></td></tr>
+<tr><td>1</td><td>English (en)</td><td>1,600,000,000</td></tr>
+<tr><td>2</td><td>Lithuanian (lt)</td><td>270,000,000</td></tr>
+<tr><td>3</td><td>Norwegian (no)</td><td>150,000,000</td></tr>
+<tr><td>4</td><td>Estonian (et)</td><td>140,000,000</td></tr>
+<tr><td>5</td><td>French (fr)</td><td>140,000,000</td></tr>
+</table>
+
+<p>I never got around to sampling some of the Lithuanian ones to see what was actually going on but I'm a bit suspicious. I might have actually lost a bit of content in this step...f
+</p>
+
+<h2>5. Tokenising</h2>
+<p>The final step was to tokenise the text. I used 
+   <a href="http://nlp.stanford.edu/software/lex-parser.shtml">the stanford parser</a>, 
+   in particular I modified their example DocumentPreprocessor to make this simplified 
+   <a href="https://github.com/matpalm/common-crawl/blob/master/java/src/cc/util/SentenceTokeniser.java">SentenceTokeniser</a>
+</p>
+<p>This tokeniser was wrapped in a 
+   <a href="https://github.com/matpalm/common-crawl/blob/master/java/src/cc/TokeniseSentences.java">TokeniseSentences</a>
+   hadoop job that did some additional sanity checking like ignoring one/two word sentences etc.
+</p>
+
+<h2>Results</h2>
+<p>The final output was 92,000,000,000 sentences (3TB gzipped). Next will be to finish porting 
+   <a href="https://github.com/matpalm/resemblance/">my near duplicate sketching algorithm</a>
+   to hadoop to run it across this data.
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2011/12/10/common_crawl_visible_text";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

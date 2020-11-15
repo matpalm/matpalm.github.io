@@ -1,0 +1,130 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="xargs-parallel-execution"></a>
+  <h2 class="blog_post_title"><a href="/blog/2009/11/06/xargs-parallel-execution/" rel="bookmark" title="Permanent Link to xargs parallel execution">xargs parallel execution</a></h2>
+  <small>November 06, 2009 at 09:57 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p>just recently discovered xargs has a parallelise option!
+</p>
+<p>i have 20 files, sample.01.gz to sample.20.gz, each ~100mb in size that i need to run a script over
+</p>
+<p>one option is
+   <pre>zcat sample*gz | ./script.rb &gt; output</pre>
+   but this will process the files sequentially on a single core.
+</p>
+<p>to get some parallel action going i could generate a temp script that produces
+   <pre>zcat sample.01.gz | ./script.rb &gt; sample.01.out &amp;
+   zcat sample.02.gz | ./script.rb &gt; sample.02.out &amp;
+   ...
+   zcat sample.20.gz | ./script.rb &gt; sample.20.out &amp;</pre>
+   and run that but this will have all 20 running at the same time and produce contention
+</p>
+<p>(though with only 20 files this might not be a problem)
+</p>
+<p>instead i can make a temp script, parse.sh
+   <pre>zcat $1 | ./script.rb &gt; $1.out</pre>
+   and run
+   <pre>find sample<em>gz | xargs -n1 -P4 sh parse.sh
+cat </em>out &gt; output</pre>
+   what is this xargs command doing?
+   <ul>
+       <li>-n1 passes one arg a time to the run comamnd (instead of the xargs default of passing all args)</li>
+       <li>-P4 says have at most 4 commands running at the same time</li>
+   </ul>
+   100% on all cores (and only because the disk can keep up)
+</p>
+<p>awesome!
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2009/11/06/xargs-parallel-execution/";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

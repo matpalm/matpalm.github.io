@@ -1,0 +1,1747 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed
+  xmlns="http://www.w3.org/2005/Atom"
+  xmlns:thr="http://purl.org/syndication/thread/1.0"
+  xml:lang="en"
+   >
+  <title type="text">brain of mat kelcey</title>
+  <subtitle type="text">thoughts from a data scientist wannabe</subtitle>
+
+  <generator uri="http://blogofile.com/">Blogofile</generator>
+
+  <link rel="alternate" type="text/html" href="http://matpalm.com/blog" />
+  <id>http://matpalm.com/blog/feed/atom/</id>
+  <link rel="self" type="application/atom+xml" href="http://matpalm.com/blog/feed/atom/" />
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[my updated list of cool machine learning books]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/cool_machine_learning_books" />
+    <id>http://matpalm.com/blog/cool_machine_learning_books</id>
+    <published>2020-11-01T21:40:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="Uncategorized" />
+    <summary type="html"><![CDATA[my updated list of cool machine learning books]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/cool_machine_learning_books"><![CDATA[<p>awhile ago i posted
+   <a href="/blog/2010/08/06/my-list-of-cool-machine-learning-books/">my list of cool machine learning books</a>,
+   but it's been awhile so it's probably time to update it...
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/mml.jpg"/>
+</p>
+<p><b><a href="https://mml-book.github.io">Mathematics for Machine Learning</a>
+   by Marc Peter Deisenroth, A. Aldo Faisal &amp; Cheng Soon Ong.</b>
+</p>
+<p>this is my personal favorite book on the general math required for machine learning,
+   the way things are described really resonate with me.
+   available as a free pdf but i got a paper copy to support the authors after reading the
+   first half.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/laalfd.jpg" />
+</p>
+<p><b><a href="http://math.mit.edu/~gs/learningfromdata/">Linear Algebra and Learning from Data</a>
+   by Gilbert Strang.</b>
+</p>
+<p>this is gilbert's most recent work. it's really great, he's such a good teacher, and
+   <a href="https://ocw.mit.edu/courses/mathematics/18-065-matrix-methods-in-data-analysis-signal-processing-and-machine-learning-spring-2018/">his freely available lectures</a>
+   are even better. it's a shorter text than his other classic intro below with
+   more of a focus on how things are connected to modern machine learning techniques.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/itla.jpg" />
+</p>
+<p><b><a href="https://math.mit.edu/~gs/linearalgebra/">Introduction to Linear Algebra</a>
+   by Gilbert Strang.</b>
+</p>
+<p>this was my favorite linear algebra book for a long time before his 'learning from
+   data' came out. this is a larger book with a more comprehensive view of linear algebra.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/ts.jpg" />
+</p>
+<p><b><a href="https://greenteapress.com/wp/think-stats-2e/">Think Stats: Probability and Statistics for Programmers</a> by Allen Downey.</b>
+</p>
+<p>this book focuses on practical computation methods for probability and statistics.
+   i got a lot out of working through this one.
+   it's all in python and available for free.
+   ( exciting update! as part of writing this post i've discovered there's a new edition
+   to read!)
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/dbda.jpg" />
+</p>
+<p><b><a href="https://sites.google.com/site/doingbayesiandataanalysis/">Doing Bayesian Data Analysis</a>
+   by John Kruscgke</b>
+</p>
+<p>on the bayesian side of things this is the book i've most enjoyed working through.
+   i've only got the first edition which was R and
+   <a href="https://en.wikipedia.org/wiki/OpenBUGS">BUGS</a> but i see
+   the second edition is R,
+   <a href="http://mcmc-jags.sourceforge.net/">JAGS</a> and
+   <a href="https://mc-stan.org/">Stan</a>.
+   it'd be fun i'm sure to work through it doing
+   everything in <a href="https://github.com/pyro-ppl/numpyro">numpyro</a>. i might do that in all
+   my free time. haha. "free time" hahaha. sob.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/eosl.jpg" />
+</p>
+<p><b><a href="https://web.stanford.edu/~hastie/ElemStatLearn/">The Elements of Statistical Learning</a>
+   by Hastie, Tibshirani and Friedman</b>
+</p>
+<p>this is still one of the most amazing fundamental machine learning books i've ever had.
+   in fact i've purchased this book <em>twice</em> and given it away both times :/ i might buy another
+   copy some time soon, even though it's been freely available to download for ages. an
+   amazing piece of work.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/pgm.jpg" />
+</p>
+<p><b>
+   <a href="https://mitpress.mit.edu/books/probabilistic-graphical-models">Probabilistic Graphical Models</a>
+   by Daphne Koller &amp; Nir Friedman</b>
+</p>
+<p>this is an epic textbook that i'd love to understand better. i've read a couple of sections in
+   detail but not the entire tome yet.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/praml.jpg" />
+</p>
+<p><b>
+   <a href="https://www.microsoft.com/en-us/research/people/cmbishop/prml-book/">Pattern Recognition and Machine Learning</a>
+   by Christopher Bishop</b>
+</p>
+<p>this is probably the best overall machine learning text book i've ever read. such a beautiful book
+   and <a href="https://www.microsoft.com/en-us/research/uploads/prod/2006/01/Bishop-Pattern-Recognition-and-Machine-Learning-2006.pdf">the pdf is FREE FOR DOWNLOAD!!!</a>
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/mlapp.jpg" />
+</p>
+<p><b><a href="https://mitpress.mit.edu/books/machine-learning-1">Machine Learning: A Probabilistic Perspective</a> by Kevin Murphy</b>
+</p>
+<p>this is my second favorite general theory text on machine learning.
+   i got kevin to sign my copy when he was passing my desk once but
+   someone borrowed it and never gave it back :(
+   so if you see a copy with my name on the spine let me know!
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/homl.jpg" />
+</p>
+<p><b><a href="https://www.oreilly.com/library/view/hands-on-machine-learning/9781492032632/">Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow</a> by Aurélien Géron</b>
+</p>
+<p>this is the book i point most people to when they are interested in getting up
+   to speed with modern applied machine learning without too much concern for the
+   theory. it's very up to date (as much as a book can be) with the latest libraries
+   and, most importantly, provides a good overview of not just neural stuff but fundamental
+   <a href="https://scikit-learn.org/stable/">scikit-learn</a> as well.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/mle.jpg" />
+</p>
+<p><b><a href="http://www.mlebook.com/wiki/doku.php">Machine Learning Engineering</a> by Andriy Burkov</b>
+</p>
+<p>a great book focussing on the operations side of running a machine learning system. i'm a bit
+   under half way through the free online version and very likely to buy a physical copy to finish
+   it and support the author. great stuff and, in many ways, a more impactful book than any of
+   the theory books here.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/itdm.jpg" />
+</p>
+<p><b><a href="https://www-users.cs.umn.edu/~kumar001/dmbook/index.php">Introduction to Data Mining</a>
+   by Pang-Ning Tan, Michael Steinbach &amp; Vipin Kumar</b>
+</p>
+<p>this is another one that was also on my list from ten years ago and though it's section
+   on neural networks is a bit of chuckle these days there is still a bunch of really
+   great fundamental stuff in this book. very practical and easy to digest. i also see there's
+   a second edition now. i reckon this would compliment the "hands on" book above very well.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/salp.jpg" />
+</p>
+<p><b><a href="https://web.stanford.edu/~jurafsky/slp3/">Speech and Language Processing</a>
+   by Dan Jurafsky &amp; James Martin</b>
+</p>
+<p>still the best overview of NLP there is (IMHO). can't wait to read the 3rd edition which
+   apparently will cover more modern stuff (e.g. transformers) but until then, for the
+   love of god though, please don't be one of those "this entire book is
+   irrelevant now! just fine tune BERT" people :/
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/no.jpg" />
+</p>
+<p><b><a href="https://link.springer.com/book/10.1007/978-0-387-40065-5">Numerical Optimization</a>
+   by Jorge NocedalStephen J. Wright</b>
+</p>
+<p>this book is super hard core and maybe more an operations
+   research book than machine learning. though i've not read it cover to cover the
+   couple of bits i've worked through really taught me a lot. i'd love to understand
+   the stuff in this text better; it's so so fundamental to machine learning (and more)
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/dl.jpg" />
+</p>
+<p><b><a href="https://www.deeplearningbook.org/">Deep Learning</a>
+   by Ian Goodfellow</b>
+</p>
+<p>writing a book specifically on deep learning is very dangerous since things move so fast but
+   if anyone can do it, ian can... i think ian's approach to explaining neural networks
+   from the ground up is one of my favorites. i got the first edition hardback but it's free to
+   download from the website.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/pr.jpg" />
+</p>
+<p><b><a href="https://mitpress.mit.edu/books/probabilistic-robotics">Probabilistic Robotics</a>
+   by Sebastian Thrun, Wolfram Burgard and Dieter Fox</b>
+</p>
+<p>when i first joined a robotics group i bought a stack of ML/robotics books and this
+   was by far the best. it's good intro stuff, and maybe already dated in places given
+   it's age (the 2006 edition i have) but i still got a bunch from it.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/tml.jpg" />
+</p>
+<p><b><a href="https://www.oreilly.com/library/view/tinyml/9781492052036/">TinyML</a>
+   by Pete Warden &amp; Daniel Situnayake</b>
+</p>
+<p>this was a super super fun book to tech review! neural networks on microcontrollers?!?
+   yes please!
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/ec.jpg" />
+</p>
+<p><b><a href="https://www.wiley.com/en-us/Evolutionary+Computation%3A+Toward+a+New+Philosophy+of+Machine+Intelligence%2C+3rd+Edition-p-9780471669517">Evolutionary Computation</a> by David Fogel</b>
+</p>
+<p>this is still by favorite book on evolutionary algorithms; i've had this for a loooong
+   time now. i still feel like evolutionary approaches are due for a big big comeback
+   any time soon....
+</p>
+<hr>
+
+
+<h2>in the mail...</h2>
+<p>the good thing about writing a list is you get people telling you cool ones you've missed :)
+</p>
+<p>the top three i've chosen (that are in the mail) are...
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/ciis.jpg" />
+</p>
+<p><b><a href="http://bayes.cs.ucla.edu/PRIMER/">Causal Inference in Statistics</a> by
+   Judea Pearl, Madelyn Glymour &amp; Nicholas P. Jewell</b>
+</p>
+<p>recommended by <a href="https://twitter.com/animesh_garg">animesh</a> who quite rightly points out
+   the lack of causality in machine learning books in the books above.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/itiala.jpg" />
+</p>
+<p><b><a href="https://www.cambridge.org/au/academic/subjects/computer-science/pattern-recognition-and-machine-learning/information-theory-inference-and-learning-algorithms?format=HB&amp;isbn=9780521642989">Information Theory, Inference and Learning Algorithms</a> by David MacKay</b>
+</p>
+<p>i've seen this book mentioned a number of times and was most recently recommended by
+   my colleague <a href="https://twitter.com/danesherbs">dane</a> so it's time to get it.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/bmlpa.jpg" />
+</p>
+<p><b><a href="https://www.oreilly.com/library/view/building-machine-learning/9781492045106/">Building Machine Learning Powered Applications</a> by Emmanuel Ameisen</b>
+</p>
+<p>a number of people i worked with have enjoyed this. first recommended by another
+   colleague <a href="https://twitter.com/davidcolls">dave</a>.
+   looks to be on the practical side rather than the theory but that's ok some times :)
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[my most meta blog ever]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/meta_blog_post" />
+    <id>http://matpalm.com/blog/meta_blog_post</id>
+    <published>2019-06-09T13:40:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="Uncategorized" />
+    <summary type="html"><![CDATA[my most meta blog ever]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/meta_blog_post"><![CDATA[<img src="/blog/imgs/2019/meta_blog_post/meta.png" />]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[simple tensorboard visualisation for gradient norms]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/viz_gradient_norms" />
+    <id>http://matpalm.com/blog/viz_gradient_norms</id>
+    <published>2017-06-27T21:45:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="Uncategorized" />
+    <summary type="html"><![CDATA[simple tensorboard visualisation for gradient norms]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/viz_gradient_norms"><![CDATA[<p><small>( i've had three people recently ask me about how i was visualising gradient norms in tensorboard so, according to
+   my three strikes rule, i now have to "automate" it by writing a blog post about it )</small>
+</p>
+<p>one really useful visualisation you can do while training a network is visualise the norms of the variables and gradients.
+</p>
+<p>how are they useful? some random things that immediately come to mind include the fact that...
+</p>
+<ul>
+ <li>
+     diverging norms of variables might mean you haven't got enough regularisation.
+ </li>
+
+ <li>
+     zero norm gradient means learning has somehow stopped.
+ </li>
+
+ <li>
+     exploding gradient norms means learning is unstable and you might need to clip (hellloooo deep reinforcement learning).
+ </li>
+</ul>
+<p>let's consider a simple bounding box regression conv net (the specifics aren't important, i just grabbed this from another project, just needed something for illustration) ...
+</p>
+<pre class="prettyprint linenums">
+# (256, 320, 3)  input image
+
+model = slim.conv2d(images, num_outputs=8, kernel_size=3, stride=2, weights_regularizer=l2(0.01), scope="c0")
+# (128, 160, 8)
+
+model = slim.conv2d(model, num_outputs=16, kernel_size=3, stride=2, weights_regularizer=l2(0.01), scope="c1")
+# (64, 80, 16)
+
+model = slim.conv2d(model, num_outputs=32, kernel_size=3, stride=2, weights_regularizer=l2(0.01), scope="c2")
+# (32, 40, 32)
+
+model = slim.conv2d(model, num_outputs=4, kernel_size=1, stride=1, weights_regularizer=l2(0.01), scope="c3")
+# (32, 40, 4)  1x1 bottleneck to get num of params down betwee c2 & h0
+
+model = slim.dropout(model, keep_prob=0.5, is_training=is_training)
+# (5120,)  32x40x4 -> 32 is where the majority of params are so going to be most prone to overfitting.
+
+model = slim.fully_connected(model, num_outputs=32, weights_regularizer=l2(0.01), scope="h0")
+# (32,)
+
+model = slim.fully_connected(model, num_outputs=4, activation_fn=None, scope="out")
+# (4,) = bounding box (x1, y1, dx, dy)
+</pre>
+
+<p>a simple training loop using feed_dict would be something along the lines of ...
+</p>
+<pre class="prettyprint linenums">
+optimiser = tf.train.AdamOptimizer()
+train_op = optimiser.minimize(loss=some_loss)
+
+with tf.Session() as sess:
+  while True:
+    _ = sess.run(train_op, feed_dict=blah)
+</pre>
+
+<p>but if we want to get access to gradients we need to do things a little differently and call <code>compute_gradients</code> and <code>apply_gradients</code> ourselves ...
+</p>
+<pre class="prettyprint linenums">
+optimiser = tf.train.AdamOptimizer()
+<b>gradients = optimiser.compute_gradients(loss=some_loss)
+train_op = optimiser.apply_gradients(gradients)</b>
+
+with tf.Session() as sess:
+  while True:
+    _ = sess.run(train_op, feed_dict=blah)
+</pre>
+
+<p>with access to the gradients we can inspect them and create tensorboard summaries for them ...
+</p>
+<pre class="prettyprint linenums">
+optimiser = tf.train.AdamOptimizer()
+gradients = optimiser.compute_gradients(loss=some_loss)
+<b>l2_norm = lambda t: tf.sqrt(tf.reduce_sum(tf.pow(t, 2)))
+for gradient, variable in gradients:
+  tf.summary.histogram("gradients/" + variable.name, l2_norm(gradient))
+  tf.summary.histogram("variables/" + variable.name, l2_norm(variable))</b>
+train_op = optimiser.apply_gradients(gradients)
+
+with tf.Session() as sess:
+  <b>summaries_op = tf.summary.merge_all()
+  summary_writer = tf.summary.FileWriter("/tmp/tb", sess.graph)</b>
+  for step in itertools.count():
+    _, <b>summary</b> = sess.run([train_op, <b>summaries_op</b>], feed_dict=blah)
+    <b>summary_writer.add_summary(summary, step)</b>
+</pre>
+
+<p>( though we may only want to run the expensive <code>summaries_op</code> once in awhile... )
+</p>
+<p>with logging like this we get 8 histogram summaries per variable; the cross product of
+</p>
+<ul>
+ <li>
+     layer weights vs layer biases
+ </li>
+
+ <li>
+     variable vs gradients
+ </li>
+
+ <li>
+     norms vs values
+ </li>
+</ul>
+<p>e.g. for conv layer c3 in the above model we get the summaries shown below.
+   note: nothing terribly interesting in this example, but a couple of things
+</p>
+<ul>
+ <li>
+     red : very large magnitude of gradient very early in training; this is classic variable rescaling.
+ </li>
+
+ <li>
+     blue: non zero gradients at end of training, so stuff still happening at this layer in terms of the balance of l2 regularisation vs loss. (note: no bias regularisation means it'll continue to drift)
+ </li>
+</ul>
+<img src="/blog/imgs/2017/c3_summaries.png" />
+
+
+<h2>gradient norms with ggplot</h2>
+<p>sometimes the histograms aren't enough and you need to do some more serious plotting. 
+   in these cases i hackily wrap the gradient calc in <a href="https://www.tensorflow.org/api_docs/python/tf/Print">tf.Print</a> 
+   and plot with <a href="http://ggplot2.org/">ggplot</a>
+</p>
+<p>e.g. here's some gradient norms from an old actor / critic model 
+   <a href="https://github.com/matpalm/cartpoleplusplus">(cartpole++)</a>
+</p>
+<img src="/blog/imgs/2017/cartpole_gradient_norms.png" />
+
+
+<h2>related: explicit simple_value and image summaries</h2>
+<p>on a related note you can also explicitly write summaries which is sometimes easier to do than generating the summaries through the graph. 
+</p>
+<p>i find this especially true for image summaries where there are many pure python options for post processing with, say, <a href="http://www.effbot.org/imagingbook/image.htm">PIL</a>
+</p>
+<p>e.g. explicit scalar values
+</p>
+<pre class="prettyprint linenums">
+summary_writer =tf.summary.FileWriter("/tmp/blah")
+summary = tf.Summary(value=[
+  tf.Summary.Value(tag="foo", simple_value=1.0),
+  tf.Summary.Value(tag="bar", simple_value=2.0),
+])
+summary_writer.add_summary(summary, step)
+</pre>
+
+<p>e.g. explicit image summaries using PIL post processing
+</p>
+<pre class="prettyprint linenums">
+summary_values = []  # (note: could already contain simple_values like above)
+for i in range(6):
+  # wrap np array with PIL image and canvas
+  img = Image.fromarray(some_np_array_probably_output_of_network[i]))
+  canvas = ImageDraw.Draw(img)
+  # draw a box in the top left
+  canvas.line([0,0, 0,10, 10,10, 10,0, 0,0], fill="white")
+  # write some text
+  canvas.text(xy=(0,0), text="some string to add to image", fill="black")
+  # serialise out to an image summary
+  sio = StringIO.StringIO()
+  img.save(sio, format="png")
+  image = tf.Summary.Image(height=256, width=320, colorspace=3, #RGB
+                           encoded_image_string=sio.getvalue())
+  summary_values.append(tf.Summary.Value(tag="img/%d" % idx, image=image))
+summary_writer.add_summary(tf.Summary(value=summary_values), step)
+</pre>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[after 2,350 days in america we are moving home...]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/farewell" />
+    <id>http://matpalm.com/blog/farewell</id>
+    <published>2017-06-14T22:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="Uncategorized" />
+    <summary type="html"><![CDATA[after 2,350 days in america we are moving home...]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/farewell"><![CDATA[<p>after 2,350 days in america we are moving home...
+</p>
+<p>as crazy as it might sound, careerwise at least, i'm leaving google brain and we're moving back to australia. #sad<strike>Panda</strike>Kangaroo. it's been a super fun 6 years in the US but our move was never going to be permanent and it feels like now is the right time for the family. believe me it's hard to leave a joint google brain / X robotics project involving deep reinforcement learning robots. hard i say!
+</p>
+<p>where will we be going?  back to melbourne where we lived for the 6 years prior to coming here. we're keen to try something different so we've bought a farm about an hour out of the city. my wife and i both grew up in semi rural settings so we have some idea of what to expect. our kids are excited their backyard is about to grow by a factor of x250.
+</p>
+<p>what will i be doing?  i actually have no idea. i'm a pretty applied person, as opposed to a hardcore researcher, and have experience in a range of areas so my resume looks ok ( even if <a href="https://www.linkedin.com/in/matkelcey/">my linkedin avatar is the i-have-no-idea-what-im-doing-dog</a> ) some recent robotics experience + lots of machine learning + moving to a farm might result in some interesting ideas. remote work is also a strong possibility; i think there is value i could add to a number of US companies even from across the ocean. to be honest i haven't thought about it too much yet, want to focus on getting everyone home as smoothly as possible first.
+</p>
+<p>what's the tech scene like in melbourne?  seemed fun when i was there, lots of smart people and i think interest in machine learning has only been growing. the tech talk i did at our little data science group just before moving here was half a dozen people, the tech talk i did in melbourne about 1 year ago was hundreds of people. when i did neural networks at uni in the late 90s it was embarrassing for the next 10 years to talk about it but these days it seems everyone is wanting to use them in some form. 
+</p>
+<p>we have about 7 weeks before we leave the bay area so i hope i get to catch up with everyone before we go! beers in the city sometime soon!
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[brutally short intro to theano word embeddings]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/2015/03/28/theano_word_embeddings" />
+    <id>http://matpalm.com/blog/2015/03/28/theano_word_embeddings</id>
+    <published>2015-03-28T13:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="Uncategorized" />
+    <summary type="html"><![CDATA[brutally short intro to theano word embeddings]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/2015/03/28/theano_word_embeddings"><![CDATA[<h1>embedding lookup tables</h1>
+<p>one thing in theano i couldn't immediately find examples for was a simple embedding lookup table, a critical component for anything with NLP. turns out that it's just one of those things that's so simple no one bothered writing it down :/
+</p>
+<p>tl;dr : you can just use <a href="http://docs.scipy.org/doc/numpy/reference/arrays.indexing.html">numpy indexing</a> and everything just works.
+</p>
+
+<h1>numpy / theano indexing</h1>
+<p>consider the following theano.tensor example of 2d embeddings for 5 items. each row represents a seperate embeddable item.
+</p>
+<pre class="prettyprint linenums">
+>>> E = np.random.randn(5, 2)
+>>> t_E = theano.shared(E)
+>>> t_E.eval()
+array([[-0.72310919, -1.81050727],
+       [ 0.2272197 , -1.23468159],
+       [-0.59782901, -1.20510837],
+       [-0.55842279, -1.57878187],
+       [ 0.63385967, -0.35352725]])
+</pre>
+
+<p>to pick a subset of the embeddings it's as simple as just using <a href="http://deeplearning.net/software/theano/library/tensor/basic.html#indexing">indexing</a>.
+   for example to get the third &amp; first embeddings it's ...
+</p>
+<pre class="prettyprint linenums">
+>>> idxs = np.asarray([2, 0])
+>>> t_E[idxs].eval()
+array([[-0.59782901, -1.20510837],   # third row of E
+       [-0.72310919, -1.81050727]])  # first row of E
+</pre>
+
+<p>if we want to concatenate them into a single vector (a common operation when we're feeding up to, say, a densely connected hidden layer),
+   it's a <a href="http://deeplearning.net/software/theano/library/tensor/basic.html#theano.tensor.reshape">reshape</a>
+</p>
+<pre class="prettyprint linenums">
+>>> t_E[idxs].reshape((1, -1)).eval()
+array([[-0.59782901, -1.20510837, -0.72310919, -1.81050727]])  # third & first row concatenated
+</pre>
+
+<p>all the required multi dimensional operations you need for batching just work too..
+</p>
+<p>eg. if we wanted to run a batch of size 2 with the first batch item being the third &amp; first embeddings and the second batch item being the
+   fourth &amp; fourth embeddings we'd do the following...
+</p>
+<pre class="prettyprint linenums">
+>>> idxs = np.asarray([[2, 0], [3, 3]])  # batch of size 2, first example in batch is pair [2, 0], second example in batch is [3, 3]
+>>> t_E[idxs].eval()
+array([[[-0.59782901, -1.20510837],    # third row of E
+        [-0.72310919, -1.81050727]],   # first row of E
+       [[-0.55842279, -1.57878187],    # fourth row of E
+        [-0.55842279, -1.57878187]]])  # fourth row of E
+>>> t_E[idxs].reshape((idxs.shape[0], -1)).eval()
+array([[-0.59782901, -1.20510837, -0.72310919, -1.81050727],   # first item in batch; third & first row concatenated
+       [-0.55842279, -1.57878187, -0.55842279, -1.57878187]])  # second item in batch; fourth row duplicated
+</pre>
+
+<p>this type of packing of the data into matrices is crucial to enable linear algebra libs and GPUs to really fire up.
+</p>
+
+<h1>a trivial full end to end example</h1>
+<p>consider the following as-simple-as-i-can-think-up "network" that uses embeddings;
+</p>
+<p>given 6 items we want to train 2d embeddings such that the first two items have the same embeddings, the third and fourth have the same embeddings and the last two
+   have the same embeddings. additionally we want all other combos to have different embeddings.
+</p>
+<p>the <i>entire</i> theano code (sans imports) is the following..
+</p>
+<p>first we initialise the embedding matrix as before
+</p>
+<pre class="prettyprint linenums">
+E = np.asarray(np.random.randn(6, 2), dtype='float32')
+t_E = theano.shared(E)
+</pre>
+
+<p>the "network" is just a dot product of two embeddings ...
+</p>
+<pre class="prettyprint linenums:3">
+t_idxs = T.ivector()
+t_embedding_output = t_E[t_idxs]
+t_dot_product = T.dot(t_embedding_output[0], t_embedding_output[1])
+</pre>
+
+<p>... where the training cost is a an L1 penality against the "label" of 1.0 for the pairs we want to have the same embeddings and
+   0.0 for the ones we want to have a different embeddings.
+</p>
+<pre class="prettyprint linenums:6">
+t_label = T.iscalar()
+gradient = T.grad(cost=abs(t_label - t_dot_product), wrt=t_E)
+updates = [(t_E, t_E - 0.01 * gradient)]
+train = theano.function(inputs=[t_idxs, t_label], outputs=[], updates=updates)
+</pre>
+
+<p>we can generate training examples by randomly picking two elements and assigning label 1.0 for the pairs 0 &amp; 1, 2 &amp; 3 and 4 &amp; 6 (and 0.0 otherwise) and every once in awhile
+   write them out to a file.
+</p>
+<pre class="prettyprint linenums:10">
+print "i n d0 d1"
+for i in range(0, 10000):
+    v1, v2 = random.randint(0, 5), random.randint(0, 5)
+    label = 1.0 if (v1/2 == v2/2) else 0.0
+    train([v1, v2], label)
+    if i % 100 == 0:
+        for n, embedding in enumerate(t_E.get_value()):
+            print i, n, embedding[0], embedding[1]
+</pre>
+
+<p>plotting this shows the convergence of the embeddings (labels denote initial embedding location)...
+</p>
+<img src="/blog/imgs/2015/twe/dp_embeddings.png" />
+
+<p>0 &amp; 1 come together, as do 2 &amp; 3 and 4 &amp; 5. ta da!
+</p>
+
+<h2>a note on dot products</h2>
+<p>it's interesting to observe the effect of this (somewhat) arbitrary cost function i picked.
+</p>
+<p>for the pairs where we wanted the embeddings to be same the cost function, \( |1 - a \cdot b | \), is minimised when the dotproduct is 1 and this happens when the vectors
+   are the same and have unit length. you can see this is case for pairs 0 &amp; 1 and 4 &amp; 5 which have come together and ended up on the unit circle. but what about 2 &amp; 3?
+   they've gone to the origin and the dotproduct of the origin with itself is 0, so it's <em>maximising</em> the cost, not minimising it! why?
+</p>
+<p>it's because of the other constraint we added. for all the pairs we wanted the embeddings to be different the cost function, \( |0 - a \cdot b | \), is minimised when
+   the dotproduct is 0. this happens when the vectors are orthogonal. both 0 &amp; 1 and 4 &amp; 5 can be on the unit sphere and orthogonal but for them to be both orthogonal
+   to 2 &amp; 3 <em>they</em> have to be at the origin. since my loss is an L1 loss (instead of, say, a L2 squared loss) the pair 2 &amp; 3 is overall better at the origin because it
+   gets more from minimising this constraint than worrying about the first.
+</p>
+<p>the pair 2 &amp; 3 has come together not because we were training embeddings to be the same but because we were also training them to be different.
+   this wouldn't be a problem if we were using 3d embeddings since they could all be both on the unit sphere and orthogonal at the same time.
+</p>
+<p>you can also see how the points never fully converge. in 2d with this loss it's impossible to get the cost down to 0 so they continue to get bumped around. in 3d, as
+   just mentioned, the cost can be 0 and the points would converge.
+</p>
+
+<h2>a note on inc_subtensor optimisation</h2>
+<p>there's one non trivial optimisation you can do regarding your embeddings that relates to how sparse the embedding update is.
+   in the above example we have 6 embeddings in total and, even though we only update 2 of them at a time, we are calculating the
+   gradient with respect to the <em>entire</em> t_E matrix. the end result is that we calculate (and apply) a gradient that for the majority of rows is just zeros.
+</p>
+<pre class="prettyprint">
+...
+gradient = T.grad(cost=abs(t_label - t_dot_product), wrt=t_E)
+updates = [(t_E, t_E - 0.01 * gradient)]
+...
+print gradient.eval({t_idxs: [1, 2], t_label: 0})
+[[  0.00000000e+00   0.00000000e+00]
+ [  9.60363150e-01   2.22545816e-04]
+ [  1.00614786e+00  -3.63630615e-03]
+ [  0.00000000e+00   0.00000000e+00]
+ [  0.00000000e+00   0.00000000e+00]
+ [  0.00000000e+00   0.00000000e+00]]
+</pre>
+
+<p>you can imagine how much sparser things are when you've got 1M embeddings and are only updating &lt;10 per example :/
+</p>
+<p>rather than do all this wasted work we can be a bit more explicit about both how we want the gradient calculated and updated
+   by using <a href="http://deeplearning.net/software/theano/library/tensor/basic.html#theano.tensor.inc_subtensor">inc_subtensor</a>
+</p>
+<pre class="prettyprint">
+...
+t_embedding_output = t_E[t_idxs]
+...
+gradient = T.grad(cost=abs(t_label - t_dot_product), wrt=t_embedding_output)
+updates = [(t_E, T.inc_subtensor(t_embedding_output, -0.01 * gradient))]
+...
+print gradient.eval({t_idxs: [1, 2], t_label: 0})
+[[  9.60363150e-01   2.22545816e-04]
+ [  1.00614786e+00  -3.63630615e-03]]
+</pre>
+
+<p>and of course you should only do this once you've <a href="http://matpalm.com/blog/2015/02/22/the_curse_of_gpufromhost/">proven it's the slow part...</a>
+</p>
+<p><a href="https://gist.github.com/matpalm/bf2e71564e87e6c36081">for code, see this gist</a>
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[hallucinating softmaxs]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/2015/03/15/hallucinating_softmaxs" />
+    <id>http://matpalm.com/blog/2015/03/15/hallucinating_softmaxs</id>
+    <published>2015-03-15T22:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="Uncategorized" />
+    <summary type="html"><![CDATA[hallucinating softmaxs]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/2015/03/15/hallucinating_softmaxs"><![CDATA[<h2>language models</h2>
+<p>language modelling is a classic problem in NLP; given a sequence of words such as "my cat likes to ..." what's the next word? this 
+   problem is related to all sorts of things, everything from autocomplete to speech to text.
+</p>
+<p>the classic solution to language modelling is based on just counting. if a speech to text system is sure its heard "my cat likes to" but
+   then can't decide if the next word if "sleep" or "beep" we can just look at relative counts; if we've observed in a large corpus
+   how cats like to sleep more than they like to beep we can say "sleep" is more likely. (note: this would be different
+   if it was "my roomba likes to ...")
+</p>
+<p>the first approach i saw to solving this problem with neural nets is from bengio et al. 
+   <a href="http://jmlr.csail.mit.edu/papers/volume3/bengio03a/bengio03a.pdf">"a neural probabilistic language model"</a> (2003).
+   this paper was a huge eye opener for me and was the first case i'd seen of using a distributed, rather than purely symbolic, 
+   representation of text. definitely "word embeddings" are all the rage these days!
+</p>
+<p>bengio takes the approach of using a softmax to estimate the distribution of possible words given the two previous words.
+   ie \( P({w}_3 | {w}_1, {w}_2) \). depending on your task though it might make more sense to instead estimate the
+   likelihood of the triple directly ie \( P({w}_1, {w}_2, {w}_3) \). 
+</p>
+<p>let's work through a empirical comparison of these two on a synthetic problem. we'll call the first the <i>softmax</i> approach and the second the <i>logisitic_regression</i> approach.
+</p>
+
+<h2>a simple generating grammar.</h2>
+<p>rather than use real text data let's work on a simpler synthetic dataset with a vocab of only 6 tokens; "A", "B", "C", "D", "E" &amp; "F". 
+   be warned: a vocab this small is so contrived that it's hard to generalise any result from it. in particular a normal english vocab in
+   the hundreds of thousands would be soooooooo much sparser.
+</p>
+<p>we'll use random walks on the following erdos renyi graph as a generating grammar. egs "phrases" include
+   "D C", "A F A F A A", "A A", "E D C" &amp; "E A A"
+</p>
+<img width="800" src="/blog/imgs/2015/hsm/trigram_generating_graph.png"/>
+
+<p>the main benefit of such a contrived small vocab is that it's feasible to analyse all 6<sup>3</sup> = 216 trigrams. 
+   let's consider the distributions associated with a couple of specific (w1, w2) pairs.
+</p>
+
+<h3>F -&gt; A -&gt; ?</h3>
+<p>there are only 45 trigrams that this grammar generates and the most frequent one is FAA. FAF is also possible but the other 
+   FA? cases can never occur.
+</p>
+<pre>
+F A A  0.20   # the most frequent trigram generated
+F A B  0.0    # never generated
+F A C  0.0
+F A D  0.0
+F A E  0.0
+F A F  0.14   # the 4th most frequent trigram
+</pre>
+
+
+<h4>softmax</h4>
+<p>if we train a simple softmax based neural probabilistic language model (nplm) we see the distribution
+   of \( P({w}_3 | {w}_1=F, {w}_2=A ) \) converge to what we expect; FAA has a likelihood of 0.66, FAF has 0.33 and the others 0.0
+</p>
+<img src="/blog/imgs/2015/hsm/sm_FA.png" />
+
+<p>this is a good illustration of the convergence we expect to see with a softmax. 
+   each observed positive example of FAA is also an implicit negative example for FAB, FAC, FAD, FAE &amp; FAF
+   and as such each FAA causes the likelihood of FAA to go up while pushing the others down. 
+   since we observe FAA twice as much as FAF it gets twice the likelihood 
+   and since we never see FAB, FAC, FAD or FAE they only ever get pushed down and converge to 0.0
+</p>
+<p>since the implementation behind this is (overly) simple we can run a couple of times to ensure things are converging consistently. 
+   here's 6 runs, from random starting parameters, and we can see each converges to the same result..
+</p>
+<img src="/blog/imgs/2015/hsm/i_sm_FA.png"/>
+
+
+<h4>logistic regression</h4>
+<p>now consider the logisitic model where instead of learning the distribution of w3 given (w1, w2) we instead
+   model the likelihood of the triple directly \( P({w}_1, {w}_2, {w}_3) \). 
+   in this case we're modelling whether a specific example is true or not, not how it relates to others, 
+   so one big con is that there are no implicit negatives like the softmax. we need explicit negative examples and for this 
+   experiment i've generated them by random sampling the trigrams that don't occur in the observed set.
+   ( the generation of "good" negatives is a surprisingly hard problem )
+</p>
+<p>if we do 6 runs again instead of learning the distribution we have FAA and FAF converging to 1.0 and the others converge to 0.0. 
+   run4 actually has FAB tending to 1.0 too but i wouldn't be surprised at all if it dropped later; these graphs in general are what i'd
+   expect given i'm just using a fixed global learning rate (ie nothing at all special about adapative learning rate)
+</p>
+<img src="/blog/imgs/2015/hsm/i_lr_FA.png"/>
+
+
+<h3>C -&gt; B -&gt; ?</h3>
+<p>now insteading considering the most frequent w1, w2 trigrams let's consider the least frequent.
+</p>
+<pre>
+C B A  0.003
+C B B  0.07   # 28th most frequent (of 45 possible trigrams)
+C B C  0.0
+C B D  0.003
+C B E  0.002
+C B F  0.001  # the least frequent trigram generated
+</pre>
+
+
+<h4>softmax</h4>
+<p>as before the softmax learns the distribution; CBB is the most frequent, CBC has 0.0 probability and the others are roughly equal.
+   these examples are far less frequent in the dataset so the model, quite rightly, allocates less of the models complexity to getting
+   them right.
+</p>
+<img src="/blog/imgs/2015/hsm/i_sm_CB.png"/>
+
+
+<h4>logisitic regression</h4>
+<p>the logisitic model as before has, generally, everything converging to 1.0 except CBC which converges to 0.0
+</p>
+<img src="/blog/imgs/2015/hsm/i_lr_CB.png"/>
+
+
+<h3>C -&gt; C -&gt; ?</h3>
+<p>finally consider the case of C -&gt; C -&gt; ?. this one is interesting since C -&gt; C never actually occurs in the grammar.
+</p>
+
+<h4>logisitic regression</h4>
+<p>first let's consider the logistic case. CC only ever occurs in the training data as an explicit negative so we see all of
+   them converging to 0.0 ( amusingly in run4 CCC alllllmost made it )
+</p>
+<img src="/blog/imgs/2015/hsm/i_lr_CC.png"/>
+
+
+<h4>softmax</h4>
+<p>now consider the softmax. recall that the softmax learns by explicit positives and implicit negatives, but, since there are no
+   cases of observed CC?, the softmax would not have seen any CC? cases.
+</p>
+<img src="/blog/imgs/2015/hsm/i_sm_CC.png"/>
+
+<p>so what is going on here? the convergence is all over the place!
+   run2 and run6 seems to suggest CCA is the only likely case whereas run3 and run4 oscillate between CCB and CCF ???
+</p>
+<p>it turns out these are artifacts of the training. there was no pressure in any way to get CC? "right" so these are just
+   the side effects of how the embeddings for tokens, particularly C in this case, are being used for the other actual observed 
+   examples. we call these hallucinations.
+</p>
+<p>another slightly different way to view this is to run the experiment 100 times and just consider the converged state
+   (or at least the final state after a fixed number of iterations)
+</p>
+<p><img src="/blog/imgs/2015/hsm/final100.fa.png"/>
+   <img src="/blog/imgs/2015/hsm/final100.cb.png"/>
+   <img src="/blog/imgs/2015/hsm/final100.cc.png"/>
+</p>
+<p>if we consider FA again we can see its low variance convergence of FAA to 0.66 and FAF to 0.33. 
+</p>
+<p>if we consider CB again we can see its higher variance convergence to the numbers we reviewe before; CBB ~= 0.4, CBC = 0.0 and the
+   others around 0.15
+</p>
+<p>considering CC though we see CCA and CCB have a bimodal distribution between 0.0 and 1.0 unlike any of the others. fascinating!
+</p>
+
+<h3>conclusions</h3>
+<p>this is interesting but i'm unsure how much of it is just due to an overly simple model. this implementation just uses a simple
+   fixed global learning rate (no per weight adaptation at all), uses very simple weight initialisation and has no regularisation at all :/
+</p>
+<p>all the code can be found on <a href="https://github.com/matpalm/neural_prob_lang_model/">github</a>
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[theano and the curse of GpuFromHost]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/2015/02/22/the_curse_of_gpufromhost" />
+    <id>http://matpalm.com/blog/2015/02/22/the_curse_of_gpufromhost</id>
+    <published>2015-02-22T22:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="Uncategorized" />
+    <summary type="html"><![CDATA[theano and the curse of GpuFromHost]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/2015/02/22/the_curse_of_gpufromhost"><![CDATA[<h3>brutually short intro to theano</h3>
+<p>i've been reviving some old <a href="http://deeplearning.net/software/theano/">theano</a> code recently and in 
+   case you haven't seen it theano is a pretty awesome python library that reads a lot like 
+   <a href="http://www.numpy.org/">numpy</a> but provides two particularly interesting features.
+</p>
+<ul>
+ <li>
+     <a href="http://deeplearning.net/software/theano/tutorial/gradients.html">symbolic differentiation</a>; not 
+something i'll talk about here, but super useful if you're tinkering with new models and you're using a gradient 
+descent method for learning (and these days, who's not..)
+ </li>
+
+ <li>
+     the ability to <a href="http://deeplearning.net/software/theano/tutorial/using_gpu.html">run transparently 
+on a gpu</a>; well, almost transparently, this'll be the main focus of this post...
+ </li>
+</ul>
+
+<h3>multiplying matrices</h3>
+<p>let's work through a very simple model that's kinda like a system of linear equations. 
+   we'll compare 1) numpy (our timing baseline) vs 2) theano on a cpu vs 3) theano on a gpu.
+   keep in mind this model is contrived and doesn't really represent anything useful, it's more to demonstrate 
+   some matrix operations.
+</p>
+
+<h4>in numpy</h4>
+<p>first consider the following numpy code 
+   (<a href="https://gist.github.com/matpalm/7b519c93ca6fb732dd17#file-speed_test_numpy-py">speed_test_numpy.py</a>)
+   which does a simple y=mx+b like calculation a number
+   of times in a tight loop. this looping isn't just for benchmarking, lots of learning algorithms operate on a tight
+   loop.
+</p>
+<pre class="prettyprint linenums">
+# define data
+# square matrices will do for a demo
+np.random.seed(123)
+m = np.random.randn(1000, 1000).astype('float32')
+x = np.random.randn(1000, 1000).astype('float32')
+b = np.random.randn(1000, 1000).astype('float32')
+
+# run tight loop
+start = time.time()
+for i in range(500):
+    y = np.add(np.dot(m, x), b)
+print "numpy", time.time()-start, "sec"
+</pre>
+
+<p>this code on a 6 core 3.8Ghz AMD runs in a bit over 2min
+</p>
+<pre class="prettyprint linenums">
+$ python speed_test_numpy.py
+numpy 135.350140095 sec
+</pre>
+
+
+<h4>in theano</h4>
+<p>now consider the same thing in theano 
+   (<a href="https://gist.github.com/matpalm/7b519c93ca6fb732dd17#file-speed_test_theano-py">speed_test_theano.py</a>)
+</p>
+<pre class="prettyprint linenums">
+import theano
+import theano.tensor as T
+
+# define data                                                                                                                                                                           
+np.random.seed(123)
+m = np.random.randn(1000, 1000).astype('float32')
+x = np.random.randn(1000, 1000).astype('float32')
+b = np.random.randn(1000, 1000).astype('float32')
+
+# define a symbolic expression of the equations in theano                                                                                                                               
+tm = T.matrix("m")
+tx = T.matrix("x")
+tb = T.matrix("b")
+ty = T.add(T.dot(tm, tx), tb)
+# and compile it
+line = theano.function(inputs=[tx, tm, tb], outputs=[ty])
+
+# then run same loop as before                                                                                                                                                          
+start = time.time()
+for i in range(500):
+    y, = line(m, x, b)
+print "theano", time.time()-start, "sec"
+</pre>
+
+<p>hopefully it's clear enough what is happening here at a high level but just briefly the tm, tx, tb and ty variables represent
+   a symbolic representation of what we want to do and the theano.function call compiles this into actual executable code.
+   there is lots of <a href="http://deeplearning.net/software/theano/tutorial/adding.html#baby-steps-algebra">gentle intro material</a> that introduces this notation on the theano site.
+</p>
+<p>when run on the cpu it takes about the same time as the numpy version
+</p>
+<pre class="prettyprint linenums">
+$ THEANO_FLAGS=device=cpu python speed_test_theano.py
+numpy 136.371109009 sec
+</pre>
+
+<p>but when "magically" run on the gpu it's quite a bit faster.
+</p>
+<pre class="prettyprint linenums">
+$ THEANO_FLAGS=device=gpu python speed_test_theano.py
+Using gpu device 0: GeForce GTX 970
+theano 3.16091990471 sec
+</pre>
+
+<p>awesome! a x40 speed up! so we're done right? not quite, we can do better.
+</p>
+
+<h3>profiling</h3>
+<p>let's drill into what's actually happening; we can do this in two ways, 
+   <a href="http://deeplearning.net/software/theano/tutorial/printing_drawing.html#debug-printing">debugging the compiled graph</a> and 
+   <a href="http://deeplearning.net/software/theano/tutorial/profiling.html">theano profiling.</a>
+</p>
+<p>debugging allows us to see what a function has been compiled to. for the cpu case it's just a
+   single <a href="http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms#Level_3">blas gemm (general matrix mulitplication)</a> call. that's
+   exactly what'd we want, so great!
+</p>
+<pre class="prettyprint linenums">
+Gemm{no_inplace} [@A] ''   0
+ |b [@B]
+ |TensorConstant{1.0} [@C]
+ |m [@D]
+ |x [@E]
+ |TensorConstant{1.0} [@C]
+</pre>
+
+<p>profiling allows to see where time is spent. 100% in this single op, no surprise.
+</p>
+<pre class="prettyprint linenums">
+$ THEANO_FLAGS=device=cpu,profile=True python speed_test_theano.py
+...
+&lt;% time&gt; &lt;sum %&gt; &lt;apply time&gt; &lt;time per call&gt; &lt;#call&gt; &lt;id&gt; &lt;Apply name&gt;
+  100.0%   100.0%     136.282s       2.73e-01s    500     0   Gemm{no_inplace}
+...
+</pre>
+
+<p>looking at the gpu version though things are a little different...
+</p>
+<pre class="prettyprint linenums">
+HostFromGpu [@A] ''   4
+ |GpuGemm{inplace} [@B] ''   3
+   |GpuFromHost [@C] ''   2
+   | |b [@D]
+   |TensorConstant{1.0} [@E]
+   |GpuFromHost [@F] ''   1
+   | |m [@G]
+   |GpuFromHost [@H] ''   0
+   | |x [@I]
+   |TensorConstant{1.0} [@E]
+</pre>
+
+<p>we can see a GpuGemm operation, the gpu equivalent of Gemm, but now there's a bunch of GpuFromHost &amp; HostFromGpu operations too? what are these? 
+</p>
+<p>i'll tell you what they are, they are the bane of your existence! these represent transferring data to/from the gpu which is slow and, if we're not
+   careful, can add up to a non trivial amount. if we review the profiling output we can see that, though we're faster
+   than the non gpu version, we're spending &gt;70% of the time just moving data.
+</p>
+<p>(though remember this example is contrived, we'd expect to be doing more in our overall computation that just a single general matrix mulitply)
+</p>
+<pre class="prettyprint linenums">
+$ THEANO_FLAGS=device=gpu,profile=True python speed_test_theano.py
+...
+&lt;% time&gt; &lt;sum %&gt; &lt;apply time&gt; &lt;time per call&gt; &lt;#call&gt; &lt;id&gt; &lt;Apply name&gt;
+  26.4%    26.4%       0.776s       1.55e-03s    500     3   GpuGemm{inplace}
+  19.5%    45.9%       0.573s       1.15e-03s    500     0   GpuFromHost(x)
+  19.5%    65.4%       0.572s       1.14e-03s    500     1   GpuFromHost(m)
+  19.3%    84.7%       0.565s       1.13e-03s    500     2   GpuFromHost(b)
+  15.3%   100.0%       0.449s       8.99e-04s    500     4   HostFromGpu(GpuGemm{inplace}.0)
+...
+</pre>
+
+<p>ouch!
+</p>
+
+<h3>shared variables</h3>
+<p>the crux of this problem is that we actually have two types of variables in this model; the parameterisation of the model (m &amp; b) and 
+   those related to examples (x &amp; y). so, though it's realistic to do a speed test with a tight loop over the same function many times,
+   what is <i>not</i> realistic is that we are passing the model parameters to/from the gpu
+   each and every input example. this is a complete waste; it's much more sensible to send them over to the gpu once at the
+   start of the loop and retreive them once at the end. this is an important and very common pattern.
+</p>
+<p>how do we fix this? it's actually pretty simple; 
+   <a href="http://deeplearning.net/software/theano/tutorial/examples.html#using-shared-variables">shared variables</a>. yay!
+</p>
+<p>consider the following; <a href="https://gist.github.com/matpalm/7b519c93ca6fb732dd17#file-speed_test_theano_shared-py">speed_test_theano_shared.py</a>
+</p>
+<pre class="prettyprint linenums">
+# define data                                                                                                                                                                           
+np.random.seed(123)
+m = np.random.randn(1000, 1000).astype('float32')
+x = np.random.randn(1000, 1000).astype('float32')
+b = np.random.randn(1000, 1000).astype('float32')
+
+# define a symbolic expression of the equations in theano                                                                                                                               
+tm = theano.shared(m)  # copy m over to gpu once explicitly
+tx = T.matrix("x")
+tb = theano.shared(b)  # copy b over to gpu once explicitly
+ty = T.add(T.dot(tm, tx), tb)
+line = theano.function(inputs=[tx], outputs=[ty])  # don't pass m & b each call
+
+# then run same loop as before                                                                                                                                                          
+start = time.time()
+for i in range(500):
+    y, = line(x)
+
+print tm.get_value().shape  # note: we can get the value back at any time
+</pre>
+
+<p>reviewing the debug we can see this removes a stack of the GpuFromHost calls.
+</p>
+<pre class="prettyprint linenums">
+HostFromGpu [@A] ''   2
+ |GpuGemm{no_inplace} [@B] ''   1
+   |<CudaNdarrayType(float32, matrix)> [@C]
+   |TensorConstant{1.0} [@D]
+   |<CudaNdarrayType(float32, matrix)> [@E]
+   |GpuFromHost [@F] ''   0
+   | |x [@G]
+   |TensorConstant{1.0} [@D]
+</pre>
+
+<p>and we're down to &lt; 2s
+</p>
+<pre class="prettyprint linenums">
+$ THEANO_FLAGS=device=gpu,profile=True python speed_test_theano_shared.py
+Using gpu device 0: GeForce GTX 970
+theano 1.93515706062 sec
+...
+&lt;% time&gt; &lt;sum %&gt; &lt;apply time&gt; &lt;time per call&gt; &lt;#call&gt; &lt;id&gt; &lt;Apply name&gt;
+  44.7%    44.7%       0.804s       1.61e-03s    500     1   GpuGemm{no_inplace}
+  30.2%    74.9%       0.543s       1.09e-03s    500     0   GpuFromHost(x)
+  25.1%   100.0%       0.451s       9.01e-04s    500     2   HostFromGpu(GpuGemm{no_inplace}.0)
+...
+</pre>
+
+<p>what's even crazier is we can go further by moving the x and y matrices onto the gpu too. it turns out this isn't <i>too</i>
+   far fetched since if x and y were representing training examples we'd be iterating over them anyways (and if we could fit them
+   all onto the gpu that'd be great )
+</p>
+<pre class="prettyprint linenums">
+#define data
+np.random.seed(123)
+m = np.random.randn(1000, 1000).astype('float32')
+x = np.random.randn(1000, 1000).astype('float32')
+b = np.random.randn(1000, 1000).astype('float32')
+
+# define a symbolic expression of the equations in theano
+tm = theano.shared(m)
+tx = theano.shared(x)
+tb = theano.shared(b)
+ty = theano.shared(np.zeros((1000, 1000)).astype('float32'))  # we need a shared var for y now
+mx_b = T.add(T.dot(tm, tx), tb)
+# and compile it
+train = theano.function(inputs=[], updates={ty: mx_b})  # update y on gpu
+
+# then run same loop as before
+start = time.time()
+for i in range(500):
+    train()  # now there's no input/output
+print tm.get_value().shape
+print "theano", time.time()-start, "sec"
+</pre>
+
+<p>the debug graph is like the cpu graph now, just one gemm call.
+</p>
+<pre class="prettyprint linenums">
+GpuGemm{no_inplace} [@A] ''   0
+ |<CudaNdarrayType(float32, matrix)> [@B]
+ |TensorConstant{1.0} [@C]
+ |<CudaNdarrayType(float32, matrix)> [@D]
+ |<CudaNdarrayType(float32, matrix)> [@E]
+ |TensorConstant{1.0} [@C]
+</pre>
+
+<p>and runs in under a second. x150 the numpy version. nice! :)
+</p>
+<pre class="prettyprint linenums">
+$ THEANO_FLAGS=device=gpu,profile=True python speed_test_theano_shared2.py
+theano 0.896003007889 sec
+...
+&lt;% time&gt; &lt;sum %&gt; &lt;apply time&gt; &lt;time per call&gt; &lt;#call&gt; &lt;id&gt; &lt;Apply name&gt;
+  100.0%   100.0%       0.800s       1.60e-03s     C      500        1   GpuGemm{no_inplace}
+...
+</pre>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[dead simple pymc]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/2012/12/27/dead_simple_pymc" />
+    <id>http://matpalm.com/blog/2012/12/27/dead_simple_pymc</id>
+    <published>2012-12-27T21:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="Uncategorized" />
+    <summary type="html"><![CDATA[dead simple pymc]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/2012/12/27/dead_simple_pymc"><![CDATA[<h3>pymc / mcmc / mind blown</h3>
+<p><a href="http://pymc-devs.github.com/pymc/">PyMC</a>
+   is a python library for working with
+   <a href="http://en.wikipedia.org/wiki/Bayesian_statistics">bayesian statistical models</a>,
+   primarily using
+   <a href="http://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo">MCMC</a>
+   methods. as a software engineer who has only just scratched the surface of statistics this whole MCMC
+   business is <a href="/blog/imgs/jackie.jpg">blowing my mind</a> so i've got to share some examples.
+</p>
+
+<h3>fitting a normal</h3>
+<p>let's start with the simplest thing possible, fitting a simple distribution.
+</p>
+<p>say we have a thousand values, <code> 87.27, 67.98, 119.56, ...</code> and we want to build a model of them.
+</p>
+<p>a common first step might be to generate a histogram.
+</p>
+<img src="/blog/imgs/2012/pymc/data.eg2.png" />
+
+<p>if i had to a make a guess i'd say this data looks
+   <a href="http://en.wikipedia.org/wiki/Normal_distribution">normally distributed</a>.
+   somewhat unsurprising, not just because normal distributions are freakin everywhere,
+   (this great
+   <a href="http://www.youtube.com/watch?v=JNm3M9cqWyc">khan academy video</a>
+   on
+   <a href="http://en.wikipedia.org/wiki/Central_limit_theorem">the central limit theorem</a>
+   explains why) but because it was me who synthetically generated this data in the first place ;)
+</p>
+<p>now a normal distribution is parameterised by two values; it's <i>mean</i> (technically speaking, the "middle" of the curve) and it's <i>standard deviation</i> (even more technically speaking, how "fat" it is) so let's use PyMC to figure out what these values are for this data.
+</p>
+<p><i>!!warning!! !!!total overkill alert!!!</i> there must be a bazillion simpler ways to fit a normal to this data but this post is about
+   dead-simple-PyMC not dead-simple-something-else.
+</p>
+<p>first a definition of our model.
+</p>
+<pre class="prettyprint linenums">
+# simple_normal_model.py
+from pymc import *
+data = map(float, open('data', 'r').readlines())
+mean = Uniform('mean', lower=min(data), upper=max(data))
+precision = Uniform('precision', lower=0.0001, upper=1.0)
+process = Normal('process', mu=mean, tau=precision, value=data, observed=True)
+</pre>
+
+<p>working <i>backwards</i> through this code ...
+</p>
+<ul>
+ <li>
+     line 6 says i am trying to model some <code>process</code> that i believe is <code>Normal</code>ly distributed defined by variables <code>mean</code> and <code>precision</code>. (precision is just the inverse of the variance, which in turn is just the standard deviation squared). i've already <code>observed</code> this data and the <code>value</code>s are in the variable <code>data</code>
+ </li>
+
+ <li>
+     line 5 says i don't know the <code>precision</code> for my <code>process</code> but my prior belief is it's value is somewhere between 0.0001 and 1.0.
+since i don't favor any values in this range my belief is <code>uniform</code> across the values. note: assuming a uniform distribution for the precision is overly simplifying things quite a bit, but we can get away with it in this simple example and we'll come back to it.
+ </li>
+
+ <li>
+     line 4 says i don't know the <code>mean</code> for my data but i think it's somewhere between the <code>min</code> and the <code>max</code> of the observed <code>data</code>. again this belief is <code>uniform</code> across the range.
+ </li>
+
+ <li>
+     line 3 says the <code>data</code> for my unknown <code>process</code> comes from a local file (just-plain-python)
+ </li>
+</ul>
+<p>the second part of the code runs the MCMC sampling.
+</p>
+<pre class="prettyprint linenums">
+from pymc import *
+import simple_normal_model
+model = MCMC(simple_normal_model)
+model.sample(iter=500)
+print(model.stats())
+</pre>
+
+<p>working <i>forwards</i> through this code ...
+</p>
+<ul>
+ <li>
+     line 4 says build a MCMC for the model from the <code>simple_normal_model</code> file
+ </li>
+
+ <li>
+     line 5 says run a sample for 500 iterations
+ </li>
+
+ <li>
+     line 6 says print some stats.
+ </li>
+</ul>
+<p><b>and that's it!</b>
+</p>
+<p>the output from our stats includes among other things estimates for the <code>mean</code> and <code>precision</code> we were trying to find
+</p>
+<pre class="prettyprint">
+{
+'mean': {'95% HPD interval': array([  94.53688316,  102.53626478]) ... },
+'precision': {'95% HPD interval': array([ 0.00072487,  0.03671603]) ... },
+...
+}
+</pre>
+
+<p>now i've brushed over a couple of things here
+   (eg the use of uniform prior over the precision, see <a href="http://pymc-devs.github.com/pymc/modelfitting.html#gibbs-step-methods">here</a> for more details)
+   but i can get away with it all because this problem is a trivial one and i'm not doing gibbs sampling in this case.
+   the main point i'm trying to make is that it's dead simple to start writing these models.
+</p>
+<p>one thing i do want to point out is that this estimation doesn't result in just one single value for mean and precision, it results in a distribution of
+   the possible values. this is great since it gives us an idea of how confident we can be in the values as well as allowing this whole process to be iterative,
+   ie the output values from this model can be feed easily into another.
+</p>
+
+<h3>deterministic variables</h3>
+<p>all the code above parameterised the normal distribution with a mean and a precision. i've always thought of normals though in terms of means and standard deviations
+   (precision is a more bayesian way to think of things... apparently...) so the first extension to my above example i want to make is to redefine the problem
+   in terms of a prior on the standard deviation instead of the precision. mainly i want to do this to introduce the <code>deterministic</code> concept
+   but it's also a subtle change in how the sampling search will be directed because it introduces a non linear transform.
+</p>
+<pre class="prettyprint linenums">
+data = map(float, open('data', 'r').readlines())
+
+mean = Uniform('mean', lower=min(data), upper=max(data))
+std_dev = Uniform('std_dev', lower=0, upper=50)
+
+@deterministic(plot=False)
+def precision(std_dev=std_dev):
+    return 1.0 / (std_dev * std_dev)
+
+process = Normal('process', mu=mean, tau=precision, value=data, observed=True)
+</pre>
+
+<p>our code is almost the same but instead of a prior on the <code>precision</code> we use a <code>deterministic</code> method to map from the parameter we're
+   trying to fit (the <code>precision</code>) to a variable we're trying to estimate (the <code>std_dev</code>).
+</p>
+<p>we fit the model using the same <code>run_mcmc.py</code> but this time get estimates for the <code>std_dev</code> not the <code>precision</code>
+</p>
+<pre class="prettyprint">
+{
+'mean': {'95% HPD interval': array([  94.23147867,  101.76893808]), ...
+'std_dev': {'95% HPD interval': array([ 19.53993697,  21.1560098 ]), ...
+...
+}
+</pre>
+
+<p>which all matches up to how i originally generated the data in the first place.. cool!
+</p>
+<pre class="prettyprint">
+from numpy.random import normal
+data = [normal(100, 20) for _i in xrange(1000)]
+</pre>
+
+<p>for this example let's now dive a bit deeper than just the stats object.
+   to help understand how the sampler is converging on it's results we can also dump
+   a trace of it's progress at the end of <code>run_mcmc.py</code>
+</p>
+<pre class="prettyprint">
+import numpy
+for p in ['mean', 'std_dev']:
+    numpy.savetxt("%s.trace" % p, model.trace(p)[:])
+</pre>
+
+<p>plotting this we can see how quickly the sampled values converged.
+</p>
+<img src="/blog/imgs/2012/pymc/traces.eg2.png" />
+
+
+<h3>two normals</h3>
+<p>let's consider a slightly more complex example.
+</p>
+<p>again we have some data... <code>107.63, 207.43, 215.84, ...</code> that plotted looks like this...
+</p>
+<img src="/blog/imgs/2012/pymc/data.eg3.png" />
+
+<p>hmmm. looks like <i>two</i> normals this time with the one centered on 100 having a bit more data.
+</p>
+<p>how could we model this one?
+</p>
+<pre class="prettyprint linenums">
+data = map(float, open('data', 'r').readlines())
+
+theta = Uniform("theta", lower=0, upper=1)
+bern = Bernoulli("bern", p=theta, size=len(data))
+
+mean1 = Uniform('mean1', lower=min(data), upper=max(data))
+mean2 = Uniform('mean2', lower=min(data), upper=max(data))
+std_dev = Uniform('std_dev', lower=0, upper=50)
+
+@deterministic(plot=False)
+def mean(bern=bern, mean1=mean1, mean2=mean2):
+    return bern * mean1 + (1 - ber) * mean2
+
+@deterministic(plot=False)
+def precision(std_dev=std_dev):
+    return 1.0 / (std_dev * std_dev)
+
+process = Normal('process', mu=mean, tau=precision, value=data, observed=True)
+</pre>
+
+<p>reviewing the code again it's mostly the same the big difference being the <code>deterministic</code> definition of the <code>mean</code>.
+   it's now that we finally start to show off the awesome power of these non analytical approaches.
+</p>
+<p>line 12 defines the mean not by one <code>mean</code> variable
+   but instead as a mixture of two, <code>mean1</code> and <code>mean2</code>. for each value we're trying to model we pick either <code>mean1</code>
+   or <code>mean2</code> based on <i>another</i> random variable <code>bern</code>.
+   <code>bern</code> is described by a
+   <a href="http://en.wikipedia.org/wiki/Bernoulli_distribution">bernoulli distribution</a>
+   and so is either 1 or 0, proportional to the parameter <code>theta</code>.
+</p>
+<p>ie the definition of our <code>mean</code> is that when <code>theta</code> is high, near 1.0, we pick <code>mean1</code> most of the time and
+   when <code>theta</code> is low, near 0.0, we pick <code>mean2</code> most of the time.
+</p>
+<p>what we are solving for then is not just <code>mean1</code> and <code>mean2</code> but how the values are split between them (described by <code>theta</code>)
+   (and note for the sake of simplicity i made the two normal differ in their means but use a shared standard deviation. depending on what you're doing this
+   might or might not make sense)
+</p>
+<p>reviewing the traces we can see the converged <code>mean</code>s are 100 &amp; 200 with <code>std dev</code> 20. the mix (<code>theta</code>) is 0.33, which all agrees
+   with the synthetic data i generated for this example...
+</p>
+<p><img src="/blog/imgs/2012/pymc/traces.eg3.png" /><img src="/blog/imgs/2012/pymc/trace.theta.png" />
+</p>
+<pre class="prettyprint">
+from numpy.random import normal
+import random
+data = [normal(100, 20) for _i in xrange(1000)]  # 2/3rds of the data
+data += [normal(200, 20) for _i in xrange(500)]  # 1/3rd of the data
+random.shuffle(data)
+</pre>
+
+<p>to me the awesome power of these methods is the ability in that function to pretty much write whatever i think best describes the process. too cool for school.
+</p>
+<p>i also find it interesting to see how the convergence came along...
+   the model starts in a local minima of both normals having mean a bit below 150
+   (the midpoint of the two actual ones) with a mixing proportion of somewhere in the ballpark of 0.5 / 0.5.
+   around iteration 1500 it correctly splits them apart and starts to understand the mix is more like 0.3 / 0.7.
+   finally by about iteration 2,500 it starts working on the standard deviation which in turn really helps narrow down the true means.
+</p>
+<p>(thanks <a href="https://twitter.com/Cmrn_DP">cam</a> for helping me out with the formulation of this one..)
+</p>
+
+<h3>summary and further reading</h3>
+<p>these are pretty simple examples thrown together to help me learn but i think they're still illustrative of the power of these methods
+   (even when i'm completely ignore anything
+   to do with
+   <a href="http://en.wikipedia.org/wiki/Conjugate_prior#Table_of_conjugate_distributions">conjugacy</a>)
+</p>
+<p>in general i've been working through an awesome book,
+   <a href="http://www.indiana.edu/~kruschke/DoingBayesianDataAnalysis/">doing bayesian data analysis</a>,
+   and can't recommend it enough.
+</p>
+<p>i also found <a href="https://twitter.com/johnmyleswhite">john's</a>
+   blog post on
+   <a href="http://www.johnmyleswhite.com/notebook/2010/08/20/using-jags-in-r-with-the-rjags-package/">using jags in r</a>
+   was really helpful getting me going.
+</p>
+<p>all the examples listed here are on
+   <a href="https://github.com/matpalm/doing_bayesian_data_analysis/tree/master/pymc_hacking">github</a>.
+</p>
+<p>next is to rewrite everything in <a href="http://mc-stan.org/">stan</a> and do some comparision between pymc, stan and
+   <a href="http://mcmc-jags.sourceforge.net/">jags</a>. fun times!
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[smoothing low support cases using confidence intervals]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/2012/12/confidence_interval_smoothing" />
+    <id>http://matpalm.com/blog/2012/12/confidence_interval_smoothing</id>
+    <published>2012-12-08T22:50:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="Uncategorized" />
+    <summary type="html"><![CDATA[smoothing low support cases using confidence intervals]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/2012/12/confidence_interval_smoothing"><![CDATA[<h2>problem</h2>
+<p>say you have three items; item1, item2 and item3 and you've somehow associated a count for each against one of five labels; A, B, C, D, E
+</p>
+<pre class="prettyprint">
+> data
+          A   B     C    D   E
+item1 23700  20  1060   11   4
+item2  1581 889 20140 1967 200
+item3     1   0     1   76   0
+</pre>
+
+<p>depending on what you're doing it'd be reasonable to normalise these values and an l1-normalisation 
+   (ie rescale so they are the same proportion but add up to 1) gives us the following...
+</p>
+<pre class="prettyprint">
+> l1_norm = function(x) x / sum(x)
+> l1 = t(apply(data, 1, l1_norm))
+> l1
+             A          B        C          D          E
+item1 0.955838 0.00080661 0.042751 0.00044364 0.00016132
+item2 0.063809 0.03588005 0.812851 0.07938814 0.00807200
+item3 0.012821 0.00000000 0.012821 0.97435897 0.00000000
+</pre>
+
+<p>great... but you know it's fair enough if you think things don't feel right...
+</p>
+<p>according to these normalised values item3 is 
+   "more of" a D (0.97) than item1 is an A (0.95) even though we've only collected 1/300th of the data for it. this just isn't right. 
+</p>
+<p>purely based on these numbers i'd think it's more sensible to expect item3 to be A or a C (since that's what we've seen 
+   with item1 and item2) but we just haven't seen enough data for it yet. what makes sense then is to smooth the value 
+   of item3 out and make it more like some sort of population average.
+</p>
+
+<h2>an average item</h2>
+<p>so firstly what makes a sensible population average? ie if we didn't know anything at all about a new item what would we want the proportions
+   of labels to be? alternatively we can ask what do we think item3 is likely to look like later on as we gather more data for it? 
+   i think an l1-norm of the sums of all the values makes sense ...
+</p>
+<pre class="prettyprint">
+> column_totals = apply(data, 2, sum)
+> population_average = l1_norm(column_totals)
+> population_average
+        A         B         C         D         E 
+0.5094218 0.0183000 0.4268199 0.0413513 0.0041069 
+</pre>
+
+<p>... and it seems fair. without any other info it's reasonable to "guess" a new item is likely to be somewhere between an A (0.50) and a C (0.42)
+</p>
+
+<h2>mixing</h2>
+<p>so now we have our item3, and our population average, and we want to mix them together in some way... how might we do this?
+</p>
+<pre class="prettyprint">
+         A         B         C         D         E 
+item3    0.012821 0.000000 0.012821 0.974358 0.000000
+pop_aver 0.509421 0.018300 0.426819 0.041351 0.004106 
+</pre>
+
+<p>a linear weighted sum is nice and easy; ie a classic <code>item3 * alpha + pop_aver * (1-alpha)</code> 
+</p>
+<p>but then how do we pick alpha? 
+</p>
+<p>if we were to do this reweighting for item1 or item2 we'd want alpha to be large, ie nearer 1.0, to reflect the confidence 
+   we have in their current values since we have lots of data for them. for item3 we'd want alpha to be small, ie nearer 0, 
+   to reflect the lack of confidence we have in it.
+</p>
+<p>enter <a href="http://en.wikipedia.org/wiki/Confidence_interval">the confidence interval</a>, a way of testing how confident we are in a set of values.
+</p>
+
+<h2>diversion</h2>
+<p>firstly, a slight diversion re: confidence intervals...
+</p>
+<p>consider three values, 100, 100 and 200. running <a href="http://www.rforge.net/doc/packages/NCStats/gofCI.html">this goodness of fit test</a>
+   gives the following result.
+</p>
+<pre class="prettyprint">
+> library(NCStats)
+> gofCI(chisq.test(c(100, 100, 200)), conf.level=0.95)
+     p.obs   p.LCI   p.UCI 
+[1,]  0.25 0.21008 0.29468
+[2,]  0.25 0.21008 0.29468
+[3,]  0.50 0.45123 0.54877
+</pre>
+
+<p>you can read the first row of this table as "the count 100 was observed to be 0.25 (p.obs) of the total and i'm 95%
+   confident (conf.level) that the <em>true</em> value is between 0.21 (p.LCI = lower confidence interval) and 0.29 (p.UCI = upper confidence interval).
+</p>
+<p>there are two important things to notice that can change the range of confidence interval...
+</p>
+<p>1) upping the confidence level results in a wider confidence interval. ie "i'm 99.99% confident the value is true value
+   is between 0.17 and 0.34, but only 1% confident it's between 0.249 and 0.2502"
+</p>
+<pre class="prettyprint">
+> gofCI(chisq.test(c(100, 100, 200)), conf.level=0.9999)
+     p.obs   p.LCI   p.UCI
+[1,]  0.25 0.17593 0.34230
+[2,]  0.25 0.17593 0.34230
+[3,]  0.50 0.40452 0.59548
+
+> gofCI(chisq.test(c(100, 100, 200)), conf.level=0.01)
+     p.obs   p.LCI   p.UCI
+[1,]  0.25 0.24973 0.25027
+[2,]  0.25 0.24973 0.25027
+[3,]  0.50 0.49969 0.50031
+</pre>
+
+<p>2) getting more data results in a narrower confidence interval. ie "even though the proportions stay the same as i gather x10, then x100, my
+   original data i can narrow my confidence interval around the observed value"
+</p>
+<pre class="prettyprint">
+> gofCI(chisq.test(c(10, 10, 20)), conf.level=0.95)
+     p.obs   p.LCI   p.UCI
+[1,]  0.25 0.14187 0.40194
+[2,]  0.25 0.14187 0.40194
+[3,]  0.50 0.35200 0.64800
+
+> gofCI(chisq.test(c(100, 100, 200)), conf.level=0.95)
+     p.obs   p.LCI   p.UCI
+[1,]  0.25 0.21008 0.29468
+[2,]  0.25 0.21008 0.29468
+[3,]  0.50 0.45123 0.54877
+
+> gofCI(chisq.test(c(1000, 1000, 2000)), conf.level=0.95)
+     p.obs   p.LCI   p.UCI   p.exp
+[1,]  0.25 0.23683 0.26365
+[2,]  0.25 0.23683 0.26365
+[3,]  0.50 0.48451 0.51549
+</pre>
+
+<p>so it turns out this confidence interval is exactly what we're after; a way of estimating a pessimistic value (the lower bound) that gets closer to
+   the observed value as the size of the observed data grows.
+</p>
+<p>note: there's a lot of discussion on how best to do these calculations. there is a more "correct" and principled version
+   of this calculation that is provided by <a href="http://cran.r-project.org/web/packages/MultinomialCI/index.html">MultinomialCI</a> but 
+   i found it's results weren't as good for my purposes.
+</p>
+
+<h2>back to alpha</h2>
+<p>awesome, so back to the problem at hand; how do we pick our mixing parameter alpha?
+</p>
+<p>let's extract the lower bound of the confidence interval value for our items using a very large confidence (99.99%)
+   (to enforce a wide interval). the original l1-normalised values are shown here again for comparison.
+</p>
+<pre class="prettyprint">
+> l1
+            A       B       C       D       E
+item1 0.95583 0.00080 0.04275 0.00044 0.00016
+item2 0.06380 0.03588 0.81285 0.07938 0.00807
+item3 0.01282 0.00000 0.01282 0.97435 0.00000
+
+> library(NCStats)
+> gof_ci_lower = function(x) gofCI(chisq.test(x), conf.level=0.9999)[,2]
+> gof_chi_ci = t(apply(data, 1, gof_ci_lower))
+> gof_chi_ci
+            A       B       C       D       E
+item1 0.95048 0.00035 0.03803 0.00015 0.00003
+item2 0.05803 0.03156 0.80302 0.07296 0.00614
+item3 0.00000 0.00000 0.00000 0.79725 0.00000
+</pre>
+
+<p>we see that item1, which had a lot of support data, has dropped it's A value only slightly from 0.955 to 0.950 whereas item3 which had very little
+   support, has had it's D value drop drastically from 0.97 to 0.79. by using a conf.level closer and closer 1.0 we see make this drop more and more
+   drastic.
+</p>
+<p>because each of the values in the <code>gof_chi_ci matrix</code> are lower bounds the rows no longer add up to 1.0 (as they do in the l1-value
+   matrix). we can calculate how much we've "lost" with <code>1 - sum(rows)</code> and it turns out this residual is pretty much
+   exactly what we were after when we were for our mixing parameter alpha!
+</p>
+<pre class="prettyprint">
+> gof_chi_ci$residual = as.vector(1 - apply(gof_chi_ci, 1, sum))
+> gof_chi_ci
+            A       B       C       D       E residual
+item1 0.95048 0.00035 0.03803 0.00015 0.00003  0.01096
+item2 0.05803 0.03156 0.80302 0.07296 0.00614  0.02829
+item3 0.00000 0.00000 0.00000 0.79725 0.00000  0.20275
+</pre>
+
+<p>in the case of item1 the residual is low, ie the confidence interval lower bound was close to the observed value so we shouldn't mix in much
+   of the population average. but in the case of item3 the residual is high, we lost a lost by the confidence interval being very wide, so we might
+   as well mix in more of the population average.
+</p>
+<p>now what i've said here is completely unprincipled. i just made it up and the maths work because everything is normalised. but having said that the
+   results are really good so i'm going with it :)
+</p>
+
+<h2>smoothing things out then</h2>
+<p>putting it all together then we have the following bits of data...
+</p>
+<pre class="prettyprint">
+> l1  # our original estimates
+            A       B       C       D       E
+item1 0.95583 0.00080 0.04275 0.00044 0.00016
+item2 0.06380 0.03588 0.81285 0.07938 0.00807
+item3 0.01282 0.00000 0.01282 0.97435 0.00000
+
+> population_average  # the population average
+            A       B       C       D       E 
+item1 0.50942 0.01830 0.42681 0.04135 0.00410
+
+> gof_chi_ci  # lower bound of our confidences
+            A       B       C       D       E
+item1 0.95048 0.00035 0.03803 0.00015 0.00003
+item2 0.05803 0.03156 0.80302 0.07296 0.00614
+item3 0.00000 0.00000 0.00000 0.79725 0.00000
+
+> gof_chi_ci_residual = as.vector(1 - apply(gof_chi_ci, 1, sum))
+> gof_chi_ci_residual  # how much we should mix in the population average
+[1] 0.01096 0.02829 0.20275 0.40759
+</pre>
+
+<p>since there's lots of support for item1 the residual is small, only 0.01, so we smooth only a little of the population average in and
+   end up not changing the values that much
+</p>
+<pre class="prettyprint">
+> l1[1,]
+            A       B       C       D       E
+item1 0.95583 0.00080 0.04275 0.00044 0.00016
+
+> gof_chi_ci[1,] + population_average * gof_chi_ci_residual[1]
+            A       B       C       D       E
+item1 0.95606 0.00055 0.04270 0.00060 0.00007
+</pre>
+
+<p>but item3 has a higher residual and so we smooth more of the population average in and it's shifted more much strongly from D towards A and B
+</p>
+<pre class="prettyprint">
+> l1[3,]
+            A       B       C       D       E
+item3 0.01282 0.00000 0.01282 0.97435 0.00000
+
+> gof_chi_ci[3,] + population_average * gof_chi_ci_residual[3]
+            A       B       C       D       E
+item3 0.10329 0.00371 0.08653 0.80563 0.00083
+</pre>
+
+<p><a href="http://www.youtube.com/watch?v=PvgleM10MDg">great success!</a>
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[item similarity by bipartite graph dispersion]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/2012/08/item_similarity_by_bipartite_graph_dispersion" />
+    <id>http://matpalm.com/blog/2012/08/item_similarity_by_bipartite_graph_dispersion</id>
+    <published>2012-08-20T20:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="Uncategorized" />
+    <summary type="html"><![CDATA[item similarity by bipartite graph dispersion]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/2012/08/item_similarity_by_bipartite_graph_dispersion"><![CDATA[<p>the basis of most recommendation systems is the ability to rate similarity between items. there are <i>lots</i> of different ways to do this. 
+</p>
+<p>one model is based the idea of an <a href="http://en.wikipedia.org/wiki/Interest_Graph">interest graph</a> where the nodes of the graph are users and items 
+   and the edges of the graph represent an interest, whatever that might mean for the domain. 
+</p>
+<p>if we only allow edges between users and items the graph is <a href="http://en.wikipedia.org/wiki/Bipartite_graph">bipartite</a>.
+</p>
+<p>let's consider a simple example of 3 users and 3 items; user1 likes item1, user2 likes all three items and user3 likes just item3.
+</p>
+<table class="data">
+<tr><td><img src="/blog/imgs/2012/bgd/fig1.png"/></td></tr>
+<tr><td>fig1</br>user / item interest graph</td></tr>
+</table>
+
+<p>one way to model similiarity between items is as follows....
+</p>
+<p>let's consider a token starting at item1. we're going to repeatedly "bounce" this token back and forth between the items and the users based on the interest edges.
+</p>
+<p>so, since item1 is connected to user1 and user2 we'll pick one of them randomly and move the token across. it's 50/50 which of user1 or user2 we end up at (fig2).
+</p>
+<p>next we bounce the token back to the items; if the token had gone to user1 then it has to go back to item1 since user1 has no other edges, but if it had gone to user2 it could back to any
+   of the three items with equal probability; 1/3rd. 
+</p>
+<p>the result of this is that the token has 0.66 chance of ending up back at item1 and equal 0.16 chance of ending up at either item2 or item3 (fig3)
+</p>
+<table class="data">
+<tr><td><img src="/blog/imgs/2012/bgd/fig2.png"/></td><td><img src="/blog/imgs/2012/bgd/fig3.png"/></td></tr>
+<tr><td>fig2</br>dispersing from item1 to users</td><td>fig3</br>dispersing back from users to items</td></tr>
+</table>
+
+<p>( note this is different than if we'd started at item2. in that case we'd have gone to user2 with certainity and then it would have been uniformly 
+   random which of the items we'd ended up at )
+</p>
+<p>for illustration let's do another iteration... 
+</p>
+<p>bouncing back to the users item1's 0.66 gets split 50/50 between user1 and user2. all of item2's 0.16 goes to user2 and item3 splits it's 0.16 between user2 and user3.
+   we end up with fig4 (no, not <a href="http://www.youtube.com/watch?v=VKrNGKO47ss">that</a> figure 4).
+   bouncing back to the items we get to fig5.
+</p>
+<table class="data">
+<tr><td><img src="/blog/imgs/2012/bgd/fig4.png"/></td><td><img src="/blog/imgs/2012/bgd/fig5.png"/></td></tr>
+<tr><td>fig4</td><td>fig5</td></tr>
+</table>
+
+<p>if we keep repeating things we
+   converge on the values <pre>{item1: 0.40, item2: 0.20, item3: 0.40}</pre> and these represent the probabilities of ending up in a particular item if we bounced forever. 
+</p>
+<p>note since this is convergent it also doesn't actually matter which item we'd started at, it would always get the same result in the limit.
+</p>
+<p>to people familiar with <a href="http://en.wikipedia.org/wiki/Power_method">power methods</a> this convergence is no surprise. you might also recognise a similiarity between this and the most famous
+   power method of them all, <a href="http://en.wikipedia.org/wiki/PageRank">pagerank</a>.
+</p>
+<p>so what has this all got to do with item similiarity? 
+</p>
+<p>well, the values of the probabilities might all converge to the same set regardless of which item we start at 
+   <b>but</b> each item gets there in different ways. 
+</p>
+<p>most importantly we can capture this difference by taking away a bit of probability each iteration of the dispersion.
+</p>
+<p>so, again, say we start at item1. after we go to users and back to items we are at fig3 again. 
+</p>
+<p>but this time, before we got back to the users side, let's take away a small proportion of the probability mass, say, 1/4. this would be 0.16 for item1 and 0.04 for item2 and 
+   item3. this leaves us with fig6.
+</p>
+<table class="data">
+<tr><td><img src="/blog/imgs/2012/bgd/fig3.png"/></td><td><img src="/blog/imgs/2012/bgd/fig6.png"/></td></tr>
+<tr><td>fig3 (again)</td><td>fig6</td></tr>
+</table>
+
+<p>we can then repeat iteratively as before, items -&gt; users -&gt; items -&gt; users. but each time we are on the items side we take away 1/4 of the mass until it's all gone.
+</p>
+<table class="data">
+<tr> <td>iteration</td> <td>taken from</br>item1</td> <td>taken from</br>item2</td> <td>taken from</br>item3</td> </tr>
+<tr> <td>1</td>         <td>0.16</td>  <td>0.04</td>  <td>0.04</td>  </tr>
+<tr> <td>2</td>         <td>0.09</td>  <td>0.04</td>  <td>0.05</td>  </tr>
+<tr> <td>3</td>         <td>0.06</td>  <td>0.02</td>  <td>0.05</td>  </tr>
+<tr> <td>...</td>       <td>...</td>   <td>...</td>   <td>...</td>   </tr>
+<tr> <td>final sum</td> <td>0.50</td>  <td>0.20</td>  <td>0.30</td>  </tr>
+</table>
+
+<p>if we do the same for item2 and item3 we get different values...
+</p>
+<table class="data">
+<tr> <td>starting at</td> <td>total taken</br> from item1</td> <td>total taken</br> from item2</td> <td>total taken</br> from item3</td> </tr>
+<tr> <td>item1</td>       <td>0.50</td>  <td>0.20</td>  <td>0.30</td>  </tr>
+<tr> <td>item2</td>       <td>0.38</td>  <td>0.24</td>  <td>0.38</td>  </tr>
+<tr> <td>item3</td>       <td>0.30</td>  <td>0.20</td>  <td>0.50</td>  </tr>
+</table>
+
+<p>finally these totals can be used as features for a pairwise comparison of the items. intuitively we can see that for any row wise similarity function we might choose to use 
+   sim(item1, item3) &gt; sim(item1, item2) or sim(item2, item3)
+</p>
+<p>one last thing to consider is that the amount of decay, 1/4 in the above example, is of course configurable and we get different results using a value between 0.0 and 1.0.
+</p>
+<p>a very low value, ~= 0.0, produces the limit value, all items being classed the same. a higher value, ~= 1.0, stops the iterations after only one "bounce" and
+   represents the minimal amount of dispersal.
+</p>]]></content>
+  </entry>
+</feed>

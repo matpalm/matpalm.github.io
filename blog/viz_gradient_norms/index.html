@@ -1,0 +1,267 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="simple-tensorboard-visualisation-for-gradient-norms"></a>
+  <h2 class="blog_post_title"><a href="/blog/viz_gradient_norms" rel="bookmark" title="Permanent Link to simple tensorboard visualisation for gradient norms">simple tensorboard visualisation for gradient norms</a></h2>
+  <small>June 27, 2017 at 09:45 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p><small>( i've had three people recently ask me about how i was visualising gradient norms in tensorboard so, according to
+   my three strikes rule, i now have to "automate" it by writing a blog post about it )</small>
+</p>
+<p>one really useful visualisation you can do while training a network is visualise the norms of the variables and gradients.
+</p>
+<p>how are they useful? some random things that immediately come to mind include the fact that...
+</p>
+<ul>
+ <li>
+     diverging norms of variables might mean you haven't got enough regularisation.
+ </li>
+
+ <li>
+     zero norm gradient means learning has somehow stopped.
+ </li>
+
+ <li>
+     exploding gradient norms means learning is unstable and you might need to clip (hellloooo deep reinforcement learning).
+ </li>
+</ul>
+<p>let's consider a simple bounding box regression conv net (the specifics aren't important, i just grabbed this from another project, just needed something for illustration) ...
+</p>
+<pre class="prettyprint linenums">
+# (256, 320, 3)  input image
+
+model = slim.conv2d(images, num_outputs=8, kernel_size=3, stride=2, weights_regularizer=l2(0.01), scope="c0")
+# (128, 160, 8)
+
+model = slim.conv2d(model, num_outputs=16, kernel_size=3, stride=2, weights_regularizer=l2(0.01), scope="c1")
+# (64, 80, 16)
+
+model = slim.conv2d(model, num_outputs=32, kernel_size=3, stride=2, weights_regularizer=l2(0.01), scope="c2")
+# (32, 40, 32)
+
+model = slim.conv2d(model, num_outputs=4, kernel_size=1, stride=1, weights_regularizer=l2(0.01), scope="c3")
+# (32, 40, 4)  1x1 bottleneck to get num of params down betwee c2 & h0
+
+model = slim.dropout(model, keep_prob=0.5, is_training=is_training)
+# (5120,)  32x40x4 -> 32 is where the majority of params are so going to be most prone to overfitting.
+
+model = slim.fully_connected(model, num_outputs=32, weights_regularizer=l2(0.01), scope="h0")
+# (32,)
+
+model = slim.fully_connected(model, num_outputs=4, activation_fn=None, scope="out")
+# (4,) = bounding box (x1, y1, dx, dy)
+</pre>
+
+<p>a simple training loop using feed_dict would be something along the lines of ...
+</p>
+<pre class="prettyprint linenums">
+optimiser = tf.train.AdamOptimizer()
+train_op = optimiser.minimize(loss=some_loss)
+
+with tf.Session() as sess:
+  while True:
+    _ = sess.run(train_op, feed_dict=blah)
+</pre>
+
+<p>but if we want to get access to gradients we need to do things a little differently and call <code>compute_gradients</code> and <code>apply_gradients</code> ourselves ...
+</p>
+<pre class="prettyprint linenums">
+optimiser = tf.train.AdamOptimizer()
+<b>gradients = optimiser.compute_gradients(loss=some_loss)
+train_op = optimiser.apply_gradients(gradients)</b>
+
+with tf.Session() as sess:
+  while True:
+    _ = sess.run(train_op, feed_dict=blah)
+</pre>
+
+<p>with access to the gradients we can inspect them and create tensorboard summaries for them ...
+</p>
+<pre class="prettyprint linenums">
+optimiser = tf.train.AdamOptimizer()
+gradients = optimiser.compute_gradients(loss=some_loss)
+<b>l2_norm = lambda t: tf.sqrt(tf.reduce_sum(tf.pow(t, 2)))
+for gradient, variable in gradients:
+  tf.summary.histogram("gradients/" + variable.name, l2_norm(gradient))
+  tf.summary.histogram("variables/" + variable.name, l2_norm(variable))</b>
+train_op = optimiser.apply_gradients(gradients)
+
+with tf.Session() as sess:
+  <b>summaries_op = tf.summary.merge_all()
+  summary_writer = tf.summary.FileWriter("/tmp/tb", sess.graph)</b>
+  for step in itertools.count():
+    _, <b>summary</b> = sess.run([train_op, <b>summaries_op</b>], feed_dict=blah)
+    <b>summary_writer.add_summary(summary, step)</b>
+</pre>
+
+<p>( though we may only want to run the expensive <code>summaries_op</code> once in awhile... )
+</p>
+<p>with logging like this we get 8 histogram summaries per variable; the cross product of
+</p>
+<ul>
+ <li>
+     layer weights vs layer biases
+ </li>
+
+ <li>
+     variable vs gradients
+ </li>
+
+ <li>
+     norms vs values
+ </li>
+</ul>
+<p>e.g. for conv layer c3 in the above model we get the summaries shown below.
+   note: nothing terribly interesting in this example, but a couple of things
+</p>
+<ul>
+ <li>
+     red : very large magnitude of gradient very early in training; this is classic variable rescaling.
+ </li>
+
+ <li>
+     blue: non zero gradients at end of training, so stuff still happening at this layer in terms of the balance of l2 regularisation vs loss. (note: no bias regularisation means it'll continue to drift)
+ </li>
+</ul>
+<img src="/blog/imgs/2017/c3_summaries.png" />
+
+
+<h2>gradient norms with ggplot</h2>
+<p>sometimes the histograms aren't enough and you need to do some more serious plotting. 
+   in these cases i hackily wrap the gradient calc in <a href="https://www.tensorflow.org/api_docs/python/tf/Print">tf.Print</a> 
+   and plot with <a href="http://ggplot2.org/">ggplot</a>
+</p>
+<p>e.g. here's some gradient norms from an old actor / critic model 
+   <a href="https://github.com/matpalm/cartpoleplusplus">(cartpole++)</a>
+</p>
+<img src="/blog/imgs/2017/cartpole_gradient_norms.png" />
+
+
+<h2>related: explicit simple_value and image summaries</h2>
+<p>on a related note you can also explicitly write summaries which is sometimes easier to do than generating the summaries through the graph. 
+</p>
+<p>i find this especially true for image summaries where there are many pure python options for post processing with, say, <a href="http://www.effbot.org/imagingbook/image.htm">PIL</a>
+</p>
+<p>e.g. explicit scalar values
+</p>
+<pre class="prettyprint linenums">
+summary_writer =tf.summary.FileWriter("/tmp/blah")
+summary = tf.Summary(value=[
+  tf.Summary.Value(tag="foo", simple_value=1.0),
+  tf.Summary.Value(tag="bar", simple_value=2.0),
+])
+summary_writer.add_summary(summary, step)
+</pre>
+
+<p>e.g. explicit image summaries using PIL post processing
+</p>
+<pre class="prettyprint linenums">
+summary_values = []  # (note: could already contain simple_values like above)
+for i in range(6):
+  # wrap np array with PIL image and canvas
+  img = Image.fromarray(some_np_array_probably_output_of_network[i]))
+  canvas = ImageDraw.Draw(img)
+  # draw a box in the top left
+  canvas.line([0,0, 0,10, 10,10, 10,0, 0,0], fill="white")
+  # write some text
+  canvas.text(xy=(0,0), text="some string to add to image", fill="black")
+  # serialise out to an image summary
+  sio = StringIO.StringIO()
+  img.save(sio, format="png")
+  image = tf.Summary.Image(height=256, width=320, colorspace=3, #RGB
+                           encoded_image_string=sio.getvalue())
+  summary_values.append(tf.Summary.Value(tag="img/%d" % idx, image=image))
+summary_writer.add_summary(tf.Summary(value=summary_values), step)
+</pre>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/viz_gradient_norms";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

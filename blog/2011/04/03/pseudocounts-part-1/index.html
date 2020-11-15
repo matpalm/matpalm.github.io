@@ -1,0 +1,256 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="pseudocounts-and-the-good-turing-estimation-(part1)"></a>
+  <h2 class="blog_post_title"><a href="/blog/2011/04/03/pseudocounts-part-1/" rel="bookmark" title="Permanent Link to pseudocounts and the good-turing estimation (part1)">pseudocounts and the good-turing estimation (part1)</a></h2>
+  <small>April 03, 2011 at 03:04 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <h2>beer</h2>
+<p>say we are running the bar at a soldout <a href="http://en.wikipedia.org/wiki/Bad_religion">bad religion</a> concert. the bar serves beer, scotch and water and we decide to record orders over the night so that we can know how much to order for tomorrow's gig...
+</p>
+<table class="data">
+<tr><td>drink</td><td>#sales</td></tr> 
+<tr><td>beer</td><td>1000</td></tr> 
+<tr><td>scotch</td><td>300</td></tr> 
+<tr><td>water</td><td>200</td></tr> 
+</table>
+
+<p>using these numbers we can predict a number of things..
+</p>
+<p>what is the chance the next person will order a beer?</br>
+   it's a pretty simple probability; 1000 beers / 1500 total drinks = 0.66 or 66%
+</p>
+<p>what is the chance the next person will order a water?</br>
+   also straightforward; 200 waters / 1500 total drinks = 0.14 or 14%
+</p>
+
+<h2>t-shirts</h2>
+<p>now say we run the t-shirt stand at the same concert....
+</p>
+<p>instead of only selling 3 items (like at the bar) we sell 20 different types of t-shirts. once again we record orders over the night...
+</p>
+<table class="data">
+<tr><td>t-shirt</td><td>#sales</td><td>t-shirt</td><td>#sales</td></tr> 
+<tr><td>br tour</td><td>15</td><td>pennywise</td><td>3</td><tr>
+<tr><td>br logo1</td><td>15</td><td>strung out</td><td>3</td><tr>
+<tr><td>br album art 1</td><td>10</td><td>propagandhi</td><td>3</td><tr>
+<tr><td>br album art 3</td><td>10</td><td>bouncing souls</td><td>1</td><tr>
+<tr><td>nofx logo1</td><td>5</td><td>the vandals</td><td>1</td><tr>
+<tr><td>nofx logo2</td><td>5</td><td>dead kennedys</td><td>1</td><tr>
+<tr><td>lagwagon</td><td>4</td><td>misfits</td><td>1</td><tr>
+<tr><td>frenzal rhomb</td><td>4</td><td>the offspring</td><td>0</td><tr>
+<tr><td>rancid</td><td>4</td><td>the ramones</td><td>0</td><tr>
+<tr><td>descendants</td><td>3</td><td>mxpx</td><td>0</td><tr>
+</table>
+
+<p>we can ask similar questions again regarding the chance of people buying a particular t-shirt
+</p>
+<p>what's the chance the next person to buy a t-shirt wants the official tour t-shirt?</br>
+   15 tour t-shirts sold / 88 sold in total = 0.170 or 17.0%
+</p>
+<p>what's the chance the next person to buy a t-shirt wants the a descendants t-shirt?</br>
+   3 descendants t-shirts sold / 88 sold in total = 0.034 or 3.4%
+</p>
+<p>what's the chance the next person to buy a t-shirt wants the an offspring t-shirt?</br>
+   0 offspring t-shirts sold / 88 sold in total = 0 or 0%
+</p>
+<p>if you're like me then the last one "feels" wrong. even though we've not seen a purchase of at least 1 t-shirt
+   it seems a bit rough to say there is <em>no</em> chance of someone buying one. 
+   this illustrates one of the problems of dealing 
+   <a href="http://en.wikipedia.org/wiki/Prior_probability">prior probabilities</a>
+</p>
+<p>any system using a products of probabilities, such as the modeling of "independent" events in naive bayes, suffers badly from these zero probabilities. i've discussed the problems a few times before in previous experiments such as 
+   (<a href="/rss.feed/p3/">this one on naive bayes</a> and <a href="/semi_supervised_naive_bayes/semi_supervised_bayes.html">this one on semi supervised bayes</a>)
+   and the approach i've always used is the simple 
+   <a href="http://en.wikipedia.org/wiki/Rule_of_succession">rule of succession</a> where we avoid
+   the zero problem by adding one to the frequency of each event.
+</p>
+<p>for reference here are the probabilities per t-shirt without adjustment...
+</p>
+<div class="pygments_murphy"><pre><span></span>R&gt; sales = rep(c(15,10,5,4,3,1,0), c(2,2,2,3,4,4,3))
+ [1] 15 15 10 10  5  5  4  4  4  3  3  3  3  1  1  1  1  0  0  0
+R&gt; simple_probs = sales / sum(sales)
+ [1] 0.17045455 0.17045455 0.11363636 0.11363636 0.05681818 0.05681818
+ [7] 0.04545455 0.04545455 0.04545455 0.03409091 0.03409091 0.03409091
+[13] 0.03409091 0.01136364 0.01136364 0.01136364 0.01136364 0.00000000
+[19] 0.00000000 0.00000000
+</pre></div>
+
+<p>... and here are the values for the succession rule case
+</p>
+<div class="pygments_murphy"><pre><span></span>R&gt; sales = rep(c(15,10,5,4,3,1,0), c(2,2,2,3,4,4,3))
+ [1] 15 15 10 10  5  5  4  4  4  3  3  3  3  1  1  1  1  0  0  0
+R&gt; sales_plus_one = sales + 1
+ [1] 16 16 11 11  6  6  5  5  5  4  4  4  4  2  2  2  2  1  1  1
+R&gt; smooth_probs = sales_plus_one / sum(sales_plus_one)
+ [1] 0.14814815 0.14814815 0.10185185 0.10185185 0.05555556 0.05555556
+ [7] 0.04629630 0.04629630 0.04629630 0.03703704 0.03703704 0.03703704
+[13] 0.03703704 0.01851852 0.01851852 0.01851852 0.01851852 0.00925926
+[19] 0.00925926 0.00925926
+</pre></div>
+
+<p>no more zeros! yay! but, unfortunately, at the cost of the accuracy of the other values.
+</p>
+<p>it's always worked for me in the past (well at least better than having the zeros) but it's always felt wrong too.  but finally the other day i found another approach, that seems a lot more statistically sound.
+</p>
+<p>it's called <a href="http://en.wikipedia.org/wiki/Good%E2%80%93Turing_frequency_estimation">good-turing estimation</a> 
+   and it was developed as part of <a href="http://en.wikipedia.org/wiki/Alan_Turing">turing's</a> work at bletchley 
+   park (so it must be awesome). a decent implementation is explained in 
+   <a href="http://www.grsampson.net/AGtf1.html">this paper</a> by geoffrey sampson (it's somewhat more 
+   complex than adding 1)
+</p>
+<p>it works on using the frequency of frequencies and redistributes the probabilities to include a
+   special allocation that we should allocate over items that have never seen before. 
+</p>
+<p>the following table shows the frequencies, the original probability, the probability adjusted using the rule of
+   succession and the probabilities as redistributed using good turing estimation.
+</p>
+<table class="data">
+<tr>
+ <td>freq</td>
+ <td>freq of freq</td>
+ <td>original</br>prob</td>
+ <td>succession</br>prob</td>
+ <td>good turing</br>prob</td>
+ <td>description</td>
+</tr>
+<tr><td>15</td><td>2 </td><td>0.170 </td><td>0.148 </td><td>0.160 </td><td>2 t-shirts sold 15 times</td></tr>
+<tr><td>10</td><td>2 </td><td>0.113 </td><td>0.101 </td><td>0.107 </td><td>2 t-shirts sold 10 times</td></tr>
+<tr><td>5 </td><td>2 </td><td>0.056 </td><td>0.055 </td><td>0.054 </td><td>2 t-shirts sold 5 times</td></tr>
+<tr><td>4 </td><td>3 </td><td>0.045 </td><td>0.046 </td><td>0.043 </td><td>3 t-shirts sold 4 times</td></tr>
+<tr><td>3 </td><td>4 </td><td>0.034 </td><td>0.037 </td><td>0.033 </td><td>4 t-shirts sold 3 times</td></tr>
+<tr><td>1 </td><td>4 </td><td>0.011 </td><td>0.018 </td><td>0.011 </td><td>4 t-shirts sold once</td></tr>
+<tr><td>0 </td><td>3 </td><td>0.000 </td><td>0.009 </td><td>0.015 </td><td>3 t-shirts didn't sell</td></tr>
+</table>
+
+<p>and here's a graph of the same thing.
+</p>
+<img src="/blog/imgs/tshirts.png"/>
+
+<p>some observations...
+</p>
+<ul>
+ <li>
+     the rule as succession is just smoothing really and drags the higher probabilities down in response to pulling the lower probabilities up
+ </li>
+
+ <li>
+     the good turing estimation is closer to the real value of the high frequency cases
+ </li>
+
+ <li>
+     the good turing estimate for the zero case is quite a bit higher than the rule of succession estimate
+ </li>
+
+ <li>
+     and most interesting of all, the good turing estimate for the freq 0 is higher than the estimate for freq 1.
+ </li>
+</ul>
+<p>the last point in particular i think is really interesting. the good turing algorithm actually gives a total estimate for the zero probability cases (in this examples it gave 0.045) and it's up to the user to distribute it among the actual examples (in this example
+   there were 3 cases so i just divided 0.045 by 3).
+</p>
+<p>if there had be 4 types of t-shirts that hadn't sold the estimate for each of them would have be 0.011 like the 4 t-shirts that sold once.
+</p>
+<p>if there had only be 1 type of t-shirt that hadn't had any sales we'd have to allocate the entire 0.045 to it. in effect the algorithms says it expects that t-shirt to be more likely to sell that the 4 types of t-shirts that had 3 sales each (the 0.033 probability case). 
+</p>
+<p>an interesting result, not sure what intution to take away from it.... 
+</p>
+<p>now this is all good, but i actually don't run the bar at a bad religion concert (or the t-shirt stand) 
+   and i'm actually interested in this in how it applies to text processing, especially in the area of classification.
+</p>
+<p>so my question is <em>"is the extra computation required for the good-turing calculation worth it?"</em>
+</p>
+<p>results coming in part2. work in progress code on <a href="https://github.com/matpalm/pseudocounts">github</a>
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2011/04/03/pseudocounts-part-1/";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+     xmlns:atom="http://www.w3.org/2005/Atom"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+     >
+  <channel>
+    <title>brain of mat kelcey</title>
+    <link>http://matpalm.com/blog</link>
+    <description>thoughts from a data scientist wannabe</description>
+    <generator>Blogofile</generator>
+    <sy:updatePeriod>hourly</sy:updatePeriod>
+    <sy:updateFrequency>1</sy:updateFrequency>
+    <item>
+      <title>the map interpretation of attention</title>
+      <link>http://matpalm.com/blog/the_map_interpretation_of_attention</link>
+      <category><![CDATA[talk]]></category>
+      <category><![CDATA[three_strikes_rule]]></category>
+      <guid>http://matpalm.com/blog/the_map_interpretation_of_attention</guid>
+      <description>the map interpretation of attention</description>
+      <content:encoded><![CDATA[<p>based on my three strikes rule i wrote a talk on the map interpretation of neural attention.
+</p>
+<p>it starts with the first NLP problem i saw where attention was used,
+   goes through the way i think about attention in terms of soft lookup in a map,
+   shows how this soft lookup solves that NLP problem,
+   and finishes with the small mods required to turn it in the building block for the transformer architecture.
+</p>
+<p>here's a recording; check it out!
+</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/7wMQgveLiQ4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>]]></content:encoded>
+    </item>
+    <item>
+      <title>measuring baseline random performance for an N way classifier</title>
+      <link>http://matpalm.com/blog/measuring_baseline_performance_for_an_n_way_classifier</link>
+      <category><![CDATA[short_tute]]></category>
+      <category><![CDATA[three_strikes_rule]]></category>
+      <guid>http://matpalm.com/blog/measuring_baseline_performance_for_an_n_way_classifier</guid>
+      <description>measuring baseline random performance for an N way classifier</description>
+      <content:encoded><![CDATA[<p><i>this post is part of my three-strikes-rule series; the third time someone asks
+   me about something, i have to write it up</i>
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.metrics import *
+</code></pre>
+
+<p>consider an 5 way classifier with varying level of support per class;
+   specifically 100 examples of class0, class1 and 20 examples of class2, 3 and 4.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; training_data_support = [100, 100, 20, 20, 20]
+</code></pre>
+
+<p>what's the simplest way to measure what baseline performance is from a random classifier is?
+   We often want to know this value to ensure we don't have silly bugs and/or we are getting some signal from the data beyond random choice.
+</p>
+<p>firstly let's expand things to a dense set of labels (since sklearn metrics don't work with a sparse set)
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; y_true = np.concatenate([np.repeat(i, n) for i, n in enumerate(training_data_support)])
+&gt;&gt;&gt; y_true
+
+array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+       3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4,
+       4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4])
+
+</code></pre>
+
+<p>we can do random predictions proportional to the support in the training data
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; training_data_proportions = training_data_support / np.sum(training_data_support)
+&gt;&gt;&gt; y_pred = np.random.choice(range(len(training_data_support)),
+&gt;&gt;&gt;                           p=training_data_proportions,
+&gt;&gt;&gt;                           size=sum(training_data_support))
+&gt;&gt;&gt; y_pred
+
+array([1, 0, 0, 1, 1, 1, 0, 3, 1, 1, 3, 1, 1, 1, 2, 0, 1, 4, 1, 1, 1, 1,
+       0, 2, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 4, 2, 1, 4, 0, 2, 1, 0, 1,
+       1, 0, 1, 4, 0, 2, 0, 0, 1, 1, 0, 1, 2, 4, 3, 0, 1, 1, 2, 1, 2, 3,
+       0, 0, 0, 2, 1, 0, 0, 0, 1, 1, 0, 0, 1, 3, 3, 1, 1, 1, 3, 1, 0, 1,
+       0, 0, 1, 0, 1, 1, 4, 1, 3, 3, 1, 1, 1, 0, 0, 1, 0, 2, 1, 0, 1, 0,
+       4, 0, 2, 0, 3, 1, 0, 1, 1, 2, 1, 1, 1, 3, 0, 2, 0, 0, 0, 1, 1, 0,
+       2, 0, 0, 0, 1, 0, 0, 1, 2, 1, 1, 0, 1, 1, 4, 1, 0, 3, 2, 0, 2, 0,
+       1, 3, 4, 1, 2, 0, 1, 0, 0, 1, 4, 0, 1, 3, 4, 1, 0, 1, 0, 1, 1, 4,
+       0, 0, 3, 0, 1, 1, 1, 2, 2, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0,
+       0, 4, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 3, 1, 1, 2, 1, 3,
+       1, 1, 0, 1, 3, 0, 4, 3, 0, 2, 0, 0, 3, 4, 0, 1, 0, 4, 2, 1, 1, 1,
+       0, 1, 0, 1, 2, 1, 3, 0, 2, 0, 1, 1, 1, 0, 0, 0, 1, 1])
+
+</code></pre>
+
+<p>from this we can calculate standard metrics; if we can't beat these, we've done
+   something realllllly wrong :/
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; confusion_matrix(y_true, y_pred)
+
+array([[29, 47,  9,  9,  6],
+       [40, 36, 11,  6,  7],
+       [ 7, 10,  1,  2,  0],
+       [ 7,  5,  2,  3,  3],
+       [ 7, 10,  2,  1,  0]])
+
+&gt;&gt;&gt; print(classification_report(y_true, y_pred))
+
+precision    recall  f1-score   support
+               0       0.32      0.29      0.31       100
+               1       0.33      0.36      0.35       100
+               2       0.04      0.05      0.04        20
+               3       0.14      0.15      0.15        20
+               4       0.00      0.00      0.00        20
+        accuracy                           0.27       260
+       macro avg       0.17      0.17      0.17       260
+    weighted avg       0.27      0.27      0.27       260
+
+</code></pre>]]></content:encoded>
+    </item>
+    <item>
+      <title>deriving class_weights from validation data</title>
+      <link>http://matpalm.com/blog/derive_class_weights_from_validation_data</link>
+      <category><![CDATA[short_tute]]></category>
+      <category><![CDATA[three_strikes_rule]]></category>
+      <guid>http://matpalm.com/blog/derive_class_weights_from_validation_data</guid>
+      <description>deriving class_weights from validation data</description>
+      <content:encoded><![CDATA[<p><i>this post is part of my three-strikes-rule series; the third time someone asks
+   me about something, i have to write it up</i>
+</p>
+<p>when training a model we often want to weight instances differently to reflect either
+</p>
+<ol>
+ <li>
+     an imbalance in the <em>amount</em> of data per class or
+ </li>
+
+ <li>
+     an imbalance in the <em>difficulty</em> across classes
+ </li>
+</ol>
+<p>the required weights for
+   case 1) can be done by checking ratios in training data;
+   case 2) though requires checking how a model does against validation data.
+</p>
+<p>this post walks through a simple example of 2)
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.metrics import log_loss
+</code></pre>
+
+<p>consider a 4-way classification problem with 10 examples
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; K = 4
+&gt;&gt;&gt; y_true = [3,1,1,0,2,0,1,2,3,3]
+&gt;&gt;&gt; N = len(y_true)
+</code></pre>
+
+<p>pretend the model produces the following predictions.
+   we can see that the model does well for classes 2 &amp; 3, but 0 &amp; 1 are confused a bit.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt;                                           # y_true
+&gt;&gt;&gt; y_pred = np.array([[0.0, 0.1, 0.1, 0.8],  # 3
+&gt;&gt;&gt;                    [0.4, 0.5, 0.0, 0.1],  # 1
+&gt;&gt;&gt;                    [0.5, 0.3, 0.1, 0.1],  # 1
+&gt;&gt;&gt;                    [0.4, 0.3, 0.1, 0.2],  # 0
+&gt;&gt;&gt;                    [0.1, 0.1, 0.8, 0.0],  # 2
+&gt;&gt;&gt;                    [0.7, 0.1, 0.1, 0.1],  # 0
+&gt;&gt;&gt;                    [0.3, 0.6, 0.1, 0.0],  # 1
+&gt;&gt;&gt;                    [0.0, 0.1, 0.9, 0.0],  # 2
+&gt;&gt;&gt;                    [0.1, 0.0, 0.0, 0.9],  # 3
+&gt;&gt;&gt;                    [0.0, 0.1, 0.1, 0.8]]) # 3
+</code></pre>
+
+<p>we can use the sklearn api to calculate the per class loss.
+   for a softmax based classifier <code>log_loss</code> is what we want (since it's what is being directly
+   optimised).( though the formulation is simple it's worth using a lib to avoid weird
+   numerical instabilities. note: though for a reasonable number of classes might need to
+   set a higher epsilon in the <code>log_loss</code> call )
+</p>
+<p>as expected we can see the loss for confused classes 0 &amp; 1 are higher than classes 2 &amp; 3.
+</p>
+<p>( note: sklearn <code>log_loss</code> doesn't work on a sparse version of <code>y_true</code>
+   so we need to convert to a one_hot representation for the call )
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; y_true_one_hot = np.zeros((N, K))
+&gt;&gt;&gt; y_true_one_hot[np.arange(N), y_true] = 1.0
+&gt;&gt;&gt;
+&gt;&gt;&gt; losses = []
+&gt;&gt;&gt; for clazz in range(K):
+&gt;&gt;&gt;     losses.append(log_loss(y_true=y_true_one_hot[:, clazz],
+&gt;&gt;&gt;                            y_pred=y_pred[:, clazz]))
+&gt;&gt;&gt;
+&gt;&gt;&gt; losses
+
+[0.3044334455393211,
+     0.3291423130879737,
+     0.09606671609189957,
+     0.10908727165739374]
+
+</code></pre>
+
+<p>next we need to convert these to values suitable for <code>class_weights</code>.
+   one way to do this is with a smoothing (via an exponentiation) followed by a normalisation.
+</p>
+<p>as expected, each smoothing value puts more class weights on the confused classes 0 &amp; 1.
+</p>
+<p>the degenerate <code>smoothing=0</code> case results in a uniform weighting as expected.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; def class_weights_for(losses, smoothing):
+&gt;&gt;&gt;   # smoothing -> 0.0 => uniform class weights; acts as a noop, i.e. class weights are all 1.0
+&gt;&gt;&gt;   # smoothing -> 1.0 => uses log loss value for class weights; probably too destructive ...
+&gt;&gt;&gt;   smoothed_losses = np.power(losses, smoothing)           # smooth values
+&gt;&gt;&gt;   normalised = smoothed_losses / np.sum(smoothed_losses)
+&gt;&gt;&gt;   return normalised * len(normalised)                     # rescale all to (0, 1)
+&gt;&gt;&gt;
+&gt;&gt;&gt; for smoothing in [0, 0.001, 0.01, 0.1, 1.0]:
+&gt;&gt;&gt;   print("smoothing=%0.3f => class_weights=%s" % (smoothing, class_weights_for(losses, smoothing)))
+
+smoothing=0.000 => class_weights=[1. 1. 1. 1.]
+    smoothing=0.001 => class_weights=[1.0005254  1.00060348 0.99937205 0.99949908]
+    smoothing=0.010 => class_weights=[1.00525187 1.00603665 0.9937238  0.99498768]
+    smoothing=0.100 => class_weights=[1.05225581 1.0604995  0.93762546 0.94961924]
+    smoothing=1.000 => class_weights=[1.45187861 1.56971809 0.45815338 0.52024992]
+
+</code></pre>]]></content:encoded>
+    </item>
+    <item>
+      <title>initing the biases in a classifer to closer match training data</title>
+      <link>http://matpalm.com/blog/initing_the_biases_in_a_classifer_to_closer_match_training_data</link>
+      <category><![CDATA[short_tute]]></category>
+      <category><![CDATA[three_strikes_rule]]></category>
+      <guid>http://matpalm.com/blog/initing_the_biases_in_a_classifer_to_closer_match_training_data</guid>
+      <description>initing the biases in a classifer to closer match training data</description>
+      <content:encoded><![CDATA[<p><i>this post is part of my three-strikes-rule series; the third time someone asks
+   me about something, i have to write it up</i>
+</p>
+<p>if we start with a simple model and run some data through it before it's trained
+   we very roughly get a uniform distribution of outputs. this is since the layers are
+   setup to generally output around zero and the biases of the denses layers are init'd as zero.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; from tensorflow.keras.layers import *
+&gt;&gt;&gt; from tensorflow.keras.models import Model
+&gt;&gt;&gt;
+&gt;&gt;&gt; inp = Input(shape=(4,), name='input')
+&gt;&gt;&gt; out = Dense(units=5, activation='softmax')(inp)
+&gt;&gt;&gt;
+&gt;&gt;&gt; model = Model(inputs=inp, outputs=out)
+&gt;&gt;&gt;
+&gt;&gt;&gt; X = np.random.random(size=(16, 4)).astype(np.float32)
+&gt;&gt;&gt; model(X)
+
+array([[0.27802917, 0.21119164, 0.13478227, 0.13102761, 0.24496922],
+       [0.24828927, 0.2713407 , 0.17112398, 0.17032027, 0.13892575],
+       [0.15432678, 0.37243405, 0.18875667, 0.18821105, 0.09627141],
+       [0.22438918, 0.3494182 , 0.16165043, 0.1623524 , 0.10218978],
+       [0.36323798, 0.1736943 , 0.11997112, 0.11338428, 0.22971232],
+       [0.21113336, 0.2970533 , 0.19298542, 0.18329948, 0.11552842],
+       [0.18894033, 0.3023035 , 0.17413773, 0.17320155, 0.16141686],
+       [0.25081626, 0.24333045, 0.17587633, 0.17023188, 0.15974507],
+       [0.28999767, 0.2593622 , 0.13038006, 0.13167746, 0.18858269],
+       [0.28792346, 0.21455322, 0.17145245, 0.1603238 , 0.16574705],
+       [0.3028727 , 0.20455441, 0.11584676, 0.11711189, 0.2596142 ],
+       [0.19915669, 0.34796396, 0.1685621 , 0.17137761, 0.1129396 ],
+       [0.36104262, 0.20813489, 0.12217646, 0.11595868, 0.1926873 ],
+       [0.34652707, 0.20086858, 0.13397619, 0.12669212, 0.191936  ],
+       [0.31914416, 0.1853605 , 0.1266775 , 0.12235387, 0.24646394],
+       [0.21416464, 0.29376236, 0.17110644, 0.17128557, 0.14968103]], dtype=float32)
+
+</code></pre>
+
+<p>but if we know the expected distribution of class labels (e.g. from training data)
+   we can seed the bias values in the classifier layer (<code>out</code>) to have it reproduce
+   these proportions at the start of training.
+</p>
+<p>we do this with a <code>bias_initializer</code>.
+</p>
+<p>this can sometimes speed training up.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; from scipy.special import logit
+&gt;&gt;&gt;
+&gt;&gt;&gt; def observed_proportion_logits(shape, dtype=None, partition_info=None):
+&gt;&gt;&gt;     # assume following counts of labels in training data
+&gt;&gt;&gt;     class_counts = np.array([10, 5, 5, 100, 100])
+&gt;&gt;&gt;     # normalise them and return as logits
+&gt;&gt;&gt;     class_proportions = class_counts / np.sum(class_counts)
+&gt;&gt;&gt;     return logit(class_proportions)
+&gt;&gt;&gt;
+&gt;&gt;&gt; inp = Input(shape=(4,), name='input')
+&gt;&gt;&gt; out = Dense(units=5,
+&gt;&gt;&gt;             bias_initializer=observed_proportion_logits,
+&gt;&gt;&gt;             activation='softmax')(inp)
+&gt;&gt;&gt;
+&gt;&gt;&gt; model = Model(inputs=inp, outputs=out)
+&gt;&gt;&gt;
+&gt;&gt;&gt; X = np.random.random(size=(16, 4)).astype(np.float32)
+&gt;&gt;&gt; np.around(model(X), decimals=3)
+
+array([[0.024, 0.024, 0.02 , 0.404, 0.528],
+       [0.032, 0.027, 0.015, 0.326, 0.6  ],
+       [0.025, 0.017, 0.014, 0.404, 0.54 ],
+       [0.028, 0.021, 0.019, 0.348, 0.585],
+       [0.037, 0.019, 0.023, 0.419, 0.502],
+       [0.029, 0.019, 0.025, 0.445, 0.481],
+       [0.033, 0.026, 0.024, 0.335, 0.582],
+       [0.016, 0.02 , 0.013, 0.413, 0.537],
+       [0.027, 0.016, 0.022, 0.501, 0.434],
+       [0.037, 0.026, 0.027, 0.432, 0.478],
+       [0.022, 0.017, 0.025, 0.532, 0.404],
+       [0.028, 0.025, 0.021, 0.433, 0.493],
+       [0.019, 0.013, 0.017, 0.48 , 0.471],
+       [0.035, 0.021, 0.023, 0.397, 0.524],
+       [0.036, 0.016, 0.014, 0.294, 0.64 ],
+       [0.015, 0.014, 0.018, 0.45 , 0.504]], dtype=float32)
+
+</code></pre>]]></content:encoded>
+    </item>
+  </channel>
+</rss>

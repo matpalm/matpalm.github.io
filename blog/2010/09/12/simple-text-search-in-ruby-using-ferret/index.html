@@ -1,0 +1,221 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="simple-text-search-in-ruby-using-ferret"></a>
+  <h2 class="blog_post_title"><a href="/blog/2010/09/12/simple-text-search-in-ruby-using-ferret/" rel="bookmark" title="Permanent Link to simple text search in ruby using ferret">simple text search in ruby using ferret</a></h2>
+  <small>September 12, 2010 at 09:28 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p><a href="http://www.davebalmain.com/trac">ferret</a> is a lightweight text search engine for ruby, a bit like <a href="http://lucene.apache.org/">lucene</a> but with less (ie no) java.
+</p>
+<p>i've been looking at it today as part of my <a href="http://github.com/matpalm/named-entity-extraction">named entity extraction prototype</a> which needs to be able to fuzzily match one short string against a list of other short strings.
+</p>
+<p>let's go through an example, it's the only way my brain works sorry.
+   &lt;!--more--&gt;
+   making a ferret index is simple; we'll just make a memory based index for this demo.
+</p>
+<table class="pygments_murphytable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2</pre></div></td><td class="code"><div class="pygments_murphy"><pre><span></span><span class="nb">require</span> <span class="s1">&#39;ferret&#39;</span>
+<span class="n">index</span> <span class="o">=</span> <span class="no">Ferret</span><span class="o">::</span><span class="no">Index</span><span class="o">::</span><span class="no">Index</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+</pre></div>
+</td></tr></table>
+
+<p>next we'll add a handful of places in africa and europe to our index.
+   each document we add is simply a hash with whatever fields we want to be able to search or return
+</p>
+<table class="pygments_murphytable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8</pre></div></td><td class="code"><div class="pygments_murphy"><pre><span></span><span class="n">african_places</span> <span class="o">=</span> <span class="o">[</span><span class="s1">&#39;Ain Sefra&#39;</span><span class="p">,</span><span class="s1">&#39;Algiers&#39;</span><span class="p">,</span><span class="s1">&#39;South Algiers&#39;</span><span class="p">,</span><span class="s1">&#39;Batna&#39;</span><span class="p">,</span><span class="s1">&#39;Batni&#39;</span><span class="o">]</span>
+<span class="n">african_places</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">place</span><span class="o">|</span>
+  <span class="n">index</span> <span class="o">&lt;&lt;</span> <span class="p">{</span> <span class="ss">:continent</span> <span class="o">=&gt;</span> <span class="s1">&#39;africa&#39;</span><span class="p">,</span> <span class="ss">:name</span> <span class="o">=&gt;</span> <span class="n">place</span> <span class="p">}</span>
+<span class="k">end</span>
+<span class="n">european_places</span> <span class="o">=</span> <span class="o">[</span><span class="s1">&#39;Paris&#39;</span><span class="p">,</span><span class="s1">&#39;London&#39;</span><span class="p">,</span><span class="s1">&#39;Batna&#39;</span><span class="o">]</span>
+<span class="n">european_places</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">place</span><span class="o">|</span>
+  <span class="n">index</span> <span class="o">&lt;&lt;</span> <span class="p">{</span> <span class="ss">:continent</span> <span class="o">=&gt;</span> <span class="s1">&#39;europe&#39;</span><span class="p">,</span> <span class="ss">:name</span> <span class="o">=&gt;</span> <span class="n">place</span> <span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+</td></tr></table>
+
+<p>the simplest querying just searches across all fields; in our example this is both continent and name.
+   search hits returning the id of the document found and a relevancy score for ranking.
+   the full contents of a document can be looked up based on their id (and are lazily loaded unless an explicit load is given).
+</p>
+<table class="pygments_murphytable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="pygments_murphy"><pre><span></span><span class="n">index</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;europe&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">hits</span><span class="o">.</span><span class="n">each</span> <span class="p">{</span> <span class="o">|</span><span class="n">hit</span><span class="o">|</span> <span class="nb">puts</span> <span class="n">hit</span><span class="o">.</span><span class="n">inspect</span> <span class="p">}</span>
+<span class="c1">#&lt;struct Ferret::Search::Hit doc=6, score=0.446250796318054&gt;</span>
+<span class="c1">#&lt;struct Ferret::Search::Hit doc=7, score=0.446250796318054&gt;</span>
+<span class="c1">#&lt;struct Ferret::Search::Hit doc=8, score=0.446250796318054&gt;</span>
+<span class="nb">puts</span> <span class="n">index</span><span class="o">[</span><span class="mi">7</span><span class="o">].</span><span class="n">load</span><span class="o">.</span><span class="n">inspect</span>
+<span class="p">{</span><span class="ss">:continent</span><span class="o">=&gt;</span><span class="s2">&quot;europe&quot;</span><span class="p">,</span> <span class="ss">:name</span><span class="o">=&gt;</span><span class="s2">&quot;London&quot;</span><span class="p">}</span>
+</pre></div>
+</td></tr></table>
+
+<p>query control will be very similiar to those that know lucene.
+</p>
+<p>as seen above the simplest query allows a match against any term in any field.
+   a particular field can be targetted though using the query form FIELD:VALUE
+</p>
+<table class="pygments_murphytable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5</pre></div></td><td class="code"><div class="pygments_murphy"><pre><span></span><span class="n">index</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;name:algiers&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">hits</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">hit</span><span class="o">|</span>
+  <span class="nb">puts</span> <span class="s2">&quot;score=</span><span class="si">#{</span><span class="n">hit</span><span class="o">.</span><span class="n">score</span><span class="si">}</span><span class="s2"> doc=</span><span class="si">#{</span><span class="vi">@index</span><span class="o">[</span><span class="n">hit</span><span class="o">.</span><span class="n">doc</span><span class="o">].</span><span class="n">load</span><span class="o">.</span><span class="n">inspect</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="k">end</span>
+<span class="n">score</span><span class="o">=</span><span class="mi">2</span><span class="o">.</span><span class="mi">0986123085022</span> <span class="n">doc</span><span class="o">=</span><span class="p">{</span><span class="ss">:continent</span><span class="o">=&gt;</span><span class="s2">&quot;africa&quot;</span><span class="p">,</span> <span class="ss">:name</span><span class="o">=&gt;</span><span class="s2">&quot;Algiers&quot;</span><span class="p">}</span>
+<span class="n">score</span><span class="o">=</span><span class="mi">1</span><span class="o">.</span><span class="mi">31163263320923</span> <span class="n">doc</span><span class="o">=</span><span class="p">{</span><span class="ss">:continent</span><span class="o">=&gt;</span><span class="s2">&quot;africa&quot;</span><span class="p">,</span> <span class="ss">:name</span><span class="o">=&gt;</span><span class="s2">&quot;South Algiers</span>
+</pre></div>
+</td></tr></table>
+
+<p>wildcarding is done with a asterix.
+</p>
+<table class="pygments_murphytable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="pygments_murphy"><pre><span></span><span class="n">index</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;name:ba*&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">hits</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">hit</span><span class="o">|</span>
+  <span class="nb">puts</span> <span class="s2">&quot;score=</span><span class="si">#{</span><span class="n">hit</span><span class="o">.</span><span class="n">score</span><span class="si">}</span><span class="s2"> doc=</span><span class="si">#{</span><span class="vi">@index</span><span class="o">[</span><span class="n">hit</span><span class="o">.</span><span class="n">doc</span><span class="o">].</span><span class="n">load</span><span class="o">.</span><span class="n">inspect</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="k">end</span>
+<span class="n">score</span><span class="o">=</span><span class="mi">1</span><span class="o">.</span><span class="mi">81093037128448</span> <span class="n">doc</span><span class="o">=</span><span class="p">{</span><span class="ss">:continent</span><span class="o">=&gt;</span><span class="s2">&quot;africa&quot;</span><span class="p">,</span> <span class="ss">:name</span><span class="o">=&gt;</span><span class="s2">&quot;Batna&quot;</span><span class="p">}</span>
+<span class="n">score</span><span class="o">=</span><span class="mi">1</span><span class="o">.</span><span class="mi">81093037128448</span> <span class="n">doc</span><span class="o">=</span><span class="p">{</span><span class="ss">:continent</span><span class="o">=&gt;</span><span class="s2">&quot;africa&quot;</span><span class="p">,</span> <span class="ss">:name</span><span class="o">=&gt;</span><span class="s2">&quot;Batni&quot;</span><span class="p">}</span>
+<span class="n">score</span><span class="o">=</span><span class="mi">1</span><span class="o">.</span><span class="mi">81093037128448</span> <span class="n">doc</span><span class="o">=</span><span class="p">{</span><span class="ss">:continent</span><span class="o">=&gt;</span><span class="s2">&quot;europe&quot;</span><span class="p">,</span> <span class="ss">:name</span><span class="o">=&gt;</span><span class="s2">&quot;Batni&quot;</span><span class="p">}</span>
+</pre></div>
+</td></tr></table>
+
+<p>fuzzy search is denoted by tilde.
+   an optional fuzziness factor can be supplied from 0 (very fuzzy match) to 1 (exact match only).
+   a reasonable default is assumed if a factor is not given.
+</p>
+<table class="pygments_murphytable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="pygments_murphy"><pre><span></span><span class="n">index</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;name:bitna~0.4&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">hits</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">hit</span><span class="o">|</span>
+  <span class="nb">puts</span> <span class="s2">&quot;score=</span><span class="si">#{</span><span class="n">hit</span><span class="o">.</span><span class="n">score</span><span class="si">}</span><span class="s2"> doc=</span><span class="si">#{</span><span class="vi">@index</span><span class="o">[</span><span class="n">hit</span><span class="o">.</span><span class="n">doc</span><span class="o">].</span><span class="n">load</span><span class="o">.</span><span class="n">inspect</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="k">end</span>
+<span class="n">score</span><span class="o">=</span><span class="mi">1</span><span class="o">.</span><span class="mi">44874429702759</span> <span class="n">doc</span><span class="o">=</span><span class="p">{</span><span class="ss">:continent</span><span class="o">=&gt;</span><span class="s2">&quot;africa&quot;</span><span class="p">,</span> <span class="ss">:name</span><span class="o">=&gt;</span><span class="s2">&quot;Batna&quot;</span><span class="p">}</span>
+<span class="n">score</span><span class="o">=</span><span class="mi">1</span><span class="o">.</span><span class="mi">08655822277069</span> <span class="n">doc</span><span class="o">=</span><span class="p">{</span><span class="ss">:continent</span><span class="o">=&gt;</span><span class="s2">&quot;africa&quot;</span><span class="p">,</span> <span class="ss">:name</span><span class="o">=&gt;</span><span class="s2">&quot;Batni&quot;</span><span class="p">}</span>
+<span class="n">score</span><span class="o">=</span><span class="mi">1</span><span class="o">.</span><span class="mi">08655822277069</span> <span class="n">doc</span><span class="o">=</span><span class="p">{</span><span class="ss">:continent</span><span class="o">=&gt;</span><span class="s2">&quot;europe&quot;</span><span class="p">,</span> <span class="ss">:name</span><span class="o">=&gt;</span><span class="s2">&quot;Batni&quot;</span><span class="p">}</span>
+</pre></div>
+</td></tr></table>
+
+<p>and, not surprisingly, a full set of boolean logic operators are supported.
+</p>
+<table class="pygments_murphytable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5</pre></div></td><td class="code"><div class="pygments_murphy"><pre><span></span><span class="n">index</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;continent:africa AND name:bitna~&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">hits</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">hit</span><span class="o">|</span>
+  <span class="nb">puts</span> <span class="s2">&quot;score=</span><span class="si">#{</span><span class="n">hit</span><span class="o">.</span><span class="n">score</span><span class="si">}</span><span class="s2"> doc=</span><span class="si">#{</span><span class="vi">@index</span><span class="o">[</span><span class="n">hit</span><span class="o">.</span><span class="n">doc</span><span class="o">].</span><span class="n">load</span><span class="o">.</span><span class="n">inspect</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="k">end</span>
+<span class="n">score</span><span class="o">=</span><span class="mi">1</span><span class="o">.</span><span class="mi">90322256088257</span> <span class="n">doc</span><span class="o">=</span><span class="p">{</span><span class="ss">:continent</span><span class="o">=&gt;</span><span class="s2">&quot;africa&quot;</span><span class="p">,</span> <span class="ss">:name</span><span class="o">=&gt;</span><span class="s2">&quot;Batna&quot;</span><span class="p">}</span>
+<span class="n">score</span><span class="o">=</span><span class="mi">1</span><span class="o">.</span><span class="mi">6052508354187</span> <span class="n">doc</span><span class="o">=</span><span class="p">{</span><span class="ss">:continent</span><span class="o">=&gt;</span><span class="s2">&quot;africa&quot;</span><span class="p">,</span> <span class="ss">:name</span><span class="o">=&gt;</span><span class="s2">&quot;Batni&quot;</span><span class="p">}</span>
+</pre></div>
+</td></tr></table>
+
+<p>though i've no idea how it scales to a larger dataset it's doing the job pretty well for me with a modest index of approx 250,000 small text items.
+</p>
+<p>loads more <a href="http://ferret.davebalmain.com/api_0.9/">api doco</a> is provided on the ferret site.
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2010/09/12/simple-text-search-in-ruby-using-ferret/";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

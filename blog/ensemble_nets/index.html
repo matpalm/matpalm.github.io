@@ -1,0 +1,610 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="ensemble-networks"></a>
+  <h2 class="blog_post_title"><a href="/blog/ensemble_nets" rel="bookmark" title="Permanent Link to ensemble networks">ensemble networks</a></h2>
+  <small>September 17, 2020 at 06:30 AM | categories:
+
+<a href='/blog/tag/projects'>projects</a>, <a href='/blog/tag/ensemble_nets'>ensemble_nets</a>, <a href='/blog/tag/jax'>jax</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <h1>overview</h1>
+<p>ensemble nets are a method of representing an ensemble of
+   models as one single logical model. we use
+   <a href="https://github.com/google/jax">jax's</a>
+   <a href="https://github.com/google/jax#auto-vectorization-with-vmap">vmap</a>
+   operation to batch over not
+   just the inputs but additionally sets of model parameters.
+   we propose some
+   approaches for training ensemble nets and introduce logit dropout as
+   a way to improve ensemble generalisation as well as provide
+   a method of calculating model confidence.
+</p>
+
+<h1>background</h1>
+<p>as part of my "embedding the chickens" project i wanted to use
+   random projection embedding networks to generate pairs of similar
+   images for weak labelling. since this technique works really well
+   in an ensemble i did some playing around and got the ensemble
+   running pretty fast in jax. i wrote it up in
+   <a href="/blog/jax_random_embedding_ensemble_network/">this blog post</a>.
+   since doing that i've been wondering how to not just run an
+   ensemble net forward pass but how you might <em>train</em> one too...
+</p>
+
+<h1>dataset &amp; problem</h1>
+<p>for this problem we'll work with the
+   <a href="https://github.com/phelber/eurosat">eurosat/rgb dataset</a>.
+   eurosat/rgb is a 10 way classification task across 27,000 64x64 RGB images
+</p>
+<p>here's a sample image from each of the ten classes...
+</p>
+<img src="/blog/imgs/2020/en/sample_images.png" />
+
+
+<h1>base line model</h1>
+
+<h2>architecture</h2>
+<p>as a baseline we'll start with a simple non ensemble network. it'll consist of
+   a pretty vanilla convolutional stack, global spatial pooling, one dense layer
+   and a final 10 way classification layer.
+</p>
+<table class='data'>
+<tr><td><b>layer</b></td><td><b>shape</b></td></tr>
+<tr><td>input</td><td>(B, 64, 64, 3)</td></tr>
+<tr><td>conv2d</td><td>(B, 31, 31, 32)</td></tr>
+<tr><td>conv2d</td><td>(B, 15, 15, 64)</td></tr>
+<tr><td>conv2d</td><td>(B, 7, 7, 96)</td></tr>
+<tr><td>conv2d</td><td>(B, 3, 3, 96)</td></tr>
+<tr><td>global spatial pooling</td><td>(B, 96)</td></tr>
+<tr><td>dense</td><td>(B, 96)</td></tr>
+<tr><td>logits (i.e. dense with no activation)</td><td>(B, 10)</td></tr>
+</table>
+
+<p>all convolutions use 3x3 kernels with a stride of 2. the conv layers and the single
+   dense layer use a gelu activation. batch size is represented by <code>B</code>.
+</p>
+<p>we use no batch norm, no residual connections, nothing fancy at all.
+   we're more interested in the training than getting the absolute best value.
+   this network is small enough that we can train it fast but it still gives
+   reasonable results. residual connections would be trivial to add but batch
+   norm would be a bit more tricky given how we'll build the ensemble net later.
+</p>
+<p>we'll use <a href="https://github.com/google/objax">objax</a> to manage the model params
+   and orchestrate the training loops.
+</p>
+
+<h2>training setup</h2>
+<p>training for the baseline will be pretty standard but let's walk through it
+   so we can call out a couple of specific things for comparison with an ensemble
+   net later...
+</p>
+<p>( we'll use 2 classes in these diagrams for ease of reading though
+   the eurosat problem has 10 classes. )
+</p>
+<img src="/blog/imgs/2020/en/d.non_ensemble.png" />
+
+<p>walking through left to right...
+</p>
+<ol>
+ <li>
+     input is a batch of images; <code>(B, H, W, 3)</code>
+ </li>
+
+ <li>
+     the output of the first convolutional layers with stride=2 &amp; 32 filters will be <code>(B, H/2, W/2, 32)</code>
+ </li>
+
+ <li>
+     the network output for an example two class problem are logits shaped <code>(B, 2)</code>
+ </li>
+
+ <li>
+     for prediction probabilities we apply a softmax to the logits
+ </li>
+
+ <li>
+     for training we use cross entropy, take the mean loss and apply backprop
+ </li>
+</ol>
+<p>we'll train on 80% of the data, do hyperparam tuning on 10% (validation set) and
+   report final results on the remaining 10% (test set)
+</p>
+<p>for hyperparam tuning we'll use <a href="https://ax.dev/">ax</a> on very short runs of 30min
+   for all trials.
+   for experiment tracking we'll use <a href="https://www.wandb.com/">wandb</a>
+</p>
+<p>the hyperparams we'll tune for the baseline will be...
+</p>
+<table class='data'>
+<tr><td><b>param</b></td><td><b>description</b></td></tr>
+<tr>
+<td>max_conv_size</td>
+<td>conv layers with be sized as [32, 64, 128, 256]</br>
+up to a max size of max_conv_size.</br>
+i.e. a max_conv_size of 75 would imply sizes [32, 64, 75, 75]</br></td>
+</tr>
+<tr>
+<td>dense_kernel_size</td>
+<td>how many units in the dense layer before the logits</td>
+</tr>
+<tr>
+<td>learning_rate</td>
+<td>learning rate for optimiser</td>
+</tr>
+</table>
+
+<p>we'd usually make choices like the conv sizes being powers of 2 instead of a smooth value but
+   i was curious about the behaviour of ax for tuning.
+   also we didn't bother with a learning rate schedule; we just use simple early
+   stopping (against the validation set)
+</p>
+<img src="/blog/imgs/2020/en/single_model.all_runs.png" />
+
+<p>the best model of this group gets an accuracy of 0.913 on the validation set
+   and 0.903 on the test set. ( usually not a fan of accuracy but the classes
+   are pretty balanced so accuracy isn't a terrible thing to report. )
+</p>
+<table class='data'>
+<tr><td><b>model</td><td><b>validation</b></td><td><b>test</b></td></tr>
+<tr><td>baseline</td><td>0.913</td><td>0.903</td></tr>
+</table>
+
+
+<h1>ensemble net model</h1>
+<p>so what then is an ensemble net?
+</p>
+<p>logically we can think about our models as being functions that take two
+   things 1) the parameters of the model and 2) an input example. from
+   these they return an output.
+</p>
+<pre class="prettyprint"><code class="language-python"># pseudo code
+model(params, input) -> output
+</code></pre>
+
+<p>we pretty much always though run a batch of <code>B</code> inputs at once.
+   this can be easily represented as a leading axis on the input and allows us to
+   make better use of accelerated hardware as well as providing some benefits regarding
+   learning w.r.t gradient variance.
+</p>
+<p>jax's
+   <a href="https://github.com/google/jax#auto-vectorization-with-vmap">vmap</a>
+   function makes this trivial to implement by vectorising a call to the model
+   across a vector of inputs to return a vector of outputs.
+</p>
+<pre class="prettyprint"><code class="language-python"># pseudo code
+vmap(partial(model, params))(b_inputs) -> b_outputs
+</code></pre>
+
+<p>interestingly we can use this same functionality to batch not across independent
+   inputs but instead batch across independent sets of <code>M</code> model params. this effectively
+   means we run the <code>M</code> models in parallel. we'll call these <code>M</code> models sub models
+   from now on.
+</p>
+<pre class="prettyprint"><code class="language-python"># pseudo code
+vmap(partial(model, input))(m_params) -> m_outputs
+</code></pre>
+
+<p>and there's no reason why we can't do both batching across both a set of inputs
+   as well as a set of model params at the same time.
+</p>
+<pre class="prettyprint"><code class="language-python"># pseudo code
+vmap(partial(model)(b_inputs, m_params) -> b_m_outputs
+</code></pre>
+
+<p>for a lot more specifics on how i use jax's vmap to support this
+   see my prior post on
+   <a href="http://matpalm.com/blog/jax_random_embedding_ensemble_network/">jax random embedding ensemble nets</a>.
+</p>
+<p>and did somebody say TPUs? turns out we can make ensemble nets run
+   super fast on TPUs by simply swapping the vmap calls for pmap ones!
+   using pmap on a TPU will have each ensemble net run in parallel! see
+   <a href="https://colab.research.google.com/drive/1ijI77AlYqGOEXm5BqtnNomtUPnFr26o0?usp=sharing">this colab</a>
+   for example code running pmap on TPUs
+</p>
+
+<h2>single_input ensemble</h2>
+<p>let's walk through this in a bit more detail with an ensemble net with two sub models.
+</p>
+<img src="/blog/imgs/2020/en/d.single_input.png" />
+
+<ol>
+ <li>
+     our input is the same as for the baseline; a batch of images <code>(B, H, W, 3)</code>
+ </li>
+
+ <li>
+     the output of the first conv layer now though has an additional <code>M</code> axis to
+represent the outputs from the <code>M</code> models and results in <code>(M, B, H/2, W/2, 32)</code>
+ </li>
+
+ <li>
+     this additional <code>M</code> axis is carried all the way through to the logits <code>(M, B, 2)</code>
+ </li>
+
+ <li>
+     at this point we have <code>(M, B, 2)</code> logits but we need <code>(B, 2)</code>
+to compare against <code>(B,)</code> labels. with logits this reduction is
+very simple; just sum over the <code>M</code> axis!
+ </li>
+
+ <li>
+     for prediction probabilities we again apply a softmax
+ </li>
+
+ <li>
+     for training we again use cross entropy to calculate the mean loss and apply backprop
+ </li>
+</ol>
+<p>this gives us a way to train the sub models to act as a single ensemble unit as well as
+   a way to run inference on the ensemble net in a single forward pass.
+</p>
+<p>we'll refer to this approach as <strong>single_input</strong> since we are starting with a single
+   image for all sub models.
+</p>
+
+<h2>multi_input ensemble</h2>
+<p>an alternative approach to training is to provide a separate image per sub model.
+   how would things differ if we did that?
+</p>
+<img src="/blog/imgs/2020/en/d.multi_input.png" />
+
+<ol>
+ <li>
+     now our input has an additional <code>M</code> axis since it's a different batch per sub model.
+<code>(M, B, H, W, 3)</code>
+ </li>
+
+ <li>
+     the output of the first conv layers carries this <code>M</code> axis through <code>(M, B, H/2, W/2, 32)</code>
+ </li>
+
+ <li>
+     which is carried to the logits <code>(M, B, 2)</code>
+ </li>
+
+ <li>
+     in this case though we have <code>M</code> seperate labels for the <code>M</code> inputs so we don't have to combine the logits at all, we can just calculate the mean loss across the <code>(M, B)</code> training instances.
+ </li>
+</ol>
+<p>we'll call this approach <strong>multi_input</strong>.
+   note that this way of feeding separate images only really applies to training;
+   for inference if we want the representation of the ensemble it only really makes
+   sense to send a batch of <code>(B)</code> images, not <code>(M, B)</code>.
+</p>
+
+<h2>training the ensemble net</h2>
+<p>let's do some tuning as before but with a couple of additional hyper
+   parameters that this time we'll sweep across.
+</p>
+<p>we'll do each of the six combos of <code>[(single, 2), (single, 4), (single, 8),
+(multi, 2), (multi, 4), (multi, 8)]</code> and tune for 30 min for each.
+</p>
+<img src="/blog/imgs/2020/en/single_multi_sweeps.png" />
+
+<p>when we poke around and facet by the various params there's only one that makes
+   a difference; single_input mode consistently does better than multi_input.
+</p>
+<p>in hindsight this is not surprising i suppose since single_input mode
+   is effectively training one network with xM parameters
+   (with an odd summing-of-logits kind of bottleneck)
+</p>
+<img src="/blog/imgs/2020/en/validation_boxplot.png" />
+
+
+<h1>confusion matrix per sub model</h1>
+
+<h2>single_input ensemble</h2>
+<p>when we check the best single_input 4 sub model ensemble net we get an accuracy of 0.920
+   against the validation set and 0.901 against the test set
+</p>
+<table class='data'>
+<tr><td><b>model</td><td><b>validation</b></td><td><b>test</b></td></tr>
+<tr><td>baseline</td><td>0.913</td><td>0.903</td></tr>
+<tr><td>single_input</td><td>0.920</td><td>0.901</td></tr>
+</table>
+
+<p>looking at the confusion matrix the only
+   really thing to note is the slight confusion between 'Permanent Crop' and
+   'Herbaceous Vegetation' which is reasonable given the similarity in RGB.
+</p>
+<img src="/blog/imgs/2020/en/cm.simo.ensemble.png" />
+
+<p>we can also review the confusion matrices of each of the 4 sub models run as
+   individuals; i.e. not working as an ensemble. we observe the quality of each isn't
+   great with accuracies of [0.111, 0.634, 0.157, 0.686].
+   again makes sense since they had been trained only to work together. that first model
+   really loves 'Forests', but don't we all...
+</p>
+<table>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.simo.model_0.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.simo.model_1.png" /></td>
+</tr>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.simo.model_2.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.simo.model_3.png" /></td>
+</tr>
+</table>
+
+
+<h2>multi_input ensemble</h2>
+<p>the performance of the multi_input ensemble isn't quite as good with
+   a validation accuracy of 0.902 and test accuracy of 0.896.
+   the confusion matrix looks similar to the single_input mode version.
+</p>
+<table class='data'>
+<tr><td><b>model</td><td><b>validation</b></td><td><b>test</b></td></tr>
+<tr><td>baseline</td><td>0.913</td><td>0.903</td></tr>
+<tr><td>single_input</td><td>0.920</td><td>0.901</td></tr>
+<tr><td>multi_input</td><td>0.902</td><td>0.896</td></tr>
+</table>
+
+<img src="/blog/imgs/2020/en/cm.mimo.ensemble.png" />
+
+<p>this time though the output of each of the 4 sub models individually is much stronger
+   with accuracies of [0.842, 0.85, 0.84, 0.83, 0.86]. this makes sense
+   since they were trained to not predict as one model.
+   it is nice to see at least that the ensemble result is higher than any one model.
+   and reviewing their confusion matrices they seem to specialise in different
+   aspects with differing pairs of confused classes.
+</p>
+<table>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.mimo.model_0.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.mimo.model_1.png" /></td>
+</tr>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.mimo.model_2.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.mimo.model_3.png" /></td>
+</tr>
+</table>
+
+
+<h1>dropping logits</h1>
+<p>the main failing of the single_input approach is that the sub models
+   are trained to always operate together; that breaks some of
+   the core ideas of why we do ensembles in the first place. as i was
+   thinking about this i was reminded that the core idea of dropout is
+   quite similar; when nodes in a dense layer are running together
+   we can drop some out to ensure other nodes don't overfit to
+   expecting them to always behave in a particular way.
+</p>
+<p>so let's do the same with the sub models of the ensemble. my first thought
+   around this was that the most logical place would be at the logits. we can
+   zero out the logits of a random half of the models during training and,
+   given the ensembling is implemented by summing the logits, this effectively
+   removes those models from the ensemble.
+   the biggest con though is the waste of the forward pass of running those sub
+   models in the first place.
+   during inference we don't have to do anything in terms of masking &amp; there's no
+   need to do any rescaling ( that i can think of ).
+</p>
+<p>so how does it do? accuracy is 0.914 against the validation set and 0.911 against
+   the test set; the best result so far! TBH though, these numbers are pretty
+   close anyways so maybe we were just lucky ;)
+</p>
+<table class='data'>
+<tr><td><b>model</td><td><b>validation</b></td><td><b>test</b></td></tr>
+<tr><td>baseline</td><td>0.913</td><td>0.903</td></tr>
+<tr><td>single_input</td><td>0.920</td><td>0.901</td></tr>
+<tr><td>multi_input</td><td>0.902</td><td>0.896</td></tr>
+<tr><td>logit drop</td><td>0.914</td><td>0.911</td></tr>
+</table>
+
+<img src="/blog/imgs/2020/en/cm.simo_ld.ensemble.png" />
+
+<p>the sub models are all now doing OK with accuracies of
+   [0.764, 0.827, 0.772, 0.710]. though the sub models aren't as
+   strong as the sub models of the multi_input mode, the overall
+   performance is the best. great! seems like a nice compromise
+   between the two!
+</p>
+<table>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.simo_ld.model_0.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.simo_ld.model_1.png" /></td>
+</tr>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.simo_ld.model_2.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.simo_ld.model_3.png" /></td>
+</tr>
+</table>
+
+
+<h1>wait! don't drop logits, drop models instead!</h1>
+<p>the main problem i had with dropping logits is that there
+   is a wasted forward pass for half the sub models. then i realised
+   why run the models at all? instead of dropping logits we can just
+   choose, through advanced indexing, a random half of the models to
+   run a forward pass through. this has the same effect of running a random
+   half of the models at a time but only requires half the forward pass
+   compute. this approach of dropping models is what the code currently does.
+   (though the dropping of logits is in the git history)
+</p>
+
+<h1>using the sub models to measure confidence</h1>
+<p>ensembles also provide a clean way of measuring confidence of
+   a prediction. if the variance of predictions across sub models is low
+   it implies the ensemble as a whole is confident.
+   alternatively if the variance is high it implies the ensemble is not confident.
+</p>
+<p>with the ensemble model that has been trained with logit dropout we can
+   get an idea of this variance by considering the ensemble in a hold-one-out
+   fashion; we can obtain <code>M</code> different predictions from the ensemble
+   by running it as if each of the <code>M</code> sub models was not present (using the same
+   idea as the logit dropout).
+</p>
+<p>consider a class that the ensemble is very good at; e.g. 'Sea &amp; Lake'.
+   given a batch of 8 of these images across an ensemble net with 4 sub
+   models we get the following prediction mean and stddevs.
+</p>
+<table class='data'>
+<tr><td><b>idx</b></td>
+<td><b>y_pred</b></td>
+<td><b>mean(P(class))</b></td>
+<td><b>std(P(class))</td></b></tr>
+<tr><td>0</td><td>Sea & Lake</td><td>0.927</td><td>0.068</td></tr>
+<tr><td>1</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+<tr><td>2</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+<tr><td>3</td><td>Sea & Lake</td><td>0.999</td><td>0.001</td></tr>
+<tr><td>4</td><td>Sea & Lake</td><td>0.989</td><td>0.019</td></tr>
+<tr><td>5</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+<tr><td>6</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+<tr><td>7</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+</table>
+
+<p>whereas when we look at a class the model is not so sure of,
+   e.g. 'Permanent Crop', we can see that for the lower probability cases
+   have a higher variance across the models.
+</p>
+<table class='data'>
+<tr><td><b>idx</b></td>
+<td><b>y_pred</b></td>
+<td><b>mean(P(class))</b></td>
+<td><b>std(P(class))</td></b></tr>
+<tr><td>0</td><td>Industrial Buildings</td><td>0.508</td><td>0.282</td></tr>
+<tr><td>1</td><td>Permanent Crop</td><td>0.979</td><td>0.021</td></tr>
+<tr><td>2</td><td>Permanent Crop</td><td>0.703</td><td>0.167</td></tr>
+<tr><td>3</td><td>Herbaceous Vegetation</td><td>0.808</td><td>0.231</td></tr>
+<tr><td>4</td><td>Permanent Crop</td><td>0.941</td><td>0.076</td></tr>
+<tr><td>5</td><td>Permanent Crop</td><td>0.979</td><td>0.014</td></tr>
+<tr><td>6</td><td>Permanent Crop</td><td>0.833</td><td>0.155</td></tr>
+<tr><td>7</td><td>Permanent Crop</td><td>0.968</td><td>0.025</td></tr>
+</table>
+
+
+<h1>conclusions</h1>
+<ul>
+ <li>
+     jax vmap provides a great way to represent an ensemble in a single ensemble net.
+ </li>
+
+ <li>
+     we have a couple of options on how to train an ensemble net.
+ </li>
+
+ <li>
+     the single_input approach gives a good result, but each sub model is poor by itself.
+ </li>
+
+ <li>
+     multi_input trains each model to predict well, and the ensemble gets a bump.
+ </li>
+
+ <li>
+     logit dropout gives a way to stop the single_input ensemble from overfitting by
+     preventing sub models from specialising.
+ </li>
+
+ <li>
+     variance across the sub models predictions gives a hint of prediction confidence.
+ </li>
+</ul>
+
+<h1>TODOs</h1>
+<ul>
+ <li>
+     compare the performance of single_input mode vs multi_input mode normalising for
+     the number of effective parameters ( recall; single_input mode, without logit dropout,
+     is basically training a single xM param large model )
+ </li>
+
+ <li>
+     what is the effect of sharing an optimiser? would it be better to train each with
+     seperate optimisers? can't see why; but might be missing something..
+ </li>
+</ul>
+
+<h1>code</h1>
+<p><a href="https://github.com/matpalm/ensemble_net">all on github</a>
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/ensemble_nets";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

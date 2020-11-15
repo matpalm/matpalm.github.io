@@ -1,0 +1,239 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="a-half-baked-pix2pix-experiment-for-road-trip-videos-with-teaching-forcing"></a>
+  <h2 class="blog_post_title"><a href="/blog/half_baked_pix2pix_road_trips" rel="bookmark" title="Permanent Link to a half baked pix2pix experiment for road trip videos with teaching forcing">a half baked pix2pix experiment for road trip videos with teaching forcing</a></h2>
+  <small>June 26, 2019 at 01:00 PM | categories:
+
+<a href='/blog/tag/projects'>projects</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p>for the last few months i've been tinkering on/off with a half baked sequential pix2pix model.
+   it's got a lot of TODOs to make it work but i've been  distracted by something else and i'll feel less
+   guilty about dropping it temporarily if i scrappily write a blog post at least...
+</p>
+
+<h2>roadtrip!</h2>
+<p>for the last month we lived in the U.S. we drove around california, utah, nevada and colorado in a huge RV.
+   occsionally i had a time lapse running on my phone which resulted in 16,000 or so stills.
+</p>
+<table class="data">
+<tr><td colspan=2>some random frames</td></tr>
+<tr><td>
+<img src="/blog/imgs/2019/p2p4rt/random_1.png"/>
+</td><td>
+<img src="/blog/imgs/2019/p2p4rt/random_2.png"/>
+</td></tr>
+<tr><td>
+<img src="/blog/imgs/2019/p2p4rt/random_3.png"/>
+</td><td>
+<img src="/blog/imgs/2019/p2p4rt/random_4.png"/>
+</td></tr>
+</table>
+
+<p>to get a sense of the time between frames here are three sequential ones ...
+</p>
+<table class="data">
+<tr><td colspan=3>three sequential frames</td></tr>
+<tr><td>
+<img src="/blog/imgs/2019/p2p4rt/eg_seq_1.png"/>
+</td><td>
+<img src="/blog/imgs/2019/p2p4rt/eg_seq_2.png"/>
+</td><td>
+<img src="/blog/imgs/2019/p2p4rt/eg_seq_3.png"/>
+</td></tr>
+</table>
+
+<p>can we train a \( next\_frame \) model that given two frames predicts the next?
+   if so, can we use it for generation by rolling out frames and feeding them back in.
+</p>
+<p>( i saw an awesome example of this a few years ago when someone did this for view out the side of a train but
+   can't find the reference now sadly :( if you know the project, please let me know! )
+</p>
+
+<h2>v1 model</h2>
+<p>the simplest formulation is just \( \hat{f_3} = next\_frame(f_1, f_2) \)
+</p>
+<p>we encode frames f1 and f2 using a shared encoder, concat the representations,
+   do a little more encoding then decode back to an image.
+   we just train on the L1 difference \(L1(f_3, \hat{f_3})\)
+</p>
+<img src="/blog/imgs/2019/p2p4rt/model_v1.png"/>
+
+<p>completely unsurprisingly, given this loss, the model just learns a weird blurry middle ground for
+   all possible frames. pretty standard for L1.
+</p>
+<p>note: i test here on a particularly difficult sequence that has pretty rare features (other cars!!) to
+   get some vague sense of how much it's memorising things...
+</p>
+<table class="data">
+<tr><td>example rollout of v1 model</td></tr>
+<tr><td>
+<img src="/blog/imgs/2019/p2p4rt/model_v1_rollout_eg.png"/>
+</td></tr>
+</table>
+
+
+<h2>v2 model</h2>
+<p>when we train the v1 model, let's consider how we use it for rollouts;
+</p>
+<ul>
+ <li>
+     we start with two known frames, \( f_1, f_2 \)
+ </li>
+
+ <li>
+     we predict the third frame by running these through the model...
+     \( \hat{f_3} = next\_frame(f_1, f_2) \)
+ </li>
+
+ <li>
+     we predict the fourth frame by refeeding this back in...
+     \( \hat{f_4} = next\_frame(f_2, \hat{f_3}) \)
+ </li>
+</ul>
+<p>this fails for too reasons; the L1 loss as before just isn't that good but additionally in the last
+   step we're asking the model to make a prediction about a frame after \( \hat{f_3} \) and given \( \hat{f_3} \)
+   isn't that much like what it's seen before, the network produces an even worse output and the problems compound.
+</p>
+<p>interestingly though for the \( \hat{f_4} = next\_frame(f_2, \hat{f_3}) \) case we actually knew what
+   it should have been, \( f_4 \), and we can use this info. basically we can tell the
+   model "look, if this is how you're screwing up \( \hat{f_3} \), at the very least here's some info about how to
+   get back on track for \( f_4 \)"
+</p>
+<p>this idea of using a later label to give direction for a intermediate prediction is called teacher forcing
+   and it's trivial to add it in by just resharing a bunch of the existing pieces to make the model
+   predict not just the next frame, but the next two frames \( \hat{f_3}, \hat{f_4} = next\_frames(f_1, f_2) \)
+</p>
+<img src="/blog/imgs/2019/p2p4rt/model_v2.png"/>
+
+<p>we train this model on the sum of the L1 losses for \( f_3 \) and \( f_4 \)
+   but continue to just use the v1 model section of the network for rollouts.
+</p>
+<p>this teacher forcing gives a bit of help and things maybe improve a bit but it's still not great.
+</p>
+<p>note: if you can see an RNN growing here you wouldn't be too far off. in hindsight maybe i should just
+   stick an LSTM between the final encoder and the decoder stacks :/
+</p>
+<table class="data">
+<tr><td>example rollout of v2 model</td></tr>
+<tr><td>
+<img src="/blog/imgs/2019/p2p4rt/model_v2_rollout_eg.png"/>
+</td></tr>
+</table>
+
+
+<h2>v3 model</h2>
+<p>the obvious next level up from L1 is to introduce a GAN loss. since the generators output is two sequential frames
+   we make this the input for the discriminator.
+</p>
+<img src="/blog/imgs/2019/p2p4rt/model_v3.png"/>
+
+<p>curiously this fails in a way i haven't seen before in a GAN...
+   the output of G oscillates between two different modes.
+   something weird to do with Gs output being two frames?
+</p>
+<table class="data">
+<tr><td>example rollout of v3 model with oscillation</td></tr>
+<tr><td>
+<img src="/blog/imgs/2019/p2p4rt/model_v3_rollout_osc_eg.png"/>
+</td></tr>
+</table>
+
+<p>if i can change D's input to be a single frame the oscillation goes away, but the results are still
+   pretty crappy.
+</p>
+<p>anyways, based on other models i've worked on that have components like this one (e.g.
+   <a href="https://ai.googleblog.com/2017/10/closing-simulation-to-reality-gap-for.html">graspgan</a> and
+   <a href="http://matpalm.com/blog/counting_bees">bnn</a> ) i know i'm at the point of tuning and tinkering
+   but i've been distracted by something else in the short term... i'll come back to though one day...
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/half_baked_pix2pix_road_trips";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

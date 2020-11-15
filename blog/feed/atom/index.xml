@@ -1,0 +1,1920 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed
+  xmlns="http://www.w3.org/2005/Atom"
+  xmlns:thr="http://purl.org/syndication/thread/1.0"
+  xml:lang="en"
+   >
+  <title type="text">brain of mat kelcey</title>
+  <subtitle type="text">thoughts from a data scientist wannabe</subtitle>
+
+  <generator uri="http://blogofile.com/">Blogofile</generator>
+
+  <link rel="alternate" type="text/html" href="http://matpalm.com/blog" />
+  <id>http://matpalm.com/blog/feed/atom/</id>
+  <link rel="self" type="application/atom+xml" href="http://matpalm.com/blog/feed/atom/" />
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[my updated list of cool machine learning books]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/cool_machine_learning_books" />
+    <id>http://matpalm.com/blog/cool_machine_learning_books</id>
+    <published>2020-11-01T21:40:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="Uncategorized" />
+    <summary type="html"><![CDATA[my updated list of cool machine learning books]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/cool_machine_learning_books"><![CDATA[<p>awhile ago i posted
+   <a href="/blog/2010/08/06/my-list-of-cool-machine-learning-books/">my list of cool machine learning books</a>,
+   but it's been awhile so it's probably time to update it...
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/mml.jpg"/>
+</p>
+<p><b><a href="https://mml-book.github.io">Mathematics for Machine Learning</a>
+   by Marc Peter Deisenroth, A. Aldo Faisal &amp; Cheng Soon Ong.</b>
+</p>
+<p>this is my personal favorite book on the general math required for machine learning,
+   the way things are described really resonate with me.
+   available as a free pdf but i got a paper copy to support the authors after reading the
+   first half.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/laalfd.jpg" />
+</p>
+<p><b><a href="http://math.mit.edu/~gs/learningfromdata/">Linear Algebra and Learning from Data</a>
+   by Gilbert Strang.</b>
+</p>
+<p>this is gilbert's most recent work. it's really great, he's such a good teacher, and
+   <a href="https://ocw.mit.edu/courses/mathematics/18-065-matrix-methods-in-data-analysis-signal-processing-and-machine-learning-spring-2018/">his freely available lectures</a>
+   are even better. it's a shorter text than his other classic intro below with
+   more of a focus on how things are connected to modern machine learning techniques.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/itla.jpg" />
+</p>
+<p><b><a href="https://math.mit.edu/~gs/linearalgebra/">Introduction to Linear Algebra</a>
+   by Gilbert Strang.</b>
+</p>
+<p>this was my favorite linear algebra book for a long time before his 'learning from
+   data' came out. this is a larger book with a more comprehensive view of linear algebra.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/ts.jpg" />
+</p>
+<p><b><a href="https://greenteapress.com/wp/think-stats-2e/">Think Stats: Probability and Statistics for Programmers</a> by Allen Downey.</b>
+</p>
+<p>this book focuses on practical computation methods for probability and statistics.
+   i got a lot out of working through this one.
+   it's all in python and available for free.
+   ( exciting update! as part of writing this post i've discovered there's a new edition
+   to read!)
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/dbda.jpg" />
+</p>
+<p><b><a href="https://sites.google.com/site/doingbayesiandataanalysis/">Doing Bayesian Data Analysis</a>
+   by John Kruscgke</b>
+</p>
+<p>on the bayesian side of things this is the book i've most enjoyed working through.
+   i've only got the first edition which was R and
+   <a href="https://en.wikipedia.org/wiki/OpenBUGS">BUGS</a> but i see
+   the second edition is R,
+   <a href="http://mcmc-jags.sourceforge.net/">JAGS</a> and
+   <a href="https://mc-stan.org/">Stan</a>.
+   it'd be fun i'm sure to work through it doing
+   everything in <a href="https://github.com/pyro-ppl/numpyro">numpyro</a>. i might do that in all
+   my free time. haha. "free time" hahaha. sob.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/eosl.jpg" />
+</p>
+<p><b><a href="https://web.stanford.edu/~hastie/ElemStatLearn/">The Elements of Statistical Learning</a>
+   by Hastie, Tibshirani and Friedman</b>
+</p>
+<p>this is still one of the most amazing fundamental machine learning books i've ever had.
+   in fact i've purchased this book <em>twice</em> and given it away both times :/ i might buy another
+   copy some time soon, even though it's been freely available to download for ages. an
+   amazing piece of work.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/pgm.jpg" />
+</p>
+<p><b>
+   <a href="https://mitpress.mit.edu/books/probabilistic-graphical-models">Probabilistic Graphical Models</a>
+   by Daphne Koller &amp; Nir Friedman</b>
+</p>
+<p>this is an epic textbook that i'd love to understand better. i've read a couple of sections in
+   detail but not the entire tome yet.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/praml.jpg" />
+</p>
+<p><b>
+   <a href="https://www.microsoft.com/en-us/research/people/cmbishop/prml-book/">Pattern Recognition and Machine Learning</a>
+   by Christopher Bishop</b>
+</p>
+<p>this is probably the best overall machine learning text book i've ever read. such a beautiful book
+   and <a href="https://www.microsoft.com/en-us/research/uploads/prod/2006/01/Bishop-Pattern-Recognition-and-Machine-Learning-2006.pdf">the pdf is FREE FOR DOWNLOAD!!!</a>
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/mlapp.jpg" />
+</p>
+<p><b><a href="https://mitpress.mit.edu/books/machine-learning-1">Machine Learning: A Probabilistic Perspective</a> by Kevin Murphy</b>
+</p>
+<p>this is my second favorite general theory text on machine learning.
+   i got kevin to sign my copy when he was passing my desk once but
+   someone borrowed it and never gave it back :(
+   so if you see a copy with my name on the spine let me know!
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/homl.jpg" />
+</p>
+<p><b><a href="https://www.oreilly.com/library/view/hands-on-machine-learning/9781492032632/">Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow</a> by Aurélien Géron</b>
+</p>
+<p>this is the book i point most people to when they are interested in getting up
+   to speed with modern applied machine learning without too much concern for the
+   theory. it's very up to date (as much as a book can be) with the latest libraries
+   and, most importantly, provides a good overview of not just neural stuff but fundamental
+   <a href="https://scikit-learn.org/stable/">scikit-learn</a> as well.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/mle.jpg" />
+</p>
+<p><b><a href="http://www.mlebook.com/wiki/doku.php">Machine Learning Engineering</a> by Andriy Burkov</b>
+</p>
+<p>a great book focussing on the operations side of running a machine learning system. i'm a bit
+   under half way through the free online version and very likely to buy a physical copy to finish
+   it and support the author. great stuff and, in many ways, a more impactful book than any of
+   the theory books here.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/itdm.jpg" />
+</p>
+<p><b><a href="https://www-users.cs.umn.edu/~kumar001/dmbook/index.php">Introduction to Data Mining</a>
+   by Pang-Ning Tan, Michael Steinbach &amp; Vipin Kumar</b>
+</p>
+<p>this is another one that was also on my list from ten years ago and though it's section
+   on neural networks is a bit of chuckle these days there is still a bunch of really
+   great fundamental stuff in this book. very practical and easy to digest. i also see there's
+   a second edition now. i reckon this would compliment the "hands on" book above very well.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/salp.jpg" />
+</p>
+<p><b><a href="https://web.stanford.edu/~jurafsky/slp3/">Speech and Language Processing</a>
+   by Dan Jurafsky &amp; James Martin</b>
+</p>
+<p>still the best overview of NLP there is (IMHO). can't wait to read the 3rd edition which
+   apparently will cover more modern stuff (e.g. transformers) but until then, for the
+   love of god though, please don't be one of those "this entire book is
+   irrelevant now! just fine tune BERT" people :/
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/no.jpg" />
+</p>
+<p><b><a href="https://link.springer.com/book/10.1007/978-0-387-40065-5">Numerical Optimization</a>
+   by Jorge NocedalStephen J. Wright</b>
+</p>
+<p>this book is super hard core and maybe more an operations
+   research book than machine learning. though i've not read it cover to cover the
+   couple of bits i've worked through really taught me a lot. i'd love to understand
+   the stuff in this text better; it's so so fundamental to machine learning (and more)
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/dl.jpg" />
+</p>
+<p><b><a href="https://www.deeplearningbook.org/">Deep Learning</a>
+   by Ian Goodfellow</b>
+</p>
+<p>writing a book specifically on deep learning is very dangerous since things move so fast but
+   if anyone can do it, ian can... i think ian's approach to explaining neural networks
+   from the ground up is one of my favorites. i got the first edition hardback but it's free to
+   download from the website.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/pr.jpg" />
+</p>
+<p><b><a href="https://mitpress.mit.edu/books/probabilistic-robotics">Probabilistic Robotics</a>
+   by Sebastian Thrun, Wolfram Burgard and Dieter Fox</b>
+</p>
+<p>when i first joined a robotics group i bought a stack of ML/robotics books and this
+   was by far the best. it's good intro stuff, and maybe already dated in places given
+   it's age (the 2006 edition i have) but i still got a bunch from it.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/tml.jpg" />
+</p>
+<p><b><a href="https://www.oreilly.com/library/view/tinyml/9781492052036/">TinyML</a>
+   by Pete Warden &amp; Daniel Situnayake</b>
+</p>
+<p>this was a super super fun book to tech review! neural networks on microcontrollers?!?
+   yes please!
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/ec.jpg" />
+</p>
+<p><b><a href="https://www.wiley.com/en-us/Evolutionary+Computation%3A+Toward+a+New+Philosophy+of+Machine+Intelligence%2C+3rd+Edition-p-9780471669517">Evolutionary Computation</a> by David Fogel</b>
+</p>
+<p>this is still by favorite book on evolutionary algorithms; i've had this for a loooong
+   time now. i still feel like evolutionary approaches are due for a big big comeback
+   any time soon....
+</p>
+<hr>
+
+
+<h2>in the mail...</h2>
+<p>the good thing about writing a list is you get people telling you cool ones you've missed :)
+</p>
+<p>the top three i've chosen (that are in the mail) are...
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/ciis.jpg" />
+</p>
+<p><b><a href="http://bayes.cs.ucla.edu/PRIMER/">Causal Inference in Statistics</a> by
+   Judea Pearl, Madelyn Glymour &amp; Nicholas P. Jewell</b>
+</p>
+<p>recommended by <a href="https://twitter.com/animesh_garg">animesh</a> who quite rightly points out
+   the lack of causality in machine learning books in the books above.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/itiala.jpg" />
+</p>
+<p><b><a href="https://www.cambridge.org/au/academic/subjects/computer-science/pattern-recognition-and-machine-learning/information-theory-inference-and-learning-algorithms?format=HB&amp;isbn=9780521642989">Information Theory, Inference and Learning Algorithms</a> by David MacKay</b>
+</p>
+<p>i've seen this book mentioned a number of times and was most recently recommended by
+   my colleague <a href="https://twitter.com/danesherbs">dane</a> so it's time to get it.
+</p>
+<p><hr>
+   <img src="/blog/imgs/2020/mlb/bmlpa.jpg" />
+</p>
+<p><b><a href="https://www.oreilly.com/library/view/building-machine-learning/9781492045106/">Building Machine Learning Powered Applications</a> by Emmanuel Ameisen</b>
+</p>
+<p>a number of people i worked with have enjoyed this. first recommended by another
+   colleague <a href="https://twitter.com/davidcolls">dave</a>.
+   looks to be on the practical side rather than the theory but that's ok some times :)
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[dithernet very slow movie player]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/dithernet_vsmp" />
+    <id>http://matpalm.com/blog/dithernet_vsmp</id>
+    <published>2020-10-21T22:30:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="projects" />
+    <summary type="html"><![CDATA[dithernet very slow movie player]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/dithernet_vsmp"><![CDATA[<h1>very slow movie player</h1>
+<p>it's been about two years since i first saw the awesome
+   <a href="https://medium.com/s/story/very-slow-movie-player-499f76c48b62">very slow movie player</a>
+   project by bryan boyer. i thought it was such an excellent idea but never got around
+   to buying the hardware to make one. more recently though i've seen a couple of references
+   to the project so i decided it was finally time to make one.
+</p>
+<p>one interesting concern about an eink very slow movie player is the screen refresh. simpler
+   eink screens refresh by doing a full cycle of a screen of white or black before displaying
+   the new image. i hated the idea of an ambient slow player doing this every few minutes
+   as it switched frames, so i wanted to make sure i got a piece of hardware that could do
+   incremental update.
+</p>
+<p>after a bit of shopping around i settled on a
+   <a href="https://www.waveshare.com/6inch-hd-e-paper-hat.htm">6 inch HD screen from waveshare</a>
+</p>
+<p>it ticks all the boxes i wanted
+</p>
+<ul>
+ <li>
+     6 inch
+ </li>
+
+ <li>
+     1448×1072 high definition
+ </li>
+
+ <li>
+     comes with a raspberry pi HAT
+ </li>
+
+ <li>
+     and, most importantly, support partial refresh
+ </li>
+</ul>
+<p>this screen also supports grey scale, but only with a flashy full cycle redraw,
+   so i'm going to stick to just black and white since it supports the partial redraw.
+</p>
+<p>note: even though the partial redraw is basically instant it does suffer from a ghosting problem;
+   when you draw a white pixel over a black one things are fine, but if you draw black over
+   white, in the partial redraw, you get a slight ghosting of gray that is present until a
+   full redraw :/
+</p>
+
+<h1>dithering</h1>
+<p>so how do you display an image when you can only show black and white?
+   dithering! here's an example of a 384x288 RGB image dithered using
+   <a href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image.convert">PILS implementation of the Floyd-Steinberg algorithm</a>
+</p>
+<table class='data'>
+<tr><td><img src="/blog/imgs/2020/dn/eg.dither.png" /></td></tr>
+<tr><td>original RGB vs dithered version</td></tr>
+</table>
+
+<p>it makes intuitive sense that you could have small variations in the exact locations of the
+   dots as long as you get the densities generally right. s
+   so there's a reasonable question then; how do you dither in such a way that you get a
+   good result, but with minimal pixel changes from a previous frame? (since we're
+   motivated on these screens to change as little as possible)
+</p>
+<p>there are two approaches i see
+</p>
+<p>1) spend 30 minutes googling for a solution that no doubt someone came up with 20 years
+   ago that can be implemented in 10 lines of c running at 1000fps ...
+</p>
+<p>2) .... or train an
+   <a href="https://jax.readthedocs.io/">jax</a>
+   based GAN to generate the dithers with a loss balancing a good dither vs no pixel change. :P
+</p>
+
+<h1>the data</h1>
+<p>when building a very slow movie player the most critical decision is...
+   what movie to play?
+   i really love the 1979 classic <a href="https://www.imdb.com/title/tt0078748/">alien</a>,
+   it's such a great dark movie, so i thought i'd go with it.
+   the movie is 160,000 frames so at a play back rate of a frame every 200 seconds
+   it'll take just over a year to finish.
+</p>
+<p>note that in this type of problem there is no concern around overfitting.
+   we have access to all data going in and so it's fine to overfit as much as we like;
+   as long as we're minimising whatever our objective is we're good to go.
+</p>
+
+<h1>v1: the vanilla unet</h1>
+<p>i started with a
+   <a href="https://arxiv.org/abs/1505.04597">unet</a>
+   that maps 3 channel RGB images to a single channel dither.
+</p>
+<table class='data'>
+<tr><td><img src="/blog/imgs/2020/dn/models.v1.png" /></td></tr>
+<tr><td>v1 architecture</td></tr>
+</table>
+
+<p>i tinkered a bit with the architecture but didn't spend too much time tuning it.
+   for the final v3 result i ended with a pretty vanilla stack of encoders &amp; decoders
+   (with skip connections connecting an encoder to the decoder at the same spatial resolution)
+   each encoder/decoder block uses a residual like shortcut around a couple of convolutions.
+   nearest neighbour upsampling gave a nicer result than deconvolutions in the decoder
+   for the v3 result.
+   also, <a href="https://arxiv.org/abs/1606.08415">gelu</a> is my new favorite activation :)
+</p>
+<p>for v1 i used a binary cross entropy loss of P(white) per pixel
+   ( since it's what worked well for my
+   <a href="http://matpalm.com/blog/counting_bees/">bee counting project</a> )
+</p>
+<p>as always i started by overfitting to a single example to get a baseline feel for capacity required.
+</p>
+<table class='data'>
+<tr><td>
+<img src="/blog/imgs/2020/dn/overfit.png" />
+</td></tr>
+<tr><td>
+v1 overfit result
+</td></tr>
+</table>
+
+<p>when scaling up to the full dataset i switched to training on half resolution images
+   against a patch size of 128. working on half resolution consistently gave a better
+   result than working with the full resolution.
+</p>
+<p>as expected though this model gave us the classic type of problem we see with
+   straight unet style image translation; we get a reasonable sense of the shapes, but no
+   fine details around the dithering.
+</p>
+<table class='data'>
+<tr><td>
+<img src="/blog/imgs/2020/dn/v1.upsample.png" />
+</td></tr>
+<tr><td>
+v1 vanilla unet with upsampling example
+</td></tr>
+</table>
+
+<p>side notes:
+</p>
+<ul>
+ <li>
+     for this v1 version using deconvolutions in the decoder
+     (instead of nearest neighbour upsampling) actually looked pretty good!
+     nicely captured texture for a dither with a surprisingly small network.
+ </li>
+
+ <li>
+     i actually did some experiments using branches in the decoder for both upsampling
+     and deconvolutions but the deconvs always dominated too much. i thought that would
+     allow the upsampling to work as a kind of residual to the deconv but it never happened.
+ </li>
+</ul>
+<table class='data'>
+<tr><td>
+<img src="/blog/imgs/2020/dn/v1.deconv.png" />
+</td></tr>
+<tr><td>
+v1 vanilla unet with deconvolution example
+</td></tr>
+</table>
+
+
+<h1>v2: to the GAN...</h1>
+<p>for v2 i added a GAN objective in an attempt to capture finer details
+</p>
+<table class='data'>
+<tr><td>
+<img src="/blog/imgs/2020/dn/models.v2.png" />
+</td></tr>
+<tr><td>
+v2 architecture
+</td></tr>
+</table>
+
+<p>i started with the original
+   <a href="https://arxiv.org/abs/1611.07004">pix2pix</a>
+   objective but reasonably quickly moved to use a
+   <a href="https://arxiv.org/abs/1701.07875">wasserstein</a>
+   critic style objective since i've always found it more stable.
+</p>
+<p>the generator (G) was the same as the unet above with the discriminator (D) running patch based.
+   at this point i also changed the reconstruction loss from a binary objective to just L1.
+   i ended up using batchnorm in D, but not G.
+   to be honest i only did a little did of manual tuning, i'm sure there's a better result
+   hidden in the hyperparameters somewhere.
+</p>
+<p>so, for this version, the loss for G has two components
+</p>
+<pre>
+1. D(G(rgb))             # fool D
+2. L1(G(rgb), dither)    # reconstruct the dither
+</pre>
+
+<p>very quickly (i.e. in &lt; 10mins ) we get a reasonable result that is started to
+   show some more detail than just the blobby reconstruction.
+</p>
+<table class='data'>
+<tr><td>
+<img src="/blog/imgs/2020/dn/v2.eg.png" />
+</td></tr>
+<tr><td>
+v2 partial trained eg
+</td></tr>
+</table>
+
+<p>note: if the loss weight of 2) is 0 we degenerate to v1
+   (which proved a useful intermediate debugging step).
+   at this point i didn't want to tune to much since the final v3 is coming...
+</p>
+
+<h1>v3: a loss related to change from last frame</h1>
+<p>for v3 we finally introduce a loss relating the previous frame
+   (which was one of the main intentions of the project in the first place)
+</p>
+<p>now G takes not just the RGB image, but the dither of the previous frame.
+</p>
+<table class='data'>
+<tr><td>
+<img src="/blog/imgs/2020/dn/models.v3.png" />
+</td></tr>
+<tr><td>
+v3 architecture
+</td></tr>
+</table>
+
+<p>the loss for G now has three parts
+</p>
+<pre>
+1. D(G(rgb_t1)) => real      # fool D
+2. L1(G(rgb_t1), dither_t1)  # reconstruct the dither
+3. L1(G(rgb_t1), dither_t0)  # don't change too much from the last frame
+</pre>
+
+<p>normally with a network that takes as input the same thing it's outputting
+   we have to be careful to include things like teacher forcing.
+   but since we don't intend to use this network for any kind of rollouts
+   we can just always feed the "true" dithers in where required.
+   having said that, rolling out the dithers from this network would be interesting :D
+</p>
+
+<h1>digression; the troublesome scene changes</h1>
+<p>the third loss objective, not changing too many pixels from the last frame,
+   works well for generally stationary shots
+   but is disastrous for scene changes :/
+</p>
+<p>consider the following graph for a sequence of frames showing the pixel difference
+   between frames.
+</p>
+<img src="/blog/imgs/2020/dn/pixel_diff_between_scenes.png" />
+
+<p>when there is a scene change we observe a clear "spike" in pixel diff. my first thought
+   was to look for these and do a full redraw for them. it's very straightforward to
+   find them (using a simple z-score based anomaly detector on a sliding window) but
+   the problem is that it doesn't pick up the troublesome case of a panning shot where we don't
+   have a scene change exactly. in these cases there is no abrupt scene change, but there
+   are a lot of pixels changing so we end up seeing a lot of ghosting.
+</p>
+<p>i spent ages tinkering with the best way to approach this before deciding that a simple
+   approach of <code>num_pixels_changed_since_last_redraw &gt; threshold</code> was good enough to decide
+   if a full redraw was required (with a cooldown to ensure we not redrawing all the time)
+</p>
+
+<h1>... and back to v3</h1>
+<p>the v3 network gets a very good result <em>very</em> quickly; unsurprisingly since the dither at time
+   t0 provided to G is a pretty good estimate of the dither at t1 :)
+   i.e. G can get a good result simply by copying it!
+</p>
+<p>the following scenario shows this effect...
+</p>
+<p>consider three sequential frames, the middle one being a scene change.
+</p>
+<img src="/blog/imgs/2020/dn/v3.scene_eg.1.png" />
+
+<p>at the very start of training the reconstruction loss is dominant and
+   we get blobby outlines of the frame.
+</p>
+<img src="/blog/imgs/2020/dn/v3.scene_eg.2.png" />
+
+<p>but as the contribution from the dither at time t0 kicks it things look good in general but
+   the frames at the scene change end up being a ghosted mix attempt to copy through the old
+   frame along with dithering the new one.
+   (depending on the relative strength of the loss terms of G).
+</p>
+<img src="/blog/imgs/2020/dn/v3.scene_eg.3.png" />
+
+
+<h1>the final result</h1>
+<p>so the v3 version generally works and i'm sure with some more tuning i could get a better result
+   but, as luck would have it, i actually find the results from v2 more appealing when testing
+   on the actual eink screen. so even though the intention was do something like v3 i'm going to end
+   up running something more like v2 (as shown in these couple of examples (though the resolution
+   does it no justice (not to mention the fact the player will run about 5000 times slower than these
+   gifs)))
+</p>
+<table class='data'><tr>
+<td><img src="/blog/imgs/2020/dn/f_00048000.gif"/></td>
+<td><img src="/blog/imgs/2020/dn/f_00067400.gif"/></td>
+</tr><tr>
+<td><img src="/blog/imgs/2020/dn/f_00082400.gif"/></td>
+<td><img src="/blog/imgs/2020/dn/f_00107045.gif"/></td>
+</tr><tr>
+<td><img src="/blog/imgs/2020/dn/f_00120600.gif"/></td>
+<td><img src="/blog/imgs/2020/dn/f_00145400.gif"/></td>
+</tr></table>
+
+
+<h1>player case</h1>
+<p>i'll update this section when i get a proper frame made (though i might try myself?) but for now the
+   prototype lives balanced precariously on a piece of foam below it's younger sibling pi zero eink screen
+   running game of life.
+</p>
+<table class='data'>
+<tr><td><img src="/blog/imgs/2020/dn/prototype.png" /></td></tr>
+<tr><td>prototype on desk</td></tr>
+</table>
+
+
+<h1>todos</h1>
+<ul>
+ <li>
+     for reconstruction and frame change i used L1 loss, but that's not exactly what we
+     want. since we want to avoid the ghosting (white changing to black resulting in grey)
+     we should try to avoid white to black but ignore black to white.
+ </li>
+
+ <li>
+     we might be able to better handle scene changes by also including a
+     loss component around the <em>next</em> frame.
+ </li>
+
+ <li>
+     there's a padding issue where i train G on patches but when it's run on the full res
+     version we get an edge artefact the size of the original patch (see image below).
+     as a hacky fix i just padded the RGB image before passing it to G in the final run, but this problem could
+     be fixed by changing the padding schema during training.
+ </li>
+</ul>
+<img src="/blog/imgs/2020/dn/todo_padding.png"/>
+
+
+<h1>code</h1>
+<p><a href="https://github.com/matpalm/dither_net">all on github</a>
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[ensemble networks]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/ensemble_nets" />
+    <id>http://matpalm.com/blog/ensemble_nets</id>
+    <published>2020-09-17T06:30:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="projects" />
+    <category scheme="http://matpalm.com/blog" term="ensemble_nets" />
+    <category scheme="http://matpalm.com/blog" term="jax" />
+    <summary type="html"><![CDATA[ensemble networks]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/ensemble_nets"><![CDATA[<h1>overview</h1>
+<p>ensemble nets are a method of representing an ensemble of
+   models as one single logical model. we use
+   <a href="https://github.com/google/jax">jax's</a>
+   <a href="https://github.com/google/jax#auto-vectorization-with-vmap">vmap</a>
+   operation to batch over not
+   just the inputs but additionally sets of model parameters.
+   we propose some
+   approaches for training ensemble nets and introduce logit dropout as
+   a way to improve ensemble generalisation as well as provide
+   a method of calculating model confidence.
+</p>
+
+<h1>background</h1>
+<p>as part of my "embedding the chickens" project i wanted to use
+   random projection embedding networks to generate pairs of similar
+   images for weak labelling. since this technique works really well
+   in an ensemble i did some playing around and got the ensemble
+   running pretty fast in jax. i wrote it up in
+   <a href="/blog/jax_random_embedding_ensemble_network/">this blog post</a>.
+   since doing that i've been wondering how to not just run an
+   ensemble net forward pass but how you might <em>train</em> one too...
+</p>
+
+<h1>dataset &amp; problem</h1>
+<p>for this problem we'll work with the
+   <a href="https://github.com/phelber/eurosat">eurosat/rgb dataset</a>.
+   eurosat/rgb is a 10 way classification task across 27,000 64x64 RGB images
+</p>
+<p>here's a sample image from each of the ten classes...
+</p>
+<img src="/blog/imgs/2020/en/sample_images.png" />
+
+
+<h1>base line model</h1>
+
+<h2>architecture</h2>
+<p>as a baseline we'll start with a simple non ensemble network. it'll consist of
+   a pretty vanilla convolutional stack, global spatial pooling, one dense layer
+   and a final 10 way classification layer.
+</p>
+<table class='data'>
+<tr><td><b>layer</b></td><td><b>shape</b></td></tr>
+<tr><td>input</td><td>(B, 64, 64, 3)</td></tr>
+<tr><td>conv2d</td><td>(B, 31, 31, 32)</td></tr>
+<tr><td>conv2d</td><td>(B, 15, 15, 64)</td></tr>
+<tr><td>conv2d</td><td>(B, 7, 7, 96)</td></tr>
+<tr><td>conv2d</td><td>(B, 3, 3, 96)</td></tr>
+<tr><td>global spatial pooling</td><td>(B, 96)</td></tr>
+<tr><td>dense</td><td>(B, 96)</td></tr>
+<tr><td>logits (i.e. dense with no activation)</td><td>(B, 10)</td></tr>
+</table>
+
+<p>all convolutions use 3x3 kernels with a stride of 2. the conv layers and the single
+   dense layer use a gelu activation. batch size is represented by <code>B</code>.
+</p>
+<p>we use no batch norm, no residual connections, nothing fancy at all.
+   we're more interested in the training than getting the absolute best value.
+   this network is small enough that we can train it fast but it still gives
+   reasonable results. residual connections would be trivial to add but batch
+   norm would be a bit more tricky given how we'll build the ensemble net later.
+</p>
+<p>we'll use <a href="https://github.com/google/objax">objax</a> to manage the model params
+   and orchestrate the training loops.
+</p>
+
+<h2>training setup</h2>
+<p>training for the baseline will be pretty standard but let's walk through it
+   so we can call out a couple of specific things for comparison with an ensemble
+   net later...
+</p>
+<p>( we'll use 2 classes in these diagrams for ease of reading though
+   the eurosat problem has 10 classes. )
+</p>
+<img src="/blog/imgs/2020/en/d.non_ensemble.png" />
+
+<p>walking through left to right...
+</p>
+<ol>
+ <li>
+     input is a batch of images; <code>(B, H, W, 3)</code>
+ </li>
+
+ <li>
+     the output of the first convolutional layers with stride=2 &amp; 32 filters will be <code>(B, H/2, W/2, 32)</code>
+ </li>
+
+ <li>
+     the network output for an example two class problem are logits shaped <code>(B, 2)</code>
+ </li>
+
+ <li>
+     for prediction probabilities we apply a softmax to the logits
+ </li>
+
+ <li>
+     for training we use cross entropy, take the mean loss and apply backprop
+ </li>
+</ol>
+<p>we'll train on 80% of the data, do hyperparam tuning on 10% (validation set) and
+   report final results on the remaining 10% (test set)
+</p>
+<p>for hyperparam tuning we'll use <a href="https://ax.dev/">ax</a> on very short runs of 30min
+   for all trials.
+   for experiment tracking we'll use <a href="https://www.wandb.com/">wandb</a>
+</p>
+<p>the hyperparams we'll tune for the baseline will be...
+</p>
+<table class='data'>
+<tr><td><b>param</b></td><td><b>description</b></td></tr>
+<tr>
+<td>max_conv_size</td>
+<td>conv layers with be sized as [32, 64, 128, 256]</br>
+up to a max size of max_conv_size.</br>
+i.e. a max_conv_size of 75 would imply sizes [32, 64, 75, 75]</br></td>
+</tr>
+<tr>
+<td>dense_kernel_size</td>
+<td>how many units in the dense layer before the logits</td>
+</tr>
+<tr>
+<td>learning_rate</td>
+<td>learning rate for optimiser</td>
+</tr>
+</table>
+
+<p>we'd usually make choices like the conv sizes being powers of 2 instead of a smooth value but
+   i was curious about the behaviour of ax for tuning.
+   also we didn't bother with a learning rate schedule; we just use simple early
+   stopping (against the validation set)
+</p>
+<img src="/blog/imgs/2020/en/single_model.all_runs.png" />
+
+<p>the best model of this group gets an accuracy of 0.913 on the validation set
+   and 0.903 on the test set. ( usually not a fan of accuracy but the classes
+   are pretty balanced so accuracy isn't a terrible thing to report. )
+</p>
+<table class='data'>
+<tr><td><b>model</td><td><b>validation</b></td><td><b>test</b></td></tr>
+<tr><td>baseline</td><td>0.913</td><td>0.903</td></tr>
+</table>
+
+
+<h1>ensemble net model</h1>
+<p>so what then is an ensemble net?
+</p>
+<p>logically we can think about our models as being functions that take two
+   things 1) the parameters of the model and 2) an input example. from
+   these they return an output.
+</p>
+<pre class="prettyprint"><code class="language-python"># pseudo code
+model(params, input) -> output
+</code></pre>
+
+<p>we pretty much always though run a batch of <code>B</code> inputs at once.
+   this can be easily represented as a leading axis on the input and allows us to
+   make better use of accelerated hardware as well as providing some benefits regarding
+   learning w.r.t gradient variance.
+</p>
+<p>jax's
+   <a href="https://github.com/google/jax#auto-vectorization-with-vmap">vmap</a>
+   function makes this trivial to implement by vectorising a call to the model
+   across a vector of inputs to return a vector of outputs.
+</p>
+<pre class="prettyprint"><code class="language-python"># pseudo code
+vmap(partial(model, params))(b_inputs) -> b_outputs
+</code></pre>
+
+<p>interestingly we can use this same functionality to batch not across independent
+   inputs but instead batch across independent sets of <code>M</code> model params. this effectively
+   means we run the <code>M</code> models in parallel. we'll call these <code>M</code> models sub models
+   from now on.
+</p>
+<pre class="prettyprint"><code class="language-python"># pseudo code
+vmap(partial(model, input))(m_params) -> m_outputs
+</code></pre>
+
+<p>and there's no reason why we can't do both batching across both a set of inputs
+   as well as a set of model params at the same time.
+</p>
+<pre class="prettyprint"><code class="language-python"># pseudo code
+vmap(partial(model)(b_inputs, m_params) -> b_m_outputs
+</code></pre>
+
+<p>for a lot more specifics on how i use jax's vmap to support this
+   see my prior post on
+   <a href="http://matpalm.com/blog/jax_random_embedding_ensemble_network/">jax random embedding ensemble nets</a>.
+</p>
+<p>and did somebody say TPUs? turns out we can make ensemble nets run
+   super fast on TPUs by simply swapping the vmap calls for pmap ones!
+   using pmap on a TPU will have each ensemble net run in parallel! see
+   <a href="https://colab.research.google.com/drive/1ijI77AlYqGOEXm5BqtnNomtUPnFr26o0?usp=sharing">this colab</a>
+   for example code running pmap on TPUs
+</p>
+
+<h2>single_input ensemble</h2>
+<p>let's walk through this in a bit more detail with an ensemble net with two sub models.
+</p>
+<img src="/blog/imgs/2020/en/d.single_input.png" />
+
+<ol>
+ <li>
+     our input is the same as for the baseline; a batch of images <code>(B, H, W, 3)</code>
+ </li>
+
+ <li>
+     the output of the first conv layer now though has an additional <code>M</code> axis to
+represent the outputs from the <code>M</code> models and results in <code>(M, B, H/2, W/2, 32)</code>
+ </li>
+
+ <li>
+     this additional <code>M</code> axis is carried all the way through to the logits <code>(M, B, 2)</code>
+ </li>
+
+ <li>
+     at this point we have <code>(M, B, 2)</code> logits but we need <code>(B, 2)</code>
+to compare against <code>(B,)</code> labels. with logits this reduction is
+very simple; just sum over the <code>M</code> axis!
+ </li>
+
+ <li>
+     for prediction probabilities we again apply a softmax
+ </li>
+
+ <li>
+     for training we again use cross entropy to calculate the mean loss and apply backprop
+ </li>
+</ol>
+<p>this gives us a way to train the sub models to act as a single ensemble unit as well as
+   a way to run inference on the ensemble net in a single forward pass.
+</p>
+<p>we'll refer to this approach as <strong>single_input</strong> since we are starting with a single
+   image for all sub models.
+</p>
+
+<h2>multi_input ensemble</h2>
+<p>an alternative approach to training is to provide a separate image per sub model.
+   how would things differ if we did that?
+</p>
+<img src="/blog/imgs/2020/en/d.multi_input.png" />
+
+<ol>
+ <li>
+     now our input has an additional <code>M</code> axis since it's a different batch per sub model.
+<code>(M, B, H, W, 3)</code>
+ </li>
+
+ <li>
+     the output of the first conv layers carries this <code>M</code> axis through <code>(M, B, H/2, W/2, 32)</code>
+ </li>
+
+ <li>
+     which is carried to the logits <code>(M, B, 2)</code>
+ </li>
+
+ <li>
+     in this case though we have <code>M</code> seperate labels for the <code>M</code> inputs so we don't have to combine the logits at all, we can just calculate the mean loss across the <code>(M, B)</code> training instances.
+ </li>
+</ol>
+<p>we'll call this approach <strong>multi_input</strong>.
+   note that this way of feeding separate images only really applies to training;
+   for inference if we want the representation of the ensemble it only really makes
+   sense to send a batch of <code>(B)</code> images, not <code>(M, B)</code>.
+</p>
+
+<h2>training the ensemble net</h2>
+<p>let's do some tuning as before but with a couple of additional hyper
+   parameters that this time we'll sweep across.
+</p>
+<p>we'll do each of the six combos of <code>[(single, 2), (single, 4), (single, 8),
+(multi, 2), (multi, 4), (multi, 8)]</code> and tune for 30 min for each.
+</p>
+<img src="/blog/imgs/2020/en/single_multi_sweeps.png" />
+
+<p>when we poke around and facet by the various params there's only one that makes
+   a difference; single_input mode consistently does better than multi_input.
+</p>
+<p>in hindsight this is not surprising i suppose since single_input mode
+   is effectively training one network with xM parameters
+   (with an odd summing-of-logits kind of bottleneck)
+</p>
+<img src="/blog/imgs/2020/en/validation_boxplot.png" />
+
+
+<h1>confusion matrix per sub model</h1>
+
+<h2>single_input ensemble</h2>
+<p>when we check the best single_input 4 sub model ensemble net we get an accuracy of 0.920
+   against the validation set and 0.901 against the test set
+</p>
+<table class='data'>
+<tr><td><b>model</td><td><b>validation</b></td><td><b>test</b></td></tr>
+<tr><td>baseline</td><td>0.913</td><td>0.903</td></tr>
+<tr><td>single_input</td><td>0.920</td><td>0.901</td></tr>
+</table>
+
+<p>looking at the confusion matrix the only
+   really thing to note is the slight confusion between 'Permanent Crop' and
+   'Herbaceous Vegetation' which is reasonable given the similarity in RGB.
+</p>
+<img src="/blog/imgs/2020/en/cm.simo.ensemble.png" />
+
+<p>we can also review the confusion matrices of each of the 4 sub models run as
+   individuals; i.e. not working as an ensemble. we observe the quality of each isn't
+   great with accuracies of [0.111, 0.634, 0.157, 0.686].
+   again makes sense since they had been trained only to work together. that first model
+   really loves 'Forests', but don't we all...
+</p>
+<table>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.simo.model_0.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.simo.model_1.png" /></td>
+</tr>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.simo.model_2.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.simo.model_3.png" /></td>
+</tr>
+</table>
+
+
+<h2>multi_input ensemble</h2>
+<p>the performance of the multi_input ensemble isn't quite as good with
+   a validation accuracy of 0.902 and test accuracy of 0.896.
+   the confusion matrix looks similar to the single_input mode version.
+</p>
+<table class='data'>
+<tr><td><b>model</td><td><b>validation</b></td><td><b>test</b></td></tr>
+<tr><td>baseline</td><td>0.913</td><td>0.903</td></tr>
+<tr><td>single_input</td><td>0.920</td><td>0.901</td></tr>
+<tr><td>multi_input</td><td>0.902</td><td>0.896</td></tr>
+</table>
+
+<img src="/blog/imgs/2020/en/cm.mimo.ensemble.png" />
+
+<p>this time though the output of each of the 4 sub models individually is much stronger
+   with accuracies of [0.842, 0.85, 0.84, 0.83, 0.86]. this makes sense
+   since they were trained to not predict as one model.
+   it is nice to see at least that the ensemble result is higher than any one model.
+   and reviewing their confusion matrices they seem to specialise in different
+   aspects with differing pairs of confused classes.
+</p>
+<table>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.mimo.model_0.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.mimo.model_1.png" /></td>
+</tr>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.mimo.model_2.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.mimo.model_3.png" /></td>
+</tr>
+</table>
+
+
+<h1>dropping logits</h1>
+<p>the main failing of the single_input approach is that the sub models
+   are trained to always operate together; that breaks some of
+   the core ideas of why we do ensembles in the first place. as i was
+   thinking about this i was reminded that the core idea of dropout is
+   quite similar; when nodes in a dense layer are running together
+   we can drop some out to ensure other nodes don't overfit to
+   expecting them to always behave in a particular way.
+</p>
+<p>so let's do the same with the sub models of the ensemble. my first thought
+   around this was that the most logical place would be at the logits. we can
+   zero out the logits of a random half of the models during training and,
+   given the ensembling is implemented by summing the logits, this effectively
+   removes those models from the ensemble.
+   the biggest con though is the waste of the forward pass of running those sub
+   models in the first place.
+   during inference we don't have to do anything in terms of masking &amp; there's no
+   need to do any rescaling ( that i can think of ).
+</p>
+<p>so how does it do? accuracy is 0.914 against the validation set and 0.911 against
+   the test set; the best result so far! TBH though, these numbers are pretty
+   close anyways so maybe we were just lucky ;)
+</p>
+<table class='data'>
+<tr><td><b>model</td><td><b>validation</b></td><td><b>test</b></td></tr>
+<tr><td>baseline</td><td>0.913</td><td>0.903</td></tr>
+<tr><td>single_input</td><td>0.920</td><td>0.901</td></tr>
+<tr><td>multi_input</td><td>0.902</td><td>0.896</td></tr>
+<tr><td>logit drop</td><td>0.914</td><td>0.911</td></tr>
+</table>
+
+<img src="/blog/imgs/2020/en/cm.simo_ld.ensemble.png" />
+
+<p>the sub models are all now doing OK with accuracies of
+   [0.764, 0.827, 0.772, 0.710]. though the sub models aren't as
+   strong as the sub models of the multi_input mode, the overall
+   performance is the best. great! seems like a nice compromise
+   between the two!
+</p>
+<table>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.simo_ld.model_0.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.simo_ld.model_1.png" /></td>
+</tr>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.simo_ld.model_2.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.simo_ld.model_3.png" /></td>
+</tr>
+</table>
+
+
+<h1>wait! don't drop logits, drop models instead!</h1>
+<p>the main problem i had with dropping logits is that there
+   is a wasted forward pass for half the sub models. then i realised
+   why run the models at all? instead of dropping logits we can just
+   choose, through advanced indexing, a random half of the models to
+   run a forward pass through. this has the same effect of running a random
+   half of the models at a time but only requires half the forward pass
+   compute. this approach of dropping models is what the code currently does.
+   (though the dropping of logits is in the git history)
+</p>
+
+<h1>using the sub models to measure confidence</h1>
+<p>ensembles also provide a clean way of measuring confidence of
+   a prediction. if the variance of predictions across sub models is low
+   it implies the ensemble as a whole is confident.
+   alternatively if the variance is high it implies the ensemble is not confident.
+</p>
+<p>with the ensemble model that has been trained with logit dropout we can
+   get an idea of this variance by considering the ensemble in a hold-one-out
+   fashion; we can obtain <code>M</code> different predictions from the ensemble
+   by running it as if each of the <code>M</code> sub models was not present (using the same
+   idea as the logit dropout).
+</p>
+<p>consider a class that the ensemble is very good at; e.g. 'Sea &amp; Lake'.
+   given a batch of 8 of these images across an ensemble net with 4 sub
+   models we get the following prediction mean and stddevs.
+</p>
+<table class='data'>
+<tr><td><b>idx</b></td>
+<td><b>y_pred</b></td>
+<td><b>mean(P(class))</b></td>
+<td><b>std(P(class))</td></b></tr>
+<tr><td>0</td><td>Sea & Lake</td><td>0.927</td><td>0.068</td></tr>
+<tr><td>1</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+<tr><td>2</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+<tr><td>3</td><td>Sea & Lake</td><td>0.999</td><td>0.001</td></tr>
+<tr><td>4</td><td>Sea & Lake</td><td>0.989</td><td>0.019</td></tr>
+<tr><td>5</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+<tr><td>6</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+<tr><td>7</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+</table>
+
+<p>whereas when we look at a class the model is not so sure of,
+   e.g. 'Permanent Crop', we can see that for the lower probability cases
+   have a higher variance across the models.
+</p>
+<table class='data'>
+<tr><td><b>idx</b></td>
+<td><b>y_pred</b></td>
+<td><b>mean(P(class))</b></td>
+<td><b>std(P(class))</td></b></tr>
+<tr><td>0</td><td>Industrial Buildings</td><td>0.508</td><td>0.282</td></tr>
+<tr><td>1</td><td>Permanent Crop</td><td>0.979</td><td>0.021</td></tr>
+<tr><td>2</td><td>Permanent Crop</td><td>0.703</td><td>0.167</td></tr>
+<tr><td>3</td><td>Herbaceous Vegetation</td><td>0.808</td><td>0.231</td></tr>
+<tr><td>4</td><td>Permanent Crop</td><td>0.941</td><td>0.076</td></tr>
+<tr><td>5</td><td>Permanent Crop</td><td>0.979</td><td>0.014</td></tr>
+<tr><td>6</td><td>Permanent Crop</td><td>0.833</td><td>0.155</td></tr>
+<tr><td>7</td><td>Permanent Crop</td><td>0.968</td><td>0.025</td></tr>
+</table>
+
+
+<h1>conclusions</h1>
+<ul>
+ <li>
+     jax vmap provides a great way to represent an ensemble in a single ensemble net.
+ </li>
+
+ <li>
+     we have a couple of options on how to train an ensemble net.
+ </li>
+
+ <li>
+     the single_input approach gives a good result, but each sub model is poor by itself.
+ </li>
+
+ <li>
+     multi_input trains each model to predict well, and the ensemble gets a bump.
+ </li>
+
+ <li>
+     logit dropout gives a way to stop the single_input ensemble from overfitting by
+     preventing sub models from specialising.
+ </li>
+
+ <li>
+     variance across the sub models predictions gives a hint of prediction confidence.
+ </li>
+</ul>
+
+<h1>TODOs</h1>
+<ul>
+ <li>
+     compare the performance of single_input mode vs multi_input mode normalising for
+     the number of effective parameters ( recall; single_input mode, without logit dropout,
+     is basically training a single xM param large model )
+ </li>
+
+ <li>
+     what is the effect of sharing an optimiser? would it be better to train each with
+     seperate optimisers? can't see why; but might be missing something..
+ </li>
+</ul>
+
+<h1>code</h1>
+<p><a href="https://github.com/matpalm/ensemble_net">all on github</a>
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[metric learning for image similarity search in objax]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/objax_metric_learning" />
+    <id>http://matpalm.com/blog/objax_metric_learning</id>
+    <published>2020-09-02T12:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="objax" />
+    <category scheme="http://matpalm.com/blog" term="jax" />
+    <summary type="html"><![CDATA[metric learning for image similarity search in objax]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/objax_metric_learning"><![CDATA[<p>i recently ported by
+   <a href="https://keras.io/">keras.io</a>
+   <a href="https://keras.io/examples/vision/metric_learning/">metric learning for image similarity search</a>
+   tutorial to use
+   <a href="https://objax.readthedocs.io/en/latest/">objax</a>.
+</p>
+<p>check it out in
+   <a href="https://github.com/google/objax/blob/master/examples/tutorials/metric-learning.ipynb">this tutorial</a>
+   and let me know what you think!
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[objax on honeysuckle farm]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/objax_on_farm" />
+    <id>http://matpalm.com/blog/objax_on_farm</id>
+    <published>2020-08-30T14:45:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="talk" />
+    <summary type="html"><![CDATA[objax on honeysuckle farm]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/objax_on_farm"><![CDATA[<p>recorded a high level explainer on
+   <a href="https://github.com/google/objax">objax</a>
+   while doing some chores. i think it's going to be a growing genre :)
+</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/WBiPnKryP_4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[the map interpretation of attention]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/the_map_interpretation_of_attention" />
+    <id>http://matpalm.com/blog/the_map_interpretation_of_attention</id>
+    <published>2020-08-19T10:30:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="talk" />
+    <category scheme="http://matpalm.com/blog" term="three_strikes_rule" />
+    <summary type="html"><![CDATA[the map interpretation of attention]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/the_map_interpretation_of_attention"><![CDATA[<p>based on my three strikes rule i wrote a talk on the map interpretation of neural attention.
+</p>
+<p>it starts with the first NLP problem i saw where attention was used,
+   goes through the way i think about attention in terms of soft lookup in a map,
+   shows how this soft lookup solves that NLP problem,
+   and finishes with the small mods required to turn it in the building block for the transformer architecture.
+</p>
+<p>here's a recording; check it out!
+</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/7wMQgveLiQ4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[self supervised learning and making use of unlabelled data]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/self_supervised_learning" />
+    <id>http://matpalm.com/blog/self_supervised_learning</id>
+    <published>2020-07-02T17:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="talk" />
+    <summary type="html"><![CDATA[self supervised learning and making use of unlabelled data]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/self_supervised_learning"><![CDATA[<p>awhile back i did a talk on self supervised learning; here's a rerecording of it!
+</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/ENS3BYxLUN0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[a jax random embedding ensemble network]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/jax_random_embedding_ensemble_network" />
+    <id>http://matpalm.com/blog/jax_random_embedding_ensemble_network</id>
+    <published>2020-06-15T06:30:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="ensemble_nets" />
+    <category scheme="http://matpalm.com/blog" term="jax" />
+    <summary type="html"><![CDATA[a jax random embedding ensemble network]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/jax_random_embedding_ensemble_network"><![CDATA[<h1>tl;dr</h1>
+<p>random embedding networks can be used to generate weakly labelled data for metric learning and
+   they see a large benefit from being run in ensembles.
+</p>
+<p>can we represent these ensembles as a single forward pass in jax?
+   why yes! yes we can!
+</p>
+
+<h1>overview</h1>
+<p>a fundamental question when training embedding models is deciding how to specify
+   the examples we want to be close vs examples we want to be far apart.
+</p>
+<p>consider a collection of renders of random synthetic objects that look something like...
+</p>
+<img src="/blog/imgs/2020/jreen/5x5_sample.png" />
+
+<p><i>( check out my
+   <a href="https://github.com/matpalm/minimal_pybullet_on_dataflow_eg">minimal example of running pybullet under google cloud dataflow</a>
+   if you'd like to generate a large amount of your own )</i>
+</p>
+<p>can we train an model that learns embeddings for these objects without explicit labels?
+   i.e. is there a way of weakly labelling these?
+   yes! by using random embedding networks.
+</p>
+<p>it turns out if we just initialise (don't train!) an embedding network
+   that images of the same object will <em>sometimes</em> be embedded
+   closest to each other.
+   we can use this as a form of weak labelling; it just has to occur more often than random.
+</p>
+<p>consider a collage of 3 "test examples" with each example consisting of 11 images.
+</p>
+<ul>
+ <li>
+     first column: an <b>anchor</b> image which is a random render of a random object.
+ </li>
+
+ <li>
+     second column: a <b>positive</b> image which is another render of the same object.
+ </li>
+
+ <li>
+     9 remaining column: <b>negative</b> images which are renders of other objects.
+ </li>
+</ul>
+<p>though this collage shows 3 examples the full test set we'll be using will contain <code>N=100</code> examples
+</p>
+<img src="/blog/imgs/2020/jreen/3_test_eg_sample.png" />
+
+<p>we can quantify the quality of a random embedding network by embedding all 11 of these
+   images and seeing how often the anchor is closer to the positive than any of the negatives.
+   given there are 9 negatives for each positive we know that random choice accuracy would
+   be 0.1.
+   the question is then, can we do better with random embeddings?
+</p>
+
+<h1>code</h1>
+<p><i>to repro all this have a look at this far less commented
+   <a href="https://colab.research.google.com/drive/1FOWuvaWjiq7_PW_Lno09aUMHDPMfoYyz?usp=sharing">colab</a></i>
+</p>
+<p>first let's get some pre cooked test data ...
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; !wget "https://github.com/matpalm/shared_data/blob/master/test_set_array.npy.gz?raw=true" -O test_set_array.npy.gz --quiet
+&gt;&gt;&gt; !gunzip -f test_set_array.npy.gz
+&gt;&gt;&gt;
+&gt;&gt;&gt; test_set_array = np.load("test_set_array.npy")
+&gt;&gt;&gt; N = test_set_array.shape[0]  # number of examples in test set
+</code></pre>
+
+<p>this array is shaped <code>(N, 11, HW, HW, 3)</code>; and again, as before
+</p>
+<ul>
+ <li>
+     <code>N = 100</code> represents the 100 test set examples.
+ </li>
+
+ <li>
+     11 represents the anchor, positive &amp; 9 negatives.
+ </li>
+
+ <li>
+     <code>(HW, HW, 3)</code> represents the image tensor
+ </li>
+</ul>
+
+<h2>a random embedding keras model</h2>
+<p>let's start with a basic <a href="https://keras.io/">keras</a> model.
+   this model is taken from another one of my projects and forms the basis of a fully convolutional network.
+   in this form it is structured to have a convolutional stack that takes an input of <code>(32, 32, 3)</code> and outputs a <code>(1, 1, 256)</code> spatial feature map.
+   this feature map is passed through a Dense layer with ReLU activation (implemented as a 1x1 convolution)
+   followed by a linear projection to a <code>E</code> dimensional embedding.
+   we normalise the embeddings to unit length for ease of the upcoming similarity calculations.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; E = 32   # output embedding dimension used for all models
+&gt;&gt;&gt;
+&gt;&gt;&gt; class NormaliseLayer(Layer):
+&gt;&gt;&gt;     def call(self, x):
+&gt;&gt;&gt;         return tf.nn.l2_normalize(x, axis=-1)
+&gt;&gt;&gt;
+&gt;&gt;&gt; def conv(x, filters):
+&gt;&gt;&gt;     return Conv2D(filters=filters, kernel_size=3, strides=2,
+&gt;&gt;&gt;                   padding='VALID', kernel_initializer='orthogonal',
+&gt;&gt;&gt;                   activation='relu')(x)
+&gt;&gt;&gt;
+&gt;&gt;&gt; def construct_model():
+&gt;&gt;&gt;     inputs = Input(shape=(HW, HW, 3))
+&gt;&gt;&gt;     model = conv(inputs, 32)
+&gt;&gt;&gt;     model = conv(model, 64)
+&gt;&gt;&gt;     model = conv(model, 128)
+&gt;&gt;&gt;     model = conv(model, 256)
+&gt;&gt;&gt;     model = Dense(units=32, kernel_initializer='orthogonal',
+&gt;&gt;&gt;                   activation='relu')(model)
+&gt;&gt;&gt;     embeddings = Dense(units=E, kernel_initializer='orthogonal',
+&gt;&gt;&gt;                       activation=None, name='embedding')(model)
+&gt;&gt;&gt;     embeddings = NormaliseLayer()(embeddings)
+&gt;&gt;&gt;     return Model(inputs, embeddings)
+&gt;&gt;&gt;
+&gt;&gt;&gt; model = construct_model()
+&gt;&gt;&gt; model.summary()
+
+</code></pre>
+
+<pre class="prettyprint">
+    _________________________________________________________________
+    Layer (type)                 Output Shape              Param #
+    =================================================================
+    input_1 (InputLayer)         [(None, 32, 32, 3)]       0
+    conv2d (Conv2D)              (None, 15, 15, 32)        896
+    conv2d_1 (Conv2D)            (None, 7, 7, 64)          18496
+    conv2d_2 (Conv2D)            (None, 3, 3, 128)         73856
+    conv2d_3 (Conv2D)            (None, 1, 1, 256)         295168
+    dense (Dense)                (None, 1, 1, 32)          8224
+    embedding (Dense)            (None, 1, 1, 32)          1056
+    normalise_layer (NormaliseLa (None, 1, 1, 32)          0
+    =================================================================
+    Total params: 397,696
+    Trainable params: 397,696
+    Non-trainable params: 0
+</pre>
+
+<p>we'll need some utility functions to
+</p>
+<ol>
+ <li>
+     run images through this model...
+ </li>
+
+ <li>
+     calculate the cosine sims between the different types of the embeddings and
+ </li>
+
+ <li>
+     calculate an overall accuracy for the 100 test examples.
+ </li>
+</ol>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; def embeddings_for(model, imgs):
+&gt;&gt;&gt;     embeddings = model.predict(imgs.reshape(N*11, HW, HW, 3))
+&gt;&gt;&gt;     return embeddings.reshape(N, 11, E)
+&gt;&gt;&gt;
+&gt;&gt;&gt; def anc_pos_neg_sims(embeddings):
+&gt;&gt;&gt;     # slice anchors, positives and negatives out of embeddings
+&gt;&gt;&gt;     # and calculate pair wise sims using dot product similarity.
+&gt;&gt;&gt;     # returns (N, 10) representing N examples of anchor compared to
+&gt;&gt;&gt;     # positives / negatives.
+&gt;&gt;&gt;     anchor_embeddings = embeddings[:, 0]              # (N, E)
+&gt;&gt;&gt;     positive_negative_embeddings = embeddings[:, 1:]  # (N, 10, E)
+&gt;&gt;&gt;     return np.einsum('ne,npe->np', anchor_embeddings,
+&gt;&gt;&gt;                      positive_negative_embeddings)    # (N, 10)
+&gt;&gt;&gt;
+&gt;&gt;&gt; def accuracy(sims):
+&gt;&gt;&gt;     # given a set of (N, 10) sims calculate accuracy. note that the data has
+&gt;&gt;&gt;     # been prepared such that correct element is the 0th element so accuracy
+&gt;&gt;&gt;     # is simply the times the most similar is the 0th.
+&gt;&gt;&gt;     most_similar = np.argmax(sims, axis=1)
+&gt;&gt;&gt;     times_correct = sum(most_similar == 0)
+&gt;&gt;&gt;     return times_correct / N
+&gt;&gt;&gt;
+&gt;&gt;&gt; accuracy(anc_pos_neg_sims(embeddings_for(model, test_set_array)))
+
+0.26
+</code></pre>
+
+<p><i>( note: if you're new to <a href="https://numpy.org/doc/stable/reference/generated/numpy.einsum.html">einsum</a>
+   check out my <a href="https://www.youtube.com/watch?v=SOaYrnQtd9g">illustrative einsum example</a> explainer video where i walk through what
+   the einsum operations in this post are doing )</i>
+</p>
+<p>great! this model does (slightly) better than random (which would have been 0.1). hooray!
+</p>
+<p>since this model isn't even trained, we should expect a degree of variance across a number of differently initialised models.
+   let's build <code>M=10</code> models and see how things vary.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; M = 10  # number of models to run in ensemble
+&gt;&gt;&gt;
+&gt;&gt;&gt; models = [construct_model() for _ in range(M)]
+&gt;&gt;&gt; per_model_sims = np.stack([anc_pos_neg_sims(embeddings_for(m, test_set_array)) for m in models])  # (M, N, 10)
+&gt;&gt;&gt; accuracies = [accuracy(sims) for sims in per_model_sims]
+&gt;&gt;&gt;
+&gt;&gt;&gt; print("accuracies", accuracies)
+&gt;&gt;&gt; print("mean", np.mean(accuracies), "std", np.std(accuracies))
+
+accuracies [0.2, 0.29, 0.26, 0.29, 0.29, 0.26, 0.29, 0.26, 0.27, 0.32]
+mean 0.273 std 0.03034798181098703
+</code></pre>
+
+
+<h2>an ensemble?</h2>
+<p>given this amount of variance we can ask, how would an ensemble do?
+   a great thing about the way this model is structured is that we can do a weighted ensemble in a really simple way.
+</p>
+<p>note that the prediction is based on the argmax of these similarities,
+   this means to combine them in an ensemble all we need to do is sum them before the argmax!
+</p>
+<p>since the embeddings are unit length the cosine similarity is being constrained to (-1, 1).
+   so when we sum them what we're doing is taking a form of weighted vote. nice!
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; accuracy(np.sum(per_model_sims, axis=0))
+
+0.4
+</code></pre>
+
+<p>great! the weighted ensemble does noticably better than any of the individual random models (which in turn did better than random choice)
+</p>
+<p>but it feels a bit clumsy to have to run these <code>M</code> models sequentially.
+   could we model this directly in a pass of a <em>single</em> network?
+</p>
+
+<h2>what is input batching doing?</h2>
+<p>let's think about what batching inputs does;
+</p>
+<p>the simplest form of a model takes an input,
+   applies some layers parameterised in some way (by theta here)
+   to calculate some hidden layer values
+   and finally produces an output.
+</p>
+<p>\( I \rightarrow f^1(\theta^1) \rightarrow H \rightarrow f^2(\theta^2) \rightarrow O \)
+</p>
+<p>what we almost always do though is run a batch of <code>B</code> examples through at a time.
+   batching inputs allows us to make the best use of hardware acceleration,
+   as well as getting use some theoretical benfits regarding optimisation.
+   since we're using the same model we have a single set of thetas and we produce a batch of <code>B</code> outputs.
+</p>
+<p>\( I_B \rightarrow f^1(\theta^1) \rightarrow H_B \rightarrow f^2(\theta^2) \rightarrow O_B \)
+</p>
+<p>but what we want to do now is to not just have a batch of <code>B</code> inputs, but also a batch of <code>M</code> models as well.
+</p>
+<p>\( I_B \rightarrow f^1(\theta^1_M) \rightarrow H_{B,M} \rightarrow f^2(\theta^2_M) \rightarrow O_{B,M} \)
+</p>
+<p>though the algebra is no different this idea of having multiple sets of theta for a layer
+   isn't something that naturally fits in the standard frameworks. :(
+   maybe this is something you <em>could</em> get going with keras but the couple of attempts i tried met heavy framework resistance :/
+   perhaps this functionality of arbitrary mapping seems a good fit for
+   <a href="https://jax.readthedocs.io/en/latest/#">jax's</a>
+   <a href="https://github.com/google/jax#auto-vectorization-with-vmap">vmap</a>; but how would it work?
+</p>
+
+<h2>a random embedding jax model</h2>
+<p>first let's rebuild this network in a minimal way with jax but without any layer framework.
+   not using a layer framework means we'll need to maintain our own set of model parameters.
+   note that we for this model we're not going to bother with bias terms, they would be zero by initialisation anyways
+   (we're remember not training at all, just building and running these networks)
+</p>
+<p>note we also more explicitly refer to the dense layer here as using a 1x1 kernel convolution.
+   this is actually equivalent to what's happening the above keras model where a <code>Dense</code> layer on a <code>(H, W, C)</code>
+   input automagically does things as a <code>1x1</code> convolution.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; key = random.PRNGKey(0)
+&gt;&gt;&gt; _key, *subkeys = random.split(key, 7)
+&gt;&gt;&gt;
+&gt;&gt;&gt; conv1_kernel = orthogonal()(subkeys[0], (3, 3, 3, 32))
+&gt;&gt;&gt; conv2_kernel = orthogonal()(subkeys[1], (3, 3, 32, 64))
+&gt;&gt;&gt; conv3_kernel = orthogonal()(subkeys[2], (3, 3, 64, 128))
+&gt;&gt;&gt; conv4_kernel = orthogonal()(subkeys[3], (3, 3, 128, 256))
+&gt;&gt;&gt; dense_kernel = orthogonal()(subkeys[4], (1, 1, 256, 32))
+&gt;&gt;&gt; embedding_kernel = orthogonal()(subkeys[5], (1, 1, 32, 32))
+&gt;&gt;&gt;
+&gt;&gt;&gt; conv_dimension_numbers = lax.conv_dimension_numbers((1, HW, HW, 3),  # input shape prototype
+&gt;&gt;&gt;                                                     (3, 3, 1, 1),    # 2d kernel shape prototype
+&gt;&gt;&gt;                                                     ('NHWC',         # input
+&gt;&gt;&gt;                                                      'HWIO',         # kernel
+&gt;&gt;&gt;                                                      'NHWC'))        # output
+&gt;&gt;&gt;
+&gt;&gt;&gt; def conv_block(stride, with_relu, input, kernel):
+&gt;&gt;&gt;     no_dilation = (1, 1)
+&gt;&gt;&gt;     block = lax.conv_general_dilated(input, kernel, (stride, stride), 'VALID',
+&gt;&gt;&gt;                                      no_dilation, no_dilation,
+&gt;&gt;&gt;                                      conv_dimension_numbers)
+&gt;&gt;&gt;     if with_relu:
+&gt;&gt;&gt;         block = relu(block)
+&gt;&gt;&gt;     return block
+&gt;&gt;&gt;
+&gt;&gt;&gt; @jit
+&gt;&gt;&gt; def model(input):                                                       # (N, 32, 32, 3)
+&gt;&gt;&gt;     conv1_output = conv_block(2, True, input, conv1_kernel)             # (N, 15, 15, 32)
+&gt;&gt;&gt;     conv2_output = conv_block(2, True, conv1_output, conv2_kernel)      # (N, 7, 7, 64)
+&gt;&gt;&gt;     conv3_output = conv_block(2, True, conv2_output, conv3_kernel)      # (N, 3, 3, 128)
+&gt;&gt;&gt;     conv4_output = conv_block(2, True, conv3_output, conv4_kernel)      # (N, 1, 1, 256)
+&gt;&gt;&gt;     dense1_output = conv_block(1, True, conv4_output, dense_kernel)     # (N, 1, 1, E)
+&gt;&gt;&gt;     embeddings = conv_block(1, False, dense1_output, embedding_kernel)  # (N, 1, 1, E)
+&gt;&gt;&gt;     embeddings /= jnp.linalg.norm(embeddings, axis=-1, keepdims=True)   # (N, 1, 1, E)
+&gt;&gt;&gt;     return embeddings
+</code></pre>
+
+<p>in terms of utility functions we can reuse the above <code>anc_pos_neg_sims</code> and <code>accuracy</code> from before
+   but we'll need to change the <code>embeddings_for</code> slightly based on how jax and keras models are called differently.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; def embeddings_for(imgs):
+&gt;&gt;&gt;     embeddings = model(imgs.reshape(N*11, HW, HW, 3))
+&gt;&gt;&gt;     return embeddings.reshape(N, 11, E)
+&gt;&gt;&gt;
+&gt;&gt;&gt; accuracy(anc_pos_neg_sims(embeddings_for(test_set_array)))
+
+0.27
+</code></pre>
+
+
+<h2>a single network ensemble?</h2>
+<p>ok, a single random model does about the same.
+   that helps give us confidence there's no weird behaviour difference the keras and the jax model.
+   next, how do we handle the ensemble idea in a single network?
+</p>
+<p>firstly we need to remake all the kernels but with a leading <code>M</code> dimension that represents the
+   <code>M</code> models we want to run in parallel.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; key = random.PRNGKey(0)
+&gt;&gt;&gt; _key, *subkeys = random.split(key, 7)
+&gt;&gt;&gt;
+&gt;&gt;&gt; conv1_kernels = orthogonal()(subkeys[0], (M, 3, 3, 3, 32))
+&gt;&gt;&gt; conv2_kernels = orthogonal()(subkeys[1], (M, 3, 3, 32, 64))
+&gt;&gt;&gt; conv3_kernels = orthogonal()(subkeys[2], (M, 3, 3, 64, 128))
+&gt;&gt;&gt; conv4_kernels = orthogonal()(subkeys[3], (M, 3, 3, 128, 256))
+&gt;&gt;&gt; dense_kernels = orthogonal()(subkeys[4], (M, 1, 1, 256, 32))
+&gt;&gt;&gt; embedding_kernels = orthogonal()(subkeys[5], (M, 1, 1, 32, 32))
+</code></pre>
+
+<p>and then all we have to do is run the same model as before, but using <code>vmap</code> for the calls.
+</p>
+<p>note: that the very first call vmaps over <em>only</em> the <code>conv1</code> layer parameters; that's since the input
+   is just batched with <code>B</code>. this results in <code>conv1_output_m</code> picking up the additional <code>M</code> leading dimension.
+   subsequent vmap calls are over <em>both</em> the prior layer inputs, and the layer parameters.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; @jit
+&gt;&gt;&gt; def vmap_model(input):                                                                    # (N, 32, 32, 3)
+&gt;&gt;&gt;     conv1_output_m = vmap(partial(conv_block, 2, True, input))(conv1_kernels)             # (M, N, 7, 7, 64)
+&gt;&gt;&gt;     conv2_output_m = vmap(partial(conv_block, 2, True))(conv1_output_m, conv2_kernels)    # (M, N, 15, 15, 32)
+&gt;&gt;&gt;     conv3_output_m = vmap(partial(conv_block, 2, True))(conv2_output_m, conv3_kernels)    # (M, N, 1, 1, 256)
+&gt;&gt;&gt;     conv4_output_m = vmap(partial(conv_block, 2, True))(conv3_output_m, conv4_kernels)    # (M, N, 1, 1, E)
+&gt;&gt;&gt;     dense1_output_m = vmap(partial(conv_block, 1, True))(conv4_output_m, dense_kernels)   # (M, N, 1, 1, E)
+&gt;&gt;&gt;     embeddings = vmap(partial(conv_block, 1, False))(dense1_output_m, embedding_kernels)  # (M, N, 1, 1, E)
+&gt;&gt;&gt;     embeddings /= jnp.linalg.norm(embeddings, axis=-1, keepdims=True)
+&gt;&gt;&gt;     return embeddings
+</code></pre>
+
+<p>for the final example of running this model we forgo the previous utility functions and run each step explicitly.
+</p>
+<p>first we run the images through the model. this produces a <code>(M, N, 11, E)</code> output instead of a <code>(N, 11, E)</code> output as before.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; embeddings = vmap_model(test_set_array.reshape(N*11, HW, HW, 3)).reshape(M, N, 11, E)
+&gt;&gt;&gt; embeddings.shape
+
+(10, 100, 11, 32)
+</code></pre>
+
+<p>next we slice out the anchors from the positives and negatives
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; anchor_embeddings = embeddings[:, :, 0]                         # (M, N, E)
+&gt;&gt;&gt; positive_negative_embeddings = embeddings[:, :, 1:]             # (M, N, 10, E)
+</code></pre>
+
+<p>we can calculate the per model accuracy by doing the reducing and explicitly keeping <code>m</code> in the output.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; per_model_sims = jnp.einsum('mne,mnpe->mnp',
+&gt;&gt;&gt;                             anchor_embeddings,
+&gt;&gt;&gt;                             positive_negative_embeddings)        # (M, N, 10)
+&gt;&gt;&gt;
+&gt;&gt;&gt; most_similar = jnp.argmax(per_model_sims, axis=2)    # (10, N)
+&gt;&gt;&gt; times_correct = jnp.sum(most_similar == 0, axis=1)   # (10,)
+&gt;&gt;&gt; accuracies = times_correct / N                       # (10,)
+&gt;&gt;&gt; accuracies
+
+array([0.25, 0.29, 0.24, 0.23, 0.21, 0.25, 0.3 , 0.25, 0.27, 0.31])
+</code></pre>
+
+<p>cool. so each model has some degree of variance, as the keras models did.
+</p>
+<p>finally we can represent the ensemble by simply doing a further reduction over <code>m</code> in the einsum calculation.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; ensemble_sims = jnp.einsum('mne,mnpe->np',
+&gt;&gt;&gt;                            anchor_embeddings,
+&gt;&gt;&gt;                            positive_negative_embeddings)       # (N, 10)
+&gt;&gt;&gt;
+&gt;&gt;&gt; most_similar = jnp.argmax(ensemble_sims, axis=1)  # (N,)
+&gt;&gt;&gt; times_correct = jnp.sum(most_similar == 0)        # (1,)
+&gt;&gt;&gt; accuracy = times_correct / N                      # (1,)
+&gt;&gt;&gt; accuracy
+
+DeviceArray(0.4, dtype=float32)
+</code></pre>
+
+<p>all this required only one forward pass through a single model,
+   and with the weighted voting idea of the ensemble, we only required an extra <code>m</code> reduction in einsum sims call.
+   so elegant!
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[an illustrative einsum example]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/einsum_example" />
+    <id>http://matpalm.com/blog/einsum_example</id>
+    <published>2020-05-27T00:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="talk" />
+    <category scheme="http://matpalm.com/blog" term="short_tute" />
+    <summary type="html"><![CDATA[an illustrative einsum example]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/einsum_example"><![CDATA[<h1>intro</h1>
+<p>recently i changed what was quite clumsy looking code in something more
+   elegant using a cool function in numpy called
+   <a href="https://numpy.org/doc/stable/reference/generated/numpy.einsum.html">einsum</a>
+   and felt it was worth writing up.
+</p>
+<p>this example is just going to be using numpy, but einsum is also provided in
+   <a href="https://www.tensorflow.org/api_docs/python/tf/einsum">tensorflow</a>,
+   <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.einsum.html">jax</a>
+   and <a href="https://pytorch.org/docs/master/generated/torch.einsum.html">pytorch</a>
+</p>
+<p>there's also <a href="https://colab.research.google.com/drive/1kmt2cNFK7IGRhY1rXgqLVX3GsNc4Ybsh?usp=sharing">a terser colab version</a> of this post if you're prefer to walk through
+   that.
+</p>
+<p>and for a video walkthrough of this see...
+</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/SOaYrnQtd9g" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+
+<h1>example walkthrough</h1>
+<p>the only user defined function we are going to use is this little <code>rnd</code>
+   one to make random arrays of various sizes.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; import numpy as np
+
+&gt;&gt;&gt; def rnd(*args):
+&gt;&gt;&gt;     return np.random.random(args)
+</code></pre>
+
+<p>let's start with a fundamental operation, the matrix multiply.
+   numpy provides it through <code>matmul</code> function which in this case is taking
+   an <code>(i, j)</code> sized matrix and a <code>(j, k)</code> sized one and producing an
+   <code>(i, k)</code> result; the classic 2d matrix multiply.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; np.matmul(rnd(4, 5), rnd(5, 6)).shape
+
+(4, 6)
+</code></pre>
+
+<p>there's a number of interpretations of what a matrix multiply
+   represents and a common one i use a lot is calculating,
+   in batch, a bunch of pairwise dot products. if we have <code>S1</code> and <code>S2</code>,
+   both of which represent some set of embeddings, in this case
+   32d embeddings, 5 for <code>S1</code> and 10 for <code>S2</code>, if we want to calculate all pairwise
+   combos we can use a matrix multiply. but note we need to massage
+   <code>S2</code> a bit; a matrix multiple wants the inner dimension to match so
+   we need to transpose <code>B</code> to make it (32, 10)
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; S1 = rnd(5, 32)
+&gt;&gt;&gt; S2 = rnd(10, 32)
+&gt;&gt;&gt; np.matmul(S1, S2.T).shape
+
+(5, 10)
+</code></pre>
+
+<p>an important thing to note about <code>matmul</code> is that it automatically handles
+   the idea of batching. for example a leading dimension of 10 makes
+   it equivalent to 10 independent matrix multiplies. we could do this
+   in a for loop but expressing it in a single <code>matmul</code> will most likely
+   be faster as the underlying linear algebra libraries can kick in with
+   a bunch of optimisations.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> np.matmul(rnd(10, 4, 5),
+>>>           rnd(10, 5, 6)).shape
+
+(10, 4, 6)
+</code></pre>
+
+<p>and note that it can be multiple leading dimensions.
+   all that matters it the last two axis follow the <code>i,j,k</code> rule.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> np.matmul(rnd(10, 20, 30, 4, 5),
+>>>           rnd(10, 20, 30, 5, 6)).shape
+
+(10, 20, 30, 4, 6)
+</code></pre>
+
+<p>so let's talk about the real use case that led me to write
+   this post. we have a <code>query</code> that i want to compare to 10 <code>keys</code> by
+   using a dot product; basically an unnormalised attention / soft map lookup.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> E = 32
+>>> query_embedding = rnd(E)
+>>> keys_embeddings = rnd(10, E)
+</code></pre>
+
+<p>even though <code>query</code> is a vector we can use <code>matmul</code> to do this because
+   <code>matmul</code> can interpret the vector as either a row vector as below in v1
+   ( i.e. a matrix of shape <code>(1, E)</code> ) or a column vector as in v2
+   ( a matrix of shape <code>(E, 1)</code> ) where, note, that <code>keys</code> and <code>query</code>
+   are swapped)
+</p>
+<pre class="prettyprint"><code class="language-python">>>> v1 = np.matmul(query_embedding, keys_embeddings.T)
+>>> v2 = np.matmul(keys_embeddings, query_embedding)
+>>> v1.shape, v2.shape, np.all(np.isclose(v1, v2))
+
+((10,), (10,), True)
+</code></pre>
+
+<p>my actual use case though is wanting to do the <code>query</code> to 10 <code>keys</code>
+   comparison, but across a "batch" of 100 independant sets. so if we
+   want to use <code>matmul</code> in the batched form we need to do a bit
+   of massaging of these two since the assumed behaviour of <code>matmul</code> will
+   no longer work.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> N = 100
+>>> E = 32
+>>> query_embeddings = rnd(N, E)
+>>> keys_embeddings = rnd(N, 10, E)
+</code></pre>
+
+<p>firstly we need to be more explicit that the <code>query</code> embeddings
+   represent N row vectors.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> query_embeddings.reshape(N, 1, E).shape
+
+(100, 1, 32)
+</code></pre>
+
+<p>secondly we need to do the transpose for <code>keys</code>, but this time we
+   can't just use <code>.T</code>, we need to be explicit about keeping the
+   leading axis the same, swapping only the final two.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> keys_embeddings.transpose(0, 2, 1).shape
+
+(100, 32, 10)
+</code></pre>
+
+<p>after doing these two transforms we get the matrices that will trigger the
+   batch matrix multiply behaviour we want. note that we end
+   up with that inner dimension of 1 still around.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> np.matmul(query_embeddings.reshape(N, 1, E),
+>>>           keys_embeddings.transpose(0, 2, 1)).shape
+
+(100, 1, 10)
+</code></pre>
+
+<p>and if we don't want that inner axis, we can explicitly <code>squeeze</code> it away.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> np.squeeze(np.matmul(query_embeddings.reshape(N, 1, E),
+>>>                      keys_embeddings.transpose(0, 2, 1))).shape
+
+(100, 10)
+</code></pre>
+
+<p>this all works but it felt clumsy to me. so let's go back through
+   these examples but using <code>einsum</code> which gives us more explicit ways to
+   define the calculation without the massaging of <code>query</code> and <code>keys</code> to
+   make <code>matmul</code> work.
+</p>
+<p>we'll redo the matmul versions again first (denoted
+   by <code>m</code>) followed by the einsum equivalents (denoted by <code>e</code>)
+</p>
+<p>let's start with matrix multiply. <code>einsum</code> take a <code>subscript</code> arg
+   which describes the computation we want to do. the first part <code>ij,jk</code> is a
+   comma seperated list of the dimensions of the inputs, in this case <code>A</code> and <code>B</code>
+</p>
+<p>the first input, <code>A</code>, is 2d with axis we're naming <code>i</code> and <code>j</code>.
+   the second input, <code>B</code>, is 2d also, with axis we're naming <code>j</code> and <code>k</code>.
+</p>
+<p>the output we want <code>-&gt;ik</code> is 2d and takes the axis <code>i</code> and <code>k</code> with a reduction
+   along <code>j</code>. this is exactly a matrix multiply.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> A, B = rnd(4, 5), rnd(5, 6)
+>>>
+>>> m = np.matmul(A, B)
+>>>
+>>> e = np.einsum('ij,jk->ik', A, B)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((4, 6), (4, 6), True)
+</code></pre>
+
+<p>consider again the case of two sets of 32d embeddings <code>S1</code> and <code>S2</code> and
+   wanting to get all the pairwise products. since the <code>j</code> is now the
+   second axis we don't need to have the transpose.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> S1, S2 = rnd(5, 32), rnd(10, 32)
+>>>
+>>> m = np.matmul(S1, S2.T)
+>>>
+>>> e = np.einsum('ij,kj->ik', S1, S2)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((5, 10), (5, 10), True)
+</code></pre>
+
+<p>in fact in <code>einsum</code> we can use whatever letters we like, so we're
+   free to try to use the character subscripts as a weak form of documentation.
+   we've basically got one letter to describe what the axis represents.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> S1, S2 = rnd(5, 32), rnd(10, 32)
+>>>
+>>> m = np.matmul(S1, S2.T)
+>>>
+>>> e = np.einsum('ae,be->ab', S1, S2)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((5, 10), (5, 10), True)
+</code></pre>
+
+<p>next let's consider the batch form of a matrix multiply. recall: <code>matmul</code>
+   handles this by default, but with <code>einsum</code> we have to be
+   explicit about it. even still it's arguably clearer since we end up not
+   having to understand the assumed behaviour of <code>matmul</code>.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> A, B = rnd(10, 4, 5), rnd(10, 5, 6)
+>>>
+>>> m = np.matmul(A, B)
+>>>
+>>> e = np.einsum('nij,njk->nik', A, B)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((10, 4, 6), (10, 4, 6), True)
+</code></pre>
+
+<p>going back to our <code>query</code> vs <code>keys</code> comparison, let's consider the
+   single instance case. one main thing that is different is we don't need
+   to have any assumption about <code>query</code> being interpretable as a row
+   or column matrix, we can just explictly describe the axis
+   ( in this case it's just the 1d <code>e</code> ).
+</p>
+<pre class="prettyprint"><code class="language-python">>>> E = 32
+>>>
+>>> query_embedding = rnd(E)
+>>> keys_embeddings = rnd(10, E)
+>>>
+>>> m = np.matmul(query_embedding, keys_embeddings.T)
+>>>
+>>> e = np.einsum('e,ke->k', query_embedding, keys_embeddings)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((10,), (10,), True)
+</code></pre>
+
+<p>and finally consider the batched version where we see the <code>einsum</code> version ends
+   up being much simpler. we don't rely on any behaviour of <code>matmul</code> that forces
+   us to change things to particular shapes. as before because we need to be
+   explict about what we want in terms of reduction we finish with a much
+   simpler expression that is much more direct.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> N = 100
+>>> E = 32
+>>>
+>>> query_embeddings = rnd(N, E)
+>>> keys_embeddings = rnd(N, 10, E)
+>>>
+>>> m = np.squeeze(np.matmul(query_embeddings.reshape(N, 1, E),
+>>>                          keys_embeddings.transpose(0, 2, 1)))
+>>>
+>>> e = np.einsum('ne,nke->nk', query_embeddings, keys_embeddings)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((100, 10), (100, 10), True)
+</code></pre>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[using cross entropy for metric learning]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/xent_for_metric_learning_talk" />
+    <id>http://matpalm.com/blog/xent_for_metric_learning_talk</id>
+    <published>2020-05-19T18:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="talk" />
+    <summary type="html"><![CDATA[using cross entropy for metric learning]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/xent_for_metric_learning_talk"><![CDATA[<p>i gave a talk at <a href="https://www.meetup.com/Machine-Learning-AI-Meetup/">the melbourne ml/ai meetup</a>
+   on using cross entropy for metric learning.
+</p>
+<p>here are the slides <a href="https://drive.google.com/file/d/1X6Ya50tA2l0WQikGiaAEAreTErpurYoH/view">slides</a>
+</p>
+<p>and here's a recording; check it out!
+</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Jb4Ewl5RzkI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>]]></content>
+  </entry>
+</feed>

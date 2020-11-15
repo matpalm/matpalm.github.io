@@ -1,0 +1,247 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="collocations-in-wikipedia,-part-2"></a>
+  <h2 class="blog_post_title"><a href="/blog/2011/11/05/collocations_2" rel="bookmark" title="Permanent Link to collocations in wikipedia, part 2">collocations in wikipedia, part 2</a></h2>
+  <small>November 05, 2011 at 05:00 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <h2>problems with low support</h2>
+<p>in my <a href="/blog/2011/10/22/collocations_1/">last post</a> we went through mutual information as a way of finding collocations.
+</p>
+<p>the astute reader may have noticed that for the list of top bigrams i only
+   showed ones that had a frequency above 5,000.
+</p>
+<p>why this cutoff? well it turns out
+   that one of the criticisms of this definition of mutual information is that it gives whacky results for low support cases.
+</p>
+<p>if we purely just sort by the mutual information score we find that the top 250,000 all have the same score
+   and correpond to bigrams that occur only once in the corpus (and whose terms only appear in that bigram). some examples
+   include "Bruail Brueil", "LW1X LW4X" and "UG-211 GB-HMF" and they are, as often as not it seems, artifacts of parsing quirks.
+</p>
+<p>so how did i decide the minimum support of 5,000? it's just a round number near the 99th percentile of the frequency of frequencies.
+   purely a magic number, not good!
+</p>
+
+<h2>likelihood ratios</h2>
+<p>another approach that doesn't suffer this problem with low frequency bigrams is to use likelihood ratios.
+   one such test is the <a href="http://en.wikipedia.org/wiki/G-test">g-test</a> very well described in
+   <a href="http://tdunning.blogspot.com/2008/03/surprise-and-coincidence.html">this blog post by ted dunning</a>
+</p>
+<p>as a concrete implementation i'll just use the
+   <a href="https://github.com/apache/mahout/blob/trunk/math/src/main/java/org/apache/mahout/math/stats/LogLikelihood.java">LogLikelihood</a>
+   code provided in <a href="http://mahout.apache.org/">mahout</a>. (yay for being able to
+   <a href="http://squarecog.wordpress.com/2010/08/20/upcoming-features-in-pig-0-8-dynamic-invokers/">use an arbitrary static java function as a pig udf!</a>)
+</p>
+<p>to use this method we need 4 values, k11, k12, k21 and k22, all conveniently calculatable from the counts we gathered for mutual info
+</p>
+<table class="data">
+<tr>
+ <td>k_value</td>
+ <td>description</td>
+ <td>calculated from</td></tr>
+<tr>
+ <td>k11</td>
+ <td>t1 & t2</td>
+ <td>freq(t1,t2)</td>
+</tr>
+<tr>
+ <td>k12</td>
+ <td>t1 & not t2</td>
+ <td>freq(t1) - freq(t1,t2)</td>
+</tr>
+<tr>
+ <td>k21</td>
+ <td>not t1 & t2</td>
+ <td>freq(t2) - freq(t1,t2)</td>
+</tr>
+<tr>
+ <td>k22</td>
+ <td>not t1 & not t2</td>
+ <td>total_num_bigrams - ( freq(t1) + freq(t2) - freq(t1,t2) )</td>
+</tr>
+</table>
+
+<p>calculating this value for the 1,300,000,000 bigrams of wikipedia
+   (<a href="https://github.com/matpalm/collocations/tree/master/llr">code here</a>)
+   we get these top 10 bigrams...
+</p>
+<table class="data">
+<tr><td>rank</td><td>bigram</td><td>llr</td></tr>
+<tr><td>1</td><td>of the</td><td>21,369,480</td></tr>
+<tr><td>2</td><td>in the</td><td>    12,669,724</td></tr>
+<tr><td>3</td><td>the the</td><td>   10,743,814</td></tr>
+<tr><td>4</td><td>United States</td><td> 10,490,802</td></tr>
+<tr><td>5</td><td>is a</td><td>     8,948,460</td></tr>
+<tr><td>6</td><td>New York</td><td>   6,973,104</td></tr>
+<tr><td>7</td><td>such as</td><td>   6,175,861</td></tr>
+<tr><td>8</td><td>the of</td><td>   5,821,300</td></tr>
+<tr><td>9</td><td>to be</td><td>   5,374,484</td></tr>
+<tr><td>10</td><td>has been</td><td>   5,348,722</td></tr>
+</table>
+
+<p>this surprised me a bit since these bigrams are not at all what i expected.... especially when you compare the results against just ranking by
+   raw bigram frequency (which is obviously much easier to calculate)
+</p>
+<table class="data">
+<tr><td>rank based</br>on llr</td><td>rank based</br>on freq</td><td>bigram</td></tr>
+<tr><td>1</td><td>1</td><td>of the</td></tr>
+<tr><td>2</td><td>2</td><td>in the</td>   </tr>
+<tr><td>3</td><td>20,000</td><td>the the</td>  </tr>
+<tr><td>4</td><td>31</td><td>United States</td></tr>
+<tr><td>5</td><td>4</td><td>is a</td>  </tr>
+<tr><td>6</td><td>48</td><td>New York</td></tr>
+<tr><td>7</td><td>27</td><td>such as</td></tr>
+<tr><td>8</td><td>18,000</td><td>the of</td></tr>
+<tr><td>9</td><td>14</td><td>to be</td>  </tr>
+<tr><td>10</td><td>36</td><td>has been</td></tr>
+</table>
+
+
+<h2>do i have a bug?</h2>
+<p>at first i thought i must have a bug but manually redoing the top one (of,the) gives the same answer
+</p>
+<p>k11
+    = f(of,the)
+    = 12,290,443
+</p>
+<p>k12
+    = f(of) - f(of,the)
+    = 41,478,115 - 12,290,443
+    = 29,187,672
+</p>
+<p>k21
+    = f(the) - f(of,the)
+    = 74,807,672 - 12,290,443
+    = 62,517,229
+</p>
+<p>k22
+    = total number bigrams - ( f(of) + f(the) - f(of, the) )
+    = 1,110,473,107 - ( 41,478,115 + 74,807,672 - 12,290,443 )
+    = 1,006,477,763
+</p>
+<p>and
+   org.apache.mahout.math.stats.LogLikelihood.logLikelihoodRatio(12290443, 29187672, 62517229, 1006477763)
+    = 2.1369480467885613E7
+</p>
+<p>hmmm.. i wonder what i'm missing? to be continued i guess!
+</p>
+
+<h2>weighting by frequency</h2>
+<p>coming back to mutual information a variation is to simply weight by the bigram frequency.
+</p>
+<p>so instead of sorting on <tt>mutual info</tt> we can sort on <tt>log(bigram freq) * mutual info</tt>. note:
+   we can't weight
+   using the bigram frequency directly because the values are on such different scales as the mutual info. rathering just
+   normalising we can reduce the bigram frequency using a logarithm which feels "fair" since these frequencies follow a power law anyways.
+</p>
+<p>ordering by this new metric gives the following results which seem ok. the main thing is i didn't have to
+   specify an arbitrary cut off frequency!
+</p>
+<table class="data">
+<tr> <td>bigram</td> <td>bigram freq</td> <td>mutual info</td> <td>log(freq) *</br> mutual info</td> </tr>
+<tr> <td>fn org</td> <td>45050</td> <td>14.699 </td> <td>  157.514</td> </tr>
+<tr> <td>Buenos Aires</td> <td>20682</td> <td>15.808   </td> <td>157.092</td> </tr>
+<tr> <td>Socorro LINEAR</td> <td>97365</td> <td>13.576   </td> <td>155.943</td> </tr>
+<tr> <td>gastropod mollusk</td> <td>19342</td> <td>15.687	</td> <td>154.835</td> </tr>
+<tr> <td>Hong Kong</td> <td>67738</td> <td>13.827	</td> <td>153.804</td> </tr>
+<tr> <td>Los Angeles</td> <td>	  134801</td> <td>12.883	</td> <td>152.172</td> </tr>
+<tr> <td>Tel Aviv</td> <td>9144	</td> <td>	       16.667	</td> <td>152.018</td> </tr>
+<tr> <td>Burkina Faso</td> <td>5407	</td> <td>	       17.649	</td> <td>151.705</td> </tr>
+<tr> <td>Kuala Lumpur</td> <td>6450	</td> <td>	       17.233	</td> <td>151.173</td> </tr>
+<tr> <td>Notre Dame</td> <td>13546	</td> <td>	       15.873	</td> <td>151.021</td> </tr>
+</table>
+
+<p>at least good enough to provide data for the next experiment...
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2011/11/05/collocations_2";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

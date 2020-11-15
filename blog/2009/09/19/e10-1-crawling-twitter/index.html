@@ -1,0 +1,111 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="e10.1-crawling-twitter"></a>
+  <h2 class="blog_post_title"><a href="/blog/2009/09/19/e10-1-crawling-twitter/" rel="bookmark" title="Permanent Link to e10.1 crawling twitter">e10.1 crawling twitter</a></h2>
+  <small>September 19, 2009 at 09:31 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p>our first goal is to get some data and <a href="http://apiwiki.twitter.com/">the twitter api</a> makes getting the data trivial. i'm focused mainly on the <a href="http://apiwiki.twitter.com/Twitter-REST-API-Method%3A-friends%C2%A0ids">friends</a> stuff but because it only gives user ids i'll also get the <a href="http://apiwiki.twitter.com/Twitter-REST-API-Method%3A-users%C2%A0show">user info</a> so i can put names to ids.
+</p>
+<p>a <a href="http://en.wikipedia.org/wiki/Depth-first_search">depth first crawl</a> makes no sense for this one experiment, we're unlikely to get the entire graph and are more interested in following edges "close" to me. instead we'll use a <a href="http://en.wikipedia.org/wiki/Breadth-first_search">breadth first search</a>.
+</p>
+<p>since any call to twitter is expensive (in time that is, they rate limit their api calls) instead of a plain vanilla breadth first we'll introduce a cost component to elements on the frontier so help decide what to grab next. this is especially important for a graph like  twitter where the outdegree of a node is often in the hundreds. it turns the crawl into something that is not strictly depth first but it works out.
+</p>
+<p>to explain the cost component consider the expected connectivity of nodes in the twitter friend graph. most nodes have an outdegree of the order 20-200. occasionally you see much larger (in the 1000's) or much smaller (under 10).
+</p>
+<p>we might, naively perhaps, say that having a large outdegree means the person is a bit less strict with her following criteria and that some of them are not really that important to her. if this is the case we should focus a little more  on getting nodes with smaller outdegree.
+</p>
+<p>the formula i've come up with is to not consider the depth but instead add 1 + Log10(1+the outdegree of the previous node). in this way we penalise large outdegress, but not by a huge amount. we always add 1 to counter the cases where there are no edges leaving a node.
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2009/09/19/e10-1-crawling-twitter/";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

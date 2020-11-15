@@ -1,0 +1,303 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="solving-cartpole...-by-evolving-the-raw-bytes-of-a-1.4kb-tflite-microcontroller-serialised-model"></a>
+  <h2 class="blog_post_title"><a href="/blog/evolving_cartpole_flat_buffers" rel="bookmark" title="Permanent Link to solving cartpole... by evolving the raw bytes of a 1.4KB tflite microcontroller serialised model">solving cartpole... by evolving the raw bytes of a 1.4KB tflite microcontroller serialised model</a></h2>
+  <small>September 13, 2019 at 12:00 AM | categories:
+
+<a href='/blog/tag/projects'>projects</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <h1>what <em>is</em> cartpole?</h1>
+<p>ahhhh, good old cartpole, a favorite for baselining reinforcement learning algorithms! for those that haven't seen it the cartpole is a simple, but not completely trivial, control problem where an agent must keep an inverted pendulum balanced by nudging a cart either left or right.
+</p>
+<p><a href="https://github.com/openai/gym/wiki/CartPole-v0">the openai gym version</a> is based on an observation of 4 values (the position / velocity of the cart &amp; the angle / tip velocity of the pole) where the environment awards +1 reward for every time step the pendulum is kept up and terminates when either 1) the pole is angled too far off vertical 2) the cart moves too far from it's starting position or 3) 200 time steps have passed.
+</p>
+<p>for this experiment we'll run trials using this environment where we attempt the problem 10 times, this gives a max possible reward score of 2,000. note: a score of 1950 would pass as 'solved' according to the definition of this environment.
+</p>
+<img src="/blog/imgs/2019/ec/cartpole.png"/>
+
+
+<h1>a random action baseline</h1>
+<p>as a baseline we'll use a random agent that nudges left/right randomly.
+   as expected it's not great. running 100 trials the median is about ~220
+</p>
+<img src="/blog/imgs/2019/ec/random_choice.png"/>
+
+
+<h1>a random network baseline</h1>
+<p>let's try to represent the control using a simple network of 19 parameters
+</p>
+<pre>
+Layer (type)     Output Shape   Param #
+========================================
+i (InputLayer)   [(None, 4)]    0        # 4d input
+h1 (Dense)       (None, 2)      10       # 2 node hidden (relu)
+h2 (Dense)       (None, 2)      6        # 2 node hidden (relu)
+o (Dense)        (None, 1)      3        # P(nudge_left)
+========================================
+Total params: 19
+</pre>
+
+<p>when we try random initialisations of this network we see it generally does worse
+   than the random action, the median is now 95, but occasionally does much better.
+   recall the environment says a sustained score of 1950 is solved.
+</p>
+<img src="/blog/imgs/2019/ec/random_agent.png"/>
+
+<p>will those occasional wins be enough signal to capture with an optimisation?
+</p>
+
+<h1>the covariance matrix adaptation evolution strategy</h1>
+<p>rather than training this network with the traditional RL approach let's try
+   to evolve a solution using an evolutionary strategy!
+</p>
+<p>we'll start with the
+   covariance matrix adaptation evolution strategy
+   <a href="https://en.wikipedia.org/wiki/CMA-ES">CMS-ES</a>
+   ( using the <a href="https://pypi.org/project/cma/">cma</a> lib )
+</p>
+<p>as for all evolutionary approaches one main thing to decide is what
+   representation to use. a key design aspect of CMA is that solutions are just
+   samples from a multivariate normal &amp; this actually works well for our problem,
+   we'll just have solutions in R^19 representing the 19 weights and biases
+   of the network.
+</p>
+<p>if we evolve a population of 20 members and plot the performance
+   of the elite member from each generation we get a "solved" solution after
+   only about 8 generations..
+</p>
+<img src="/blog/imgs/2019/ec/cma.png"/>
+
+<p>with a population size of 20 that's only 160 trials, not bad! to be honest
+   in the past i'd collected x10 that #samples with a random agent
+   when filling a replay buffer before any deep RL attempt o_O
+</p>
+
+<h1>simple genetic algorithm for the 19 weights</h1>
+<p>the CMA approach works but, for reasons we'll come back to, let's try it
+   using a simpler style of
+   <a href="https://en.wikipedia.org/wiki/Genetic_algorithm">genetic algorithm</a>.
+</p>
+<p>we'll start with an initial
+   population whose weights come directly from the initialised keras model,
+   but we'll evolve them using just a standard genetic algorithm using
+   just a <a href="https://en.wikipedia.org/wiki/Crossover_%28genetic_algorithm%29">crossover operator</a>
+</p>
+<p><img src="/blog/imgs/2019/ec/OnePointCrossover.svg"/>
+   <small>image from wikipedia</small>
+</p>
+<p>the simplest genetic algorithm requires only two things from us...
+</p>
+<ol>
+ <li>
+     the ability to be able to generate new members
+ </li>
+
+ <li>
+     an implementation of the crossover function that takes two "parent" members and generates two valid new "children"
+ </li>
+</ol>
+<p>note: we'll use a really simple crossover operator; pick a random crossover point and combine the first part of one parent and the second part of the other. for a fixed length representation, like the 19 weights, this generates valid children without us having to do anything else. not all representations automatically do this; e.g. have a think about a representation for the travelling salesman problem that is just a random ordering of the cities...
+</p>
+<p>we'll use a population of 20 again and for each generation we'll
+</p>
+<ul>
+ <li>
+     keep the 2 best performing members (elitism)
+ </li>
+
+ <li>
+     introduce 2 completely new members (diversity)
+ </li>
+
+ <li>
+     "breed" the remaining 18 using crossover
+ </li>
+</ul>
+<p>in particular we won't do any form of
+   <a href="https://en.wikipedia.org/wiki/Mutation_%28genetic_algorithm%29">mutation</a> or
+   <a href="https://en.wikipedia.org/wiki/Chromosomal_inversion">inversion</a> which are common
+   operators for genetic algorithms. they would be ok with this representation,
+   but we'll leave them off to make things easier later.
+</p>
+<p>though this is a very simple approach it works well and for this problem
+   finds a solution faster than CMA; only 3 generations (60 trials)
+</p>
+<img src="/blog/imgs/2019/ec/neural_ga.png"/>
+
+
+<h1>digression : exporting a tf-lite network to a microcontroller</h1>
+<p>seemingly randomly, let's consider <a href="https://www.tensorflow.org/lite">tf-lite</a>
+   for a bit....
+</p>
+<p>tf-lite is a light weight tensorflow
+   runtime for on device inference. the big focus is for mobile but it
+   includes (experimental) support for microcontrollers too.
+</p>
+<p>the approach to building a model for a microcontroller isn't trivial but isn't
+   that hard either...
+</p>
+<ul>
+ <li>
+     train a standard keras model using whatever technique we want
+ </li>
+
+ <li>
+     optimise the model (e.g. applying <a href="https://www.tensorflow.org/lite/convert/cmdline_examples#quantization">quantisation</a> etc) in this case using <a href="https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/post_training_quantization.md"><code>tf.lite.Optimize.OPTIMIZE_FOR_SIZE</code></a>
+ </li>
+
+ <li>
+     use the <a href="https://www.tensorflow.org/lite/convert">lite converter</a> to convert the model to <a href="https://google.github.io/flatbuffers/">flatbuffer format</a>
+ </li>
+
+ <li>
+     and finally, since microcontrollers don't provide a filesystem, use a tool like <a href="https://www.google.com/search?q=xxd">xxd</a> to export the model as a byte[] we can use directly in c++ code. #l33tHax0r
+ </li>
+</ul>
+<p>for our simple network we get a 1488 element byte array like the following.
+   this is the code we'd cut and paste into our microcontroller code.
+</p>
+<pre>
+unsigned char example_tflite_exported_network[] = {
+  0x1c, 0x00, 0x00, 0x00, 0x54, 0x46, 0x4c, 0x33, 0x00, 0x00, 0x12, 0x00,
+  0x1c, 0x00, 0x04, 0x00, 0x08, 0x00, 0x0c, 0x00, 0x10, 0x00, 0x14, 0x00,
+  0x00, 0x00, 0x18, 0x00, 0x12, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
+  0xe4, 0x05, 0x00, 0x00, 0xb8, 0x01, 0x00, 0x00, 0xa0, 0x01, 0x00, 0x00,
+  0x34, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+  0x04, 0x00, 0x00, 0x00, 0xb8, 0xfa, 0xff, 0xff, 0x08, 0x00, 0x00, 0x00,
+  0x0c, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00, 0x6d, 0x69, 0x6e, 0x5f,
+  .....
+</pre>
+
+<p>two interesting observations about this pipeline are ....
+</p>
+<ol>
+ <li>
+     we can use these steps to generate random initialised keras models which we can then convert to byte arrays (generating new members)
+ </li>
+
+ <li>
+     since these representations are fixed length a simple crossover operator of slicing one part of one parent and one part of the other automatically generates a byte array that is still a valid tflite flatbuffer
+ </li>
+</ol>
+<p>so... could this bytes array be used as a representation for our
+   simple genetic algorithm? sure can!
+</p>
+
+<h1>simple genetic algorithm for the 1.4KB bytes of an exported tf-lite model</h1>
+<p>running our simple genetic algorithm against the bytes of these files works
+   pretty much just as well as against the "raw" 19 weights, just a bit slower...
+</p>
+<img src="/blog/imgs/2019/ec/lite_neural_ga.png"/>
+
+<p>why slower? consider the binary diffs below between two elite members
+   across generations. since it's the
+   raw binary format there are huge chunks of the representation aren't actually
+   weights but instead are related to the serialisation of network architecture.
+   in terms of the genetic operators we could think of these as a bit like
+   junk dna. the simple genetic algorithm "wastes time" exploring crossover in
+   these regions which are effectively constant across the population.
+   because we never use a mutation or inversion operator though we don't
+   ever interfere with
+   these and accidentally make infeasible solutions (which, incidentally,
+   causes the python process to segfault when you try to create the interpreter :/)
+</p>
+<img src="/blog/imgs/2019/ec/hexdiff.png"/>
+
+<p>finally do the models run on a microcontroller? yep :)
+</p>
+<p>( though i was too lazy to actually hook them up to a serial connection
+   and/or LEDs )
+</p>
+<p>see all the code <a href="https://github.com/matpalm/evolved_cartpole">here</a>
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/evolving_cartpole_flat_buffers";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

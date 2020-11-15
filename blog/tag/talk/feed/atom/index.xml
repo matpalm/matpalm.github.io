@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed
+  xmlns="http://www.w3.org/2005/Atom"
+  xmlns:thr="http://purl.org/syndication/thread/1.0"
+  xml:lang="en"
+   >
+  <title type="text">brain of mat kelcey</title>
+  <subtitle type="text">thoughts from a data scientist wannabe</subtitle>
+
+  <generator uri="http://blogofile.com/">Blogofile</generator>
+
+  <link rel="alternate" type="text/html" href="http://matpalm.com/blog" />
+  <id>http://matpalm.com/blog/feed/atom/</id>
+  <link rel="self" type="application/atom+xml" href="http://matpalm.com/blog/feed/atom/" />
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[objax on honeysuckle farm]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/objax_on_farm" />
+    <id>http://matpalm.com/blog/objax_on_farm</id>
+    <published>2020-08-30T14:45:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="talk" />
+    <summary type="html"><![CDATA[objax on honeysuckle farm]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/objax_on_farm"><![CDATA[<p>recorded a high level explainer on
+   <a href="https://github.com/google/objax">objax</a>
+   while doing some chores. i think it's going to be a growing genre :)
+</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/WBiPnKryP_4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[the map interpretation of attention]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/the_map_interpretation_of_attention" />
+    <id>http://matpalm.com/blog/the_map_interpretation_of_attention</id>
+    <published>2020-08-19T10:30:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="talk" />
+    <category scheme="http://matpalm.com/blog" term="three_strikes_rule" />
+    <summary type="html"><![CDATA[the map interpretation of attention]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/the_map_interpretation_of_attention"><![CDATA[<p>based on my three strikes rule i wrote a talk on the map interpretation of neural attention.
+</p>
+<p>it starts with the first NLP problem i saw where attention was used,
+   goes through the way i think about attention in terms of soft lookup in a map,
+   shows how this soft lookup solves that NLP problem,
+   and finishes with the small mods required to turn it in the building block for the transformer architecture.
+</p>
+<p>here's a recording; check it out!
+</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/7wMQgveLiQ4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[self supervised learning and making use of unlabelled data]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/self_supervised_learning" />
+    <id>http://matpalm.com/blog/self_supervised_learning</id>
+    <published>2020-07-02T17:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="talk" />
+    <summary type="html"><![CDATA[self supervised learning and making use of unlabelled data]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/self_supervised_learning"><![CDATA[<p>awhile back i did a talk on self supervised learning; here's a rerecording of it!
+</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/ENS3BYxLUN0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[an illustrative einsum example]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/einsum_example" />
+    <id>http://matpalm.com/blog/einsum_example</id>
+    <published>2020-05-27T00:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="talk" />
+    <category scheme="http://matpalm.com/blog" term="short_tute" />
+    <summary type="html"><![CDATA[an illustrative einsum example]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/einsum_example"><![CDATA[<h1>intro</h1>
+<p>recently i changed what was quite clumsy looking code in something more
+   elegant using a cool function in numpy called
+   <a href="https://numpy.org/doc/stable/reference/generated/numpy.einsum.html">einsum</a>
+   and felt it was worth writing up.
+</p>
+<p>this example is just going to be using numpy, but einsum is also provided in
+   <a href="https://www.tensorflow.org/api_docs/python/tf/einsum">tensorflow</a>,
+   <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.einsum.html">jax</a>
+   and <a href="https://pytorch.org/docs/master/generated/torch.einsum.html">pytorch</a>
+</p>
+<p>there's also <a href="https://colab.research.google.com/drive/1kmt2cNFK7IGRhY1rXgqLVX3GsNc4Ybsh?usp=sharing">a terser colab version</a> of this post if you're prefer to walk through
+   that.
+</p>
+<p>and for a video walkthrough of this see...
+</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/SOaYrnQtd9g" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+
+<h1>example walkthrough</h1>
+<p>the only user defined function we are going to use is this little <code>rnd</code>
+   one to make random arrays of various sizes.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; import numpy as np
+
+&gt;&gt;&gt; def rnd(*args):
+&gt;&gt;&gt;     return np.random.random(args)
+</code></pre>
+
+<p>let's start with a fundamental operation, the matrix multiply.
+   numpy provides it through <code>matmul</code> function which in this case is taking
+   an <code>(i, j)</code> sized matrix and a <code>(j, k)</code> sized one and producing an
+   <code>(i, k)</code> result; the classic 2d matrix multiply.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; np.matmul(rnd(4, 5), rnd(5, 6)).shape
+
+(4, 6)
+</code></pre>
+
+<p>there's a number of interpretations of what a matrix multiply
+   represents and a common one i use a lot is calculating,
+   in batch, a bunch of pairwise dot products. if we have <code>S1</code> and <code>S2</code>,
+   both of which represent some set of embeddings, in this case
+   32d embeddings, 5 for <code>S1</code> and 10 for <code>S2</code>, if we want to calculate all pairwise
+   combos we can use a matrix multiply. but note we need to massage
+   <code>S2</code> a bit; a matrix multiple wants the inner dimension to match so
+   we need to transpose <code>B</code> to make it (32, 10)
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; S1 = rnd(5, 32)
+&gt;&gt;&gt; S2 = rnd(10, 32)
+&gt;&gt;&gt; np.matmul(S1, S2.T).shape
+
+(5, 10)
+</code></pre>
+
+<p>an important thing to note about <code>matmul</code> is that it automatically handles
+   the idea of batching. for example a leading dimension of 10 makes
+   it equivalent to 10 independent matrix multiplies. we could do this
+   in a for loop but expressing it in a single <code>matmul</code> will most likely
+   be faster as the underlying linear algebra libraries can kick in with
+   a bunch of optimisations.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> np.matmul(rnd(10, 4, 5),
+>>>           rnd(10, 5, 6)).shape
+
+(10, 4, 6)
+</code></pre>
+
+<p>and note that it can be multiple leading dimensions.
+   all that matters it the last two axis follow the <code>i,j,k</code> rule.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> np.matmul(rnd(10, 20, 30, 4, 5),
+>>>           rnd(10, 20, 30, 5, 6)).shape
+
+(10, 20, 30, 4, 6)
+</code></pre>
+
+<p>so let's talk about the real use case that led me to write
+   this post. we have a <code>query</code> that i want to compare to 10 <code>keys</code> by
+   using a dot product; basically an unnormalised attention / soft map lookup.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> E = 32
+>>> query_embedding = rnd(E)
+>>> keys_embeddings = rnd(10, E)
+</code></pre>
+
+<p>even though <code>query</code> is a vector we can use <code>matmul</code> to do this because
+   <code>matmul</code> can interpret the vector as either a row vector as below in v1
+   ( i.e. a matrix of shape <code>(1, E)</code> ) or a column vector as in v2
+   ( a matrix of shape <code>(E, 1)</code> ) where, note, that <code>keys</code> and <code>query</code>
+   are swapped)
+</p>
+<pre class="prettyprint"><code class="language-python">>>> v1 = np.matmul(query_embedding, keys_embeddings.T)
+>>> v2 = np.matmul(keys_embeddings, query_embedding)
+>>> v1.shape, v2.shape, np.all(np.isclose(v1, v2))
+
+((10,), (10,), True)
+</code></pre>
+
+<p>my actual use case though is wanting to do the <code>query</code> to 10 <code>keys</code>
+   comparison, but across a "batch" of 100 independant sets. so if we
+   want to use <code>matmul</code> in the batched form we need to do a bit
+   of massaging of these two since the assumed behaviour of <code>matmul</code> will
+   no longer work.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> N = 100
+>>> E = 32
+>>> query_embeddings = rnd(N, E)
+>>> keys_embeddings = rnd(N, 10, E)
+</code></pre>
+
+<p>firstly we need to be more explicit that the <code>query</code> embeddings
+   represent N row vectors.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> query_embeddings.reshape(N, 1, E).shape
+
+(100, 1, 32)
+</code></pre>
+
+<p>secondly we need to do the transpose for <code>keys</code>, but this time we
+   can't just use <code>.T</code>, we need to be explicit about keeping the
+   leading axis the same, swapping only the final two.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> keys_embeddings.transpose(0, 2, 1).shape
+
+(100, 32, 10)
+</code></pre>
+
+<p>after doing these two transforms we get the matrices that will trigger the
+   batch matrix multiply behaviour we want. note that we end
+   up with that inner dimension of 1 still around.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> np.matmul(query_embeddings.reshape(N, 1, E),
+>>>           keys_embeddings.transpose(0, 2, 1)).shape
+
+(100, 1, 10)
+</code></pre>
+
+<p>and if we don't want that inner axis, we can explicitly <code>squeeze</code> it away.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> np.squeeze(np.matmul(query_embeddings.reshape(N, 1, E),
+>>>                      keys_embeddings.transpose(0, 2, 1))).shape
+
+(100, 10)
+</code></pre>
+
+<p>this all works but it felt clumsy to me. so let's go back through
+   these examples but using <code>einsum</code> which gives us more explicit ways to
+   define the calculation without the massaging of <code>query</code> and <code>keys</code> to
+   make <code>matmul</code> work.
+</p>
+<p>we'll redo the matmul versions again first (denoted
+   by <code>m</code>) followed by the einsum equivalents (denoted by <code>e</code>)
+</p>
+<p>let's start with matrix multiply. <code>einsum</code> take a <code>subscript</code> arg
+   which describes the computation we want to do. the first part <code>ij,jk</code> is a
+   comma seperated list of the dimensions of the inputs, in this case <code>A</code> and <code>B</code>
+</p>
+<p>the first input, <code>A</code>, is 2d with axis we're naming <code>i</code> and <code>j</code>.
+   the second input, <code>B</code>, is 2d also, with axis we're naming <code>j</code> and <code>k</code>.
+</p>
+<p>the output we want <code>-&gt;ik</code> is 2d and takes the axis <code>i</code> and <code>k</code> with a reduction
+   along <code>j</code>. this is exactly a matrix multiply.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> A, B = rnd(4, 5), rnd(5, 6)
+>>>
+>>> m = np.matmul(A, B)
+>>>
+>>> e = np.einsum('ij,jk->ik', A, B)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((4, 6), (4, 6), True)
+</code></pre>
+
+<p>consider again the case of two sets of 32d embeddings <code>S1</code> and <code>S2</code> and
+   wanting to get all the pairwise products. since the <code>j</code> is now the
+   second axis we don't need to have the transpose.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> S1, S2 = rnd(5, 32), rnd(10, 32)
+>>>
+>>> m = np.matmul(S1, S2.T)
+>>>
+>>> e = np.einsum('ij,kj->ik', S1, S2)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((5, 10), (5, 10), True)
+</code></pre>
+
+<p>in fact in <code>einsum</code> we can use whatever letters we like, so we're
+   free to try to use the character subscripts as a weak form of documentation.
+   we've basically got one letter to describe what the axis represents.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> S1, S2 = rnd(5, 32), rnd(10, 32)
+>>>
+>>> m = np.matmul(S1, S2.T)
+>>>
+>>> e = np.einsum('ae,be->ab', S1, S2)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((5, 10), (5, 10), True)
+</code></pre>
+
+<p>next let's consider the batch form of a matrix multiply. recall: <code>matmul</code>
+   handles this by default, but with <code>einsum</code> we have to be
+   explicit about it. even still it's arguably clearer since we end up not
+   having to understand the assumed behaviour of <code>matmul</code>.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> A, B = rnd(10, 4, 5), rnd(10, 5, 6)
+>>>
+>>> m = np.matmul(A, B)
+>>>
+>>> e = np.einsum('nij,njk->nik', A, B)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((10, 4, 6), (10, 4, 6), True)
+</code></pre>
+
+<p>going back to our <code>query</code> vs <code>keys</code> comparison, let's consider the
+   single instance case. one main thing that is different is we don't need
+   to have any assumption about <code>query</code> being interpretable as a row
+   or column matrix, we can just explictly describe the axis
+   ( in this case it's just the 1d <code>e</code> ).
+</p>
+<pre class="prettyprint"><code class="language-python">>>> E = 32
+>>>
+>>> query_embedding = rnd(E)
+>>> keys_embeddings = rnd(10, E)
+>>>
+>>> m = np.matmul(query_embedding, keys_embeddings.T)
+>>>
+>>> e = np.einsum('e,ke->k', query_embedding, keys_embeddings)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((10,), (10,), True)
+</code></pre>
+
+<p>and finally consider the batched version where we see the <code>einsum</code> version ends
+   up being much simpler. we don't rely on any behaviour of <code>matmul</code> that forces
+   us to change things to particular shapes. as before because we need to be
+   explict about what we want in terms of reduction we finish with a much
+   simpler expression that is much more direct.
+</p>
+<pre class="prettyprint"><code class="language-python">>>> N = 100
+>>> E = 32
+>>>
+>>> query_embeddings = rnd(N, E)
+>>> keys_embeddings = rnd(N, 10, E)
+>>>
+>>> m = np.squeeze(np.matmul(query_embeddings.reshape(N, 1, E),
+>>>                          keys_embeddings.transpose(0, 2, 1)))
+>>>
+>>> e = np.einsum('ne,nke->nk', query_embeddings, keys_embeddings)
+>>>
+>>> m.shape, e.shape, np.all(np.isclose(m, e))
+
+((100, 10), (100, 10), True)
+</code></pre>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[using cross entropy for metric learning]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/xent_for_metric_learning_talk" />
+    <id>http://matpalm.com/blog/xent_for_metric_learning_talk</id>
+    <published>2020-05-19T18:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="talk" />
+    <summary type="html"><![CDATA[using cross entropy for metric learning]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/xent_for_metric_learning_talk"><![CDATA[<p>i gave a talk at <a href="https://www.meetup.com/Machine-Learning-AI-Meetup/">the melbourne ml/ai meetup</a>
+   on using cross entropy for metric learning.
+</p>
+<p>here are the slides <a href="https://drive.google.com/file/d/1X6Ya50tA2l0WQikGiaAEAreTErpurYoH/view">slides</a>
+</p>
+<p>and here's a recording; check it out!
+</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Jb4Ewl5RzkI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[data engineering concerns for machine learning products]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/de_concerns_for_ml" />
+    <id>http://matpalm.com/blog/de_concerns_for_ml</id>
+    <published>2019-09-26T18:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="talk" />
+    <summary type="html"><![CDATA[data engineering concerns for machine learning products]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/de_concerns_for_ml"><![CDATA[<p>i gave a talk at <a href="https://www.meetup.com/Data-Engineering-Melbourne/events/258551330/">the melbourne data engineering meetup</a>
+   on "data engineering concerns for machine learning products"
+</p>
+<p>there was no recording :( (sad panda) but
+   there are at least <a href="https://drive.google.com/file/d/1Cx-l393LvRCV9KKAfKBP5tU4ZM0AsHv_/view">slides</a> :)
+</p>
+<p>check them out!
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[brutally short introduction to learning to learn]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/learning_to_learn" />
+    <id>http://matpalm.com/blog/learning_to_learn</id>
+    <published>2019-08-07T00:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="talk" />
+    <summary type="html"><![CDATA[brutally short introduction to learning to learn]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/learning_to_learn"><![CDATA[<p>i gave a talk at <a href="https://yowconference.com/data/2019/">yow! data</a> recently
+   on learning to learn.
+</p>
+<p>there's an <a href="https://youtu.be/v6WLIv2zH4g">official recording on the yow data
+youtube channel</a> but since they missed
+   out a bunch of my slides i did a
+   <a href="https://youtu.be/MQ6i_drgYj4">slides-only-remix</a> too.
+</p>
+<p>check it out!
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[deep reinforcement learning for robotics]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/deep_rl_for_robotics" />
+    <id>http://matpalm.com/blog/deep_rl_for_robotics</id>
+    <published>2017-09-21T19:12:34Z</published>
+    <category scheme="http://matpalm.com/blog" term="talk" />
+    <summary type="html"><![CDATA[deep reinforcement learning for robotics]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/deep_rl_for_robotics"><![CDATA[<p>did a talk on deep rl for robots at melbourne ml/ai
+</p>
+<p>check it out!
+</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/EydQxFR4pzU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>]]></content>
+  </entry>
+</feed>

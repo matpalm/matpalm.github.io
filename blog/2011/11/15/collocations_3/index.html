@@ -1,0 +1,324 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="finding-phrases-with-mutual-information"></a>
+  <h2 class="blog_post_title"><a href="/blog/2011/11/15/collocations_3" rel="bookmark" title="Permanent Link to finding phrases with mutual information">finding phrases with mutual information</a></h2>
+  <small>November 15, 2011 at 11:00 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <h2>finding phrases with mutual information</h2>
+<p>continuing on with my series of <a href="/blog/2011/10/22/collocations_1/">mutual information experiments</a> how might 
+   we extend the technique to identity sequences longer than just two terms?
+</p>
+<p>one novel way is to identify the bigrams of interest, replace them with a single token and simply repeat 
+   the entire process. (thanks <a href="http://tdunning.blogspot.com">ted</a> for the idea)
+</p>
+
+<h2>example</h2>
+<p>so say we had the 6 term sentence <tt>i went to new york city</tt>
+</p>
+<p>it has 5 bigrams; <tt>('i went', 'went to', 'to new', 'new york', 'york city')</tt>
+</p>
+<p>running the mutual information algorithm over this might identify <tt>new york</tt> 
+   as a bigram of interest. 
+</p>
+<p>we can swap the two terms with a single token 
+   <tt>(new_york)</tt> giving us a new sentence with 5 terms; <tt>i went to '(new_york)' city</tt>
+</p>
+<p>this new sentence has 4 bigrams <tt>('i went', 'went to', 'to (new_york)', '(new_york) city')</tt>
+</p>
+<p>another run of mutual information might now identify the pair <tt>(new_york) city</tt> so we replace 
+   it with the token <tt>((new_york)_city)</tt> and just keep repeating.
+</p>
+
+<h2>data</h2>
+<p>lets run this over a small sample of 300,000 sentences taken from visible text of 
+   the <a href="http://download.freebase.com/wex/">freebase wiki dump</a> after it's been tokenised by 
+   <a href="http://nlp.stanford.edu/software/lex-parser.shtml">the stanford parser</a>
+</p>
+<p>(to speed things a little i calculate mutual information and replace the top 10 bigrams in the text before recalculating)
+</p>
+<p>example starting sentences include...
+</p>
+<pre>
+A solid and dependable performer Taylor held the record having played in games for the Phillies at second base t...
+A surface may also exhibit both specular and diffuse reflection as is the case for example of glossy paint as us...
+A variety of names have since been given to the Wandering Jew including Matathias Buttadeus Paul Marrane and Isa...
+A.D.A.M. has control over Eggman 's computer and therefore every robot he owns he can also spread to other compu...
+Absolute magnitude magazine cover Though this image is subject to copyright its use is covered by the U.S. fair ...
+</pre>
+
+
+<h2>results</h2>
+
+<h3>what phrases do we find?</h3>
+<p>after the first iteration we get the bigrams we've seen before...
+</p>
+<pre>
+Socorro LINEAR
+expr    expr
+United  States
+Los     Angeles
+median  income
+</pre>
+
+<hr>
+
+<p>but after the second iteration we get a mix of single term bigrams and immediately 
+   start seeing some new composite bigrams; in this case the trigram <tt>'per square mile'</tt>
+</p>
+<pre>
+(expr_expr)     (expr_expr)
+capita  income
+(t_t)   t
+per     (square_mile)
+Las     Vegas
+</pre>
+
+<p>unfortunately there's lots of noise too. <tt>'expr expr expr expr'</tt> comes from an single sentence, the term 'expr' repeated 450 times, 
+   that must have been poorly parsed originally. the <tt>'t t t</tt>' case is something similar.
+</p>
+<hr>
+
+<p>by the 16th iteration we get our first 4gram phrase <tt>' U.S. fair use laws'</tt>
+</p>
+<pre>
+had     been
+U.S.    ((fair_use)_laws)
+Rotten  Tomatoes
+science fiction
+(New_York)      City
+</pre>
+
+<hr>
+
+<p>and by the 70th iteration we get our first 5gram phrase <tt>'United Nations Security Council Resolution'</tt>.
+   jujitsu fans out there will be pleased to see some grappling coming in too!
+</p>
+<p>alas more rubbish as well with the align styling tags leaking in.
+</p>
+<pre>
+(((United_Nations)_Security)_Council)   Resolution
+Submission      (rear_(naked_choke))
+Asian   (Pacific_Islander)
+(UD_(align_left))       ((align_left)_((align_center)_(Win_(align_left))))
+lieutenant      colonel
+</pre>
+
+<hr>
+
+<p>it's only two passes later that we get a big continuation of this one 
+   with <tt>'United Nations Security Council Resolution adopted unanimously'</tt>
+</p>
+<pre>
+(((((United_Nations)_Security)_Council)_Resolution)_adopted)    unanimously
+(United_States) ((align_left)_((align_center)_(Win_(align_left))))
+Flying  Corps
+Saddam  Hussein
+TKO     punches
+</pre>
+
+<p>i was a bit suspicous of this one but grabbing the original text we can see
+   how it makes for an interesting construct in the text...
+</p>
+<pre>
+United Nations Security Council Resolution adopted unanimously on August after recalling Resolution the Council ... 
+United Nations Security Council Resolution adopted unanimously on March after recalling all previous resolutions...
+United Nations Security Council Resolution adopted unanimously on February after noting that the Council had bee...
+United Nations Security Council Resolution adopted unanimously on December after reaffirming all resolutions on ...
+United Nations Security Council Resolution adopted unanimously on May after a complaint by Senegal against Portu...
+United Nations Security Council Resolution adopted unanimously on June after recalling resolutions and the Counc...
+United Nations Security Council Resolution adopted unanimously on July after noting the recent entry into force ...
+United Nations Security Council Resolution adopted unanimously on May after recalling all resolutions on the sit...
+United Nations Security Council Resolution adopted unanimously on January after recalling all previous resolutio...
+United Nations Security Council Resolution adopted unanimously on June after hearing representations from Botswa...
+United Nations Security Council Resolution adopted unanimously on May after reaffirming Resolution and all subse...
+United Nations Security Council Resolution adopted unanimously on August after reaffirming previous resolutions ...
+United Nations Security Council Resolution adopted unanimously on December after reaffirming all resolutions on ...
+United Nations Security Council Resolution was adopted unanimously on October after recalling resolutions and on...
+United Nations Security Council resolution adopted unanimously on March after reaffirming resolutions and on the...
+United Nations Security Council Resolution adopted unanimously on June after recalling all previous resolutions ...
+United Nations Security Council Resolution adopted unanimously on January after reaffirming Resolution on the si...
+United Nations Security Council Resolution adopted unanimously on February after reaffirming resolutions and in ...
+</pre>
+
+<p>interesting. i wonder has this come from a template perhaps? maybe just cut n paste? one author with fixed style?
+</p>
+<hr>
+
+<p>even by the end of my run, 950 iterations, (aka last night) there continue to be valid 
+   short phrases being picked up
+</p>
+<pre>
+(County_Kansas) (United_States)
+County  Clare
+Sunday  night
+Rift    Valley
+Charlton        Heston
+</pre>
+
+
+<h3>how has the corpus changed?</h3>
+<p>during the processing we've been replacing these tokens in the original text. 
+   so how does it look by this time? well, not a whole lot has changed actually. 
+</p>
+<p>the following 3 random examples show how little the text differs
+   (should have left it running much longer!!)
+</p>
+<pre>
+(He_played) for a (short_time) with (Duke_Ellington) for (which_he) is (best_remembered)
+
+His (debut_single) Mi God Mi King topped the Jamaican (singles_chart) and a string of hits
+followed including Heel And Toe Monkey And Ape (Ghost_Rider) and Crucifixion although his
+best-remembered song is Mini Bus which lamented the demise (of_the) jolly bus and which 
+(was_awarded) the title Song Of The Year in (from_the) Jamaica (Broadcasting_Corporation)
+
+However this number is certainly an improvement (from_the) cars it averaged yearly ((during_the)_1980s)
+</pre>
+
+
+<h3>what are the longest phrases identified?</h3>
+<p>the top three are noise alas...
+</p>
+<table class="data">
+<tr> <td>rank</td> <td>num</br>underscores</td> <td>phrase</td> </tr>
+<tr> <td>1</td> <td>127</td> <td>expr_expr_expr_..... (128 times)</td></tr>
+<tr> <td>2</td> <td>95</td>  <td>September_Socorro_LINEAR_September_Socorro_LINEAR_... (32 times)</td></tr>
+<tr> <td>3</td> <td>63</td>  <td>t_t_t_... (64 times)</td></tr>
+</table>
+
+<p>it's not until the 77th we get something that isn't (arguably) just a repeated 
+   pattern or noisy parsing
+</p>
+<table class="data">
+<tr> <td>rank</td> <td>num</br>underscores</td> <td>phrase</td> </tr>
+<tr> <td>77</td> <td>10</td><td> At_the_census_there_were_people_households_and_families_residing_in </td></tr>
+</table>
+
+<p>which were identified as phrases due to the large frequency of occurances of variations of the following...
+</p>
+<table class="data">
+<tr> <td>freq</td> <td>original phrase</td> </tr>
+<tr><td> 72 </td> <td>As of the census of there were people households and families residing in the city      </td> </tr>
+<tr><td>     60 </td> <td>As of the census of there were people households and families residing in the town      </td> </tr>
+<tr><td>     46 </td> <td>As of the census of there were people households and families residing in the CDP       </td> </tr>
+<tr><td>     32 </td> <td>As of the census of there were people households and families residing in the village   </td> </tr>
+<tr><td>     26 </td> <td>As of the census of there were people households and families residing in the township  </td> </tr>
+<tr><td>     15 </td> <td>As of the census of there were people households and families residing in the borough   </td> </tr>
+<tr><td>      3 </td> <td>At the census there were people households and families residing in the city  </td> </tr>
+<tr><td>      2 </td> <td>At the census there were people households and families residing in the village </td> </tr>
+<tr><td>      2 </td> <td>As of the census of there were people households and families residing on the base      </td> </tr>
+</table>
+
+<p>fascinating stuff!!
+</p>
+
+<h2>random todo thoughts</h2>
+<ul>
+ <li>
+     use patterns found in this experiment to clean up noise and rerun
+ </li>
+
+ <li>
+     work out a way to fold the composition into the scoring
+ </li>
+
+ <li>
+     work on larger dataset
+ </li>
+
+ <li>
+     approach to dealing with duplicates? don't want to just uniq since they represent something 
+ </li>
+</ul>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2011/11/15/collocations_3";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

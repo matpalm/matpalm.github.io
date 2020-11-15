@@ -1,0 +1,150 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="fuzzy-jaccard"></a>
+  <h2 class="blog_post_title"><a href="/blog/2012/07/31/fuzzy_jaccard" rel="bookmark" title="Permanent Link to fuzzy jaccard">fuzzy jaccard</a></h2>
+  <small>July 31, 2012 at 08:00 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p>the <a href="http://en.wikipedia.org/wiki/Jaccard_index">jaccard coefficient</a> is one of the fundamental measures for doing set similarity. 
+</p>
+<p>( recall jaccard(set1, set2) = |intersection| / |union|. when set1 == set2 this evaluates to 1.0 and when set1 and set2 have no intersection it evaluates to 0.0 )
+</p>
+<p>one thing that's always annoyed me about it though is that is loses any sense of partial similarity. as a set based measure it's all or nothing.
+</p>
+<p>so consider the sets <i>set1 = {i1, i2, i3}</i> and <i>set2 = {i1, i2, i4}</i>
+</p>
+<img src="/blog/imgs/2012/jaccard/sets.png"/>
+
+<p>jaccard(set1, set2) = 2/4 = 0.5 which is fine given you have <i>no</i> prior info about the relationship between i3 and i4. 
+</p>
+<p>but what if you have a similarity function, s, and s(i3, i4) ~= 1.0? in this case you don't want a jaccard of 0.5, you want something closer to 1.0. by saying i3 ~= i4 you're saying the sets are almost the same.
+</p>
+<p>after lots of googling i couldn't find a jaccard variant that supports this idea so i rolled my own. the idea is that we want to count the values in the complement of the intersection not as 0.0 on the jaccard numerator but as some value ranging between 0.0 and 1.0 based on the similarity of the elements. after some experiments i found that just counting each as the root mean sqr value of the pairwise sims of them all works pretty well. i'd love to know the name of this technique (or any similar better one) so i can read some more about it.
+</p>
+<pre class="prettyprint">
+def fuzzy_jaccard(s1, s2, sim):
+    union = s1.union(s2)
+    intersection = s1.intersection(s2)
+    
+    # calculate root mean square sims between elements in just s1 and just s2
+    just_s1 = s1 - intersection
+    just_s2 = s2 - intersection
+    sims = [sim(i1, i2) for i1 in just_s1 for i2 in just_s2]
+    sqr_sims = [s * s for s in sims]
+    root_mean_sqr_sim = sqrt(float(sum(sqr_sims)) / len(sqr_sims))
+    
+    # use this root_mean_sqr_sim to count these values in the complement as, in some way, being "partially" in the intersection
+    return float(len(intersection) + (root_mean_sqr_sim * intersection_complement_size)) / len(union)
+</pre>
+
+<p>looking at our example of <i>{i1, i2, i3}</i> vs <i>{i1, i2, i4}</i>...
+</p>
+<p>when s(i3, i4) = 0.0 it degenerates to normal jaccard and scores 0.5
+   <pre class="prettyprint">
+   print fuzzy_jaccard(set([1,2,3]), set([1,2,4]), lambda i1, i2: 0.0)  # = 0.5 (2/4)  ie normal jaccard
+   </pre>
+</p>
+<p>when s(i3, i4) = 1.0 it treats the values as the same and scores 1.0
+   <pre class="prettyprint">
+   print fuzzy_jaccard(set([1,2,3]), set([1,2,4]), lambda i1, i2: 1.0)  # = 1.0 (4/4)  treating i3 == i4
+   </pre>
+</p>
+<p>when s(i3, i4) = 0.9 it scores inbetween with 0.8
+   <pre class="prettyprint">
+   print fuzzy_jaccard(set([1,2,3]), set([1,2,4]), lambda i1, i2: 0.8)  # = 0.9 (3.6/4)
+   </pre>
+</p>
+<p>this is great for me because now given an appropriate similiarity function i'm able to get a lot more discrimination between sets.
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2012/07/31/fuzzy_jaccard";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

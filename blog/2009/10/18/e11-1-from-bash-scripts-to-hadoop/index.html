@@ -1,0 +1,293 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="e11.1-from-bash-scripts-to-hadoop"></a>
+  <h2 class="blog_post_title"><a href="/blog/2009/10/18/e11-1-from-bash-scripts-to-hadoop/" rel="bookmark" title="Permanent Link to e11.1 from bash scripts to hadoop">e11.1 from bash scripts to hadoop</a></h2>
+  <small>October 18, 2009 at 02:10 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p>let's rewrite <a href="http://matpalm.com/blog/2009/10/16/e11-0-tweets-around-the-world/">v1</a> using hadoop tooling, code is on <a href="http://github.com/matpalm/rtw_tweet/tree/master/v2/">github</a>
+</p>
+<p>we'll run hadoop in non distributed <a href="http://hadoop.apache.org/common/docs/r0.20.0/quickstart.html#Local">standalone mode</a>. in this mode everything runs in a single jvm so it's nice and simple to dev against.
+</p>
+
+<h3>step 1: extract the locations strings from the json stream</h3>
+<p>in v1 it was
+</p>
+<div class="pygments_murphy"><pre><span></span>bzcat sample.bz2 | ./extract_locations.pl &gt; locations
+</pre></div>
+
+<p>using the the awesome <a href="http://hadoop.apache.org/common/docs/current/streaming">hadoop streaming</a> interface it's not too different. this interface allows you to specify any app as the mapper or reducer. the main difference is that it works on directories not just files.
+</p>
+<p>for the mapper we'll use exactly the same script as before; extract_locations.pl and since there is no reduce component of this job so we use an "identity" script, ie cat, as the reduce phase.
+</p>
+<div class="pygments_murphy"><pre><span></span>mkdir json_stream
+bzcat sample.bz2 | gzip - &gt; json_stream/input.gz
+# hadoop supports gzip out of the bound but not bzip2 :(
+export HADOOP_STREAMING_JAR=$HADOOP_HOME/contrib/streaming/hadoop-*-streaming.jar
+hadoop jar $HADOOP_STREAMING_JAR \
+  -mapper ./extract_locations.pl -reducer /bin/cat \
+  -input json_stream -output locations
+</pre></div>
+
+<p>this gives us the locations in a single file locations/part-0000
+</p>
+
+<h3>step 2: extract iphone and ut lat longs strings</h3>
+<p>the second step is another text munging problem where we extract just the lat longs for the iPhone and UT tagged locations
+</p>
+<p>ie for strings of the form
+</p>
+<div class="pygments_murphy"><pre><span></span>iPhone: 21.320328,-157.877579
+\u00dcT: 41.727877,-91.626323
+</pre></div>
+
+<p>we want to extract
+</p>
+<div class="pygments_murphy"><pre><span></span>21.320328 -157.877579
+41.727877 -91.626323
+</pre></div>
+
+<p>since this is just text manipulation we'll use streaming again
+</p>
+<p>in v1 it was
+</p>
+<div class="pygments_murphy"><pre><span></span>cat locations | ./extract_lat_longs_from_locations.rb iphone &gt; locations.iphone
+cat locations | ./extract_lat_longs_from_locations.rb ut &gt; locations.ut
+</pre></div>
+
+<p>for hadoop streaming it's
+</p>
+<div class="pygments_murphy"><pre><span></span>hadoop jar $HADOOP_STREAMING_JAR \
+  -mapper &#39;./extract_lat_longs_from_locations.rb iphone&#39; -reducer /bin/cat \
+  -input locations -output locations.iphone
+hadoop jar $HADOOP_STREAMING_JAR \
+  -mapper &#39;./extract_lat_longs_from_locations.rb ut&#39; -reducer /bin/cat \
+  -input locations -output locations.ut
+</pre></div>
+
+
+<h3>step 3: convert from lat long to mercator coordinates and aggregate into buckets for the heat map</h3>
+<p>in v1 it was
+</p>
+<div class="pygments_murphy"><pre><span></span>cat locations.{ut,iphone} | ./lat_long_to_merc.rb | ./bucket.rb | sort | uniq -c
+</pre></div>
+
+<p>this converts the three tuples { lat, long }
+</p>
+<div class="pygments_murphy"><pre><span></span>35.670086 139.740766
+-23.492420 -46.846916
+35.657570 139.744858
+</pre></div>
+
+<p>into two tuples { frequency, left-offset, top-offset }
+</p>
+<div class="pygments_murphy"><pre><span></span>1 0.36 0.45
+2 0.88 0.28
+</pre></div>
+
+<p>the first two parts, converting to mercator (lat_long_to_merc.rb) and the bucketing (bucket.rb), i'll combine into one script.
+</p>
+<div class="pygments_murphy"><pre><span></span>hadoop jar $HADOOP_STREAMING_JAR \
+  -mapper ./lat_long_to_merc_and_bucket.rb -reducer /bin/cat \
+  -input locations.iphone -input locations.ut -output x_y_points
+</pre></div>
+
+<p>but the use of sort and uniq to aggregate the data is represented by the shuffle and reduce stages of hadoop.
+</p>
+<p>we could use the aggregate functionality of the streaming interface but i'm trying to learn more pig so we'll use that instead. <a href="http://hadoop.apache.org/pig/">pig</a> is a scripting language that translates a pig latin query language into map reduce jobs. my main motivation for using it has been that it's great at doing joins, something i've found to be a <a href="http://matpalm.com/sip/take2_term_frequency.html#hadoop+part+2">big pain</a> to represent in plain map reduce jobs.
+</p>
+<p>( note we didn't do the conversion to mercator and bucketing in pig, the arithmetic operations provided are a bit lacking. )
+</p>
+<p>enter a pig shell running in standalone (ie non hadoop distributed) mode
+</p>
+<div class="pygments_murphy"><pre><span></span>bash&gt; pig -x local
+</pre></div>
+
+<p>load the points
+</p>
+<div class="pygments_murphy"><pre><span></span>grunt&gt; pts = load &#39;x_y_points/part-00000&#39; as (x:float, y:float);
+grunt&gt; describe pts;
+pts: {x: float,y: float}
+grunt&gt; dump pts
+(0.06F,0.32F)
+(0.15F,0.27F)
+(0.16F,0.27F)
+...
+</pre></div>
+
+<p>group them together
+</p>
+<div class="pygments_murphy"><pre><span></span>grunt&gt; buckets = group pts by (x,y);
+grunt&gt; describe buckets;
+buckets: {group: (x: float,y: float),pts: {x: float,y: float}}
+grunt&gt; dump buckets;
+((0.06F,0.32F),{(0.06F,0.32F)})
+((0.15F,0.27F),{(0.15F,0.27F)})
+((0.16F,0.27F),{(0.16F,0.27F),(0.16F,0.27F),(0.16F,0.27F),(0.16F,0.27F)})
+...
+</pre></div>
+
+<p>from the groups emit the size of each bucket, this corresponds to the frequency
+</p>
+<div class="pygments_murphy"><pre><span></span>grunt&gt; freq = foreach buckets { generate group, SIZE(pts) as size; }
+grunt&gt; describe freq;
+freq: {group: (x: float,y: float),size: long}
+grunt&gt; dump freq
+((0.06F,0.32F),1L)
+((0.15F,0.27F),1L)
+((0.16F,0.27F),4L)
+...
+</pre></div>
+
+<p>and based on the sizes we can evaluate the min and max frequencies which we'll use in the colour coding of the heat map
+</p>
+<div class="pygments_murphy"><pre><span></span>grunt&gt; freqs = group freq all;
+grunt&gt; describe freqs;
+freqs: {group: chararray,freq: {group: (x: float,y: float),size: long}}
+grunt&gt; dump freqs;
+(all,{((0.06F,0.32F),1L),((0.15F,0.27F),1L), ... })
+grunt&gt; store freq into &#39;freqs&#39;;&lt;/pre&gt;
+&lt;pre&gt;grunt&gt; min_max = foreach freqs { generate MAX(freq.size) as max, MIN(freq.size) as min; };
+grunt&gt; describe min_max;
+min_max: {max: long,min: long}
+grunt&gt; dump min_max;
+(7L,1L)
+grunt&gt; store min_max into &#39;min_max&#39;;&lt;/pre&gt;
+&lt;pre&gt;bash&gt; cat freqs
+(0.06,0.32)   1
+(0.15,0.27)   1
+(0.16,0.27)   4
+</pre></div>
+
+<p>these call all be run as one command
+</p>
+<div class="pygments_murphy"><pre><span></span>bash&gt; pig -x local -f freqs.pig
+</pre></div>
+
+<p>we just need our final conversion to a javascript snippet to jam into a map page
+</p>
+<div class="pygments_murphy"><pre><span></span>bash&gt; cat freqs | ./as_draw_square.rb 1 7
+</pre></div>
+
+<p>win!
+</p>
+<p>to make things a little different lets use a bigger sample of 475e3 tweets from oct 13 07:00 to 20:00. this results in 10e3 iphone locations (7e3 unique) and 22e3 ut locations (15e3 unique)
+</p>
+<p>lat longs are bucketed into only 478 pixels for map
+</p>
+<p>here's one plot with the raw numbers; highest freq is 9e3 in jakarta
+</p>
+
+<h4>raw frequencies</h4>
+<img class="size-full wp-image-111" title="raw frequencies" src="/blog/imgs/2009/10/raw1.jpg" alt="raw frequencies" width="682" height="529" />
+
+<p>scaling down by log 10 gives a smoother map
+</p>
+
+<h4>log10 frequencies</h4>
+<img class="size-full wp-image-113" title="log10 frequencies" src="/blog/imgs/2009/10/log10.jpg" alt="log10 frequencies" width="682" height="529" />
+
+<p>and here is a comparison of iphone vs ut. without knowing what ut is i can see it's not big in northern europe or japan but it's popular in indonesia.
+</p>
+
+<h4>iphones</h4>
+<img class="size-medium wp-image-120" title="iphones" src="/blog/imgs/2009/10/iphones-300x232.jpg" alt="iphones" width="300" height="232" />
+
+
+<h4>ut</h4>
+<img class="size-medium wp-image-119" title="ut" src="/blog/imgs/2009/10/ut-300x232.jpg" alt="ut" width="300" height="232" />
+
+<p>next steps, animating based on the hour of the day
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2009/10/18/e11-1-from-bash-scripts-to-hadoop/";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

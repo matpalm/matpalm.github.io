@@ -1,0 +1,3030 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed
+  xmlns="http://www.w3.org/2005/Atom"
+  xmlns:thr="http://purl.org/syndication/thread/1.0"
+  xml:lang="en"
+   >
+  <title type="text">brain of mat kelcey</title>
+  <subtitle type="text">thoughts from a data scientist wannabe</subtitle>
+
+  <generator uri="http://blogofile.com/">Blogofile</generator>
+
+  <link rel="alternate" type="text/html" href="http://matpalm.com/blog" />
+  <id>http://matpalm.com/blog/feed/atom/</id>
+  <link rel="self" type="application/atom+xml" href="http://matpalm.com/blog/feed/atom/" />
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[dithernet very slow movie player]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/dithernet_vsmp" />
+    <id>http://matpalm.com/blog/dithernet_vsmp</id>
+    <published>2020-10-21T22:30:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="projects" />
+    <summary type="html"><![CDATA[dithernet very slow movie player]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/dithernet_vsmp"><![CDATA[<h1>very slow movie player</h1>
+<p>it's been about two years since i first saw the awesome
+   <a href="https://medium.com/s/story/very-slow-movie-player-499f76c48b62">very slow movie player</a>
+   project by bryan boyer. i thought it was such an excellent idea but never got around
+   to buying the hardware to make one. more recently though i've seen a couple of references
+   to the project so i decided it was finally time to make one.
+</p>
+<p>one interesting concern about an eink very slow movie player is the screen refresh. simpler
+   eink screens refresh by doing a full cycle of a screen of white or black before displaying
+   the new image. i hated the idea of an ambient slow player doing this every few minutes
+   as it switched frames, so i wanted to make sure i got a piece of hardware that could do
+   incremental update.
+</p>
+<p>after a bit of shopping around i settled on a
+   <a href="https://www.waveshare.com/6inch-hd-e-paper-hat.htm">6 inch HD screen from waveshare</a>
+</p>
+<p>it ticks all the boxes i wanted
+</p>
+<ul>
+ <li>
+     6 inch
+ </li>
+
+ <li>
+     1448×1072 high definition
+ </li>
+
+ <li>
+     comes with a raspberry pi HAT
+ </li>
+
+ <li>
+     and, most importantly, support partial refresh
+ </li>
+</ul>
+<p>this screen also supports grey scale, but only with a flashy full cycle redraw,
+   so i'm going to stick to just black and white since it supports the partial redraw.
+</p>
+<p>note: even though the partial redraw is basically instant it does suffer from a ghosting problem;
+   when you draw a white pixel over a black one things are fine, but if you draw black over
+   white, in the partial redraw, you get a slight ghosting of gray that is present until a
+   full redraw :/
+</p>
+
+<h1>dithering</h1>
+<p>so how do you display an image when you can only show black and white?
+   dithering! here's an example of a 384x288 RGB image dithered using
+   <a href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image.convert">PILS implementation of the Floyd-Steinberg algorithm</a>
+</p>
+<table class='data'>
+<tr><td><img src="/blog/imgs/2020/dn/eg.dither.png" /></td></tr>
+<tr><td>original RGB vs dithered version</td></tr>
+</table>
+
+<p>it makes intuitive sense that you could have small variations in the exact locations of the
+   dots as long as you get the densities generally right. s
+   so there's a reasonable question then; how do you dither in such a way that you get a
+   good result, but with minimal pixel changes from a previous frame? (since we're
+   motivated on these screens to change as little as possible)
+</p>
+<p>there are two approaches i see
+</p>
+<p>1) spend 30 minutes googling for a solution that no doubt someone came up with 20 years
+   ago that can be implemented in 10 lines of c running at 1000fps ...
+</p>
+<p>2) .... or train an
+   <a href="https://jax.readthedocs.io/">jax</a>
+   based GAN to generate the dithers with a loss balancing a good dither vs no pixel change. :P
+</p>
+
+<h1>the data</h1>
+<p>when building a very slow movie player the most critical decision is...
+   what movie to play?
+   i really love the 1979 classic <a href="https://www.imdb.com/title/tt0078748/">alien</a>,
+   it's such a great dark movie, so i thought i'd go with it.
+   the movie is 160,000 frames so at a play back rate of a frame every 200 seconds
+   it'll take just over a year to finish.
+</p>
+<p>note that in this type of problem there is no concern around overfitting.
+   we have access to all data going in and so it's fine to overfit as much as we like;
+   as long as we're minimising whatever our objective is we're good to go.
+</p>
+
+<h1>v1: the vanilla unet</h1>
+<p>i started with a
+   <a href="https://arxiv.org/abs/1505.04597">unet</a>
+   that maps 3 channel RGB images to a single channel dither.
+</p>
+<table class='data'>
+<tr><td><img src="/blog/imgs/2020/dn/models.v1.png" /></td></tr>
+<tr><td>v1 architecture</td></tr>
+</table>
+
+<p>i tinkered a bit with the architecture but didn't spend too much time tuning it.
+   for the final v3 result i ended with a pretty vanilla stack of encoders &amp; decoders
+   (with skip connections connecting an encoder to the decoder at the same spatial resolution)
+   each encoder/decoder block uses a residual like shortcut around a couple of convolutions.
+   nearest neighbour upsampling gave a nicer result than deconvolutions in the decoder
+   for the v3 result.
+   also, <a href="https://arxiv.org/abs/1606.08415">gelu</a> is my new favorite activation :)
+</p>
+<p>for v1 i used a binary cross entropy loss of P(white) per pixel
+   ( since it's what worked well for my
+   <a href="http://matpalm.com/blog/counting_bees/">bee counting project</a> )
+</p>
+<p>as always i started by overfitting to a single example to get a baseline feel for capacity required.
+</p>
+<table class='data'>
+<tr><td>
+<img src="/blog/imgs/2020/dn/overfit.png" />
+</td></tr>
+<tr><td>
+v1 overfit result
+</td></tr>
+</table>
+
+<p>when scaling up to the full dataset i switched to training on half resolution images
+   against a patch size of 128. working on half resolution consistently gave a better
+   result than working with the full resolution.
+</p>
+<p>as expected though this model gave us the classic type of problem we see with
+   straight unet style image translation; we get a reasonable sense of the shapes, but no
+   fine details around the dithering.
+</p>
+<table class='data'>
+<tr><td>
+<img src="/blog/imgs/2020/dn/v1.upsample.png" />
+</td></tr>
+<tr><td>
+v1 vanilla unet with upsampling example
+</td></tr>
+</table>
+
+<p>side notes:
+</p>
+<ul>
+ <li>
+     for this v1 version using deconvolutions in the decoder
+     (instead of nearest neighbour upsampling) actually looked pretty good!
+     nicely captured texture for a dither with a surprisingly small network.
+ </li>
+
+ <li>
+     i actually did some experiments using branches in the decoder for both upsampling
+     and deconvolutions but the deconvs always dominated too much. i thought that would
+     allow the upsampling to work as a kind of residual to the deconv but it never happened.
+ </li>
+</ul>
+<table class='data'>
+<tr><td>
+<img src="/blog/imgs/2020/dn/v1.deconv.png" />
+</td></tr>
+<tr><td>
+v1 vanilla unet with deconvolution example
+</td></tr>
+</table>
+
+
+<h1>v2: to the GAN...</h1>
+<p>for v2 i added a GAN objective in an attempt to capture finer details
+</p>
+<table class='data'>
+<tr><td>
+<img src="/blog/imgs/2020/dn/models.v2.png" />
+</td></tr>
+<tr><td>
+v2 architecture
+</td></tr>
+</table>
+
+<p>i started with the original
+   <a href="https://arxiv.org/abs/1611.07004">pix2pix</a>
+   objective but reasonably quickly moved to use a
+   <a href="https://arxiv.org/abs/1701.07875">wasserstein</a>
+   critic style objective since i've always found it more stable.
+</p>
+<p>the generator (G) was the same as the unet above with the discriminator (D) running patch based.
+   at this point i also changed the reconstruction loss from a binary objective to just L1.
+   i ended up using batchnorm in D, but not G.
+   to be honest i only did a little did of manual tuning, i'm sure there's a better result
+   hidden in the hyperparameters somewhere.
+</p>
+<p>so, for this version, the loss for G has two components
+</p>
+<pre>
+1. D(G(rgb))             # fool D
+2. L1(G(rgb), dither)    # reconstruct the dither
+</pre>
+
+<p>very quickly (i.e. in &lt; 10mins ) we get a reasonable result that is started to
+   show some more detail than just the blobby reconstruction.
+</p>
+<table class='data'>
+<tr><td>
+<img src="/blog/imgs/2020/dn/v2.eg.png" />
+</td></tr>
+<tr><td>
+v2 partial trained eg
+</td></tr>
+</table>
+
+<p>note: if the loss weight of 2) is 0 we degenerate to v1
+   (which proved a useful intermediate debugging step).
+   at this point i didn't want to tune to much since the final v3 is coming...
+</p>
+
+<h1>v3: a loss related to change from last frame</h1>
+<p>for v3 we finally introduce a loss relating the previous frame
+   (which was one of the main intentions of the project in the first place)
+</p>
+<p>now G takes not just the RGB image, but the dither of the previous frame.
+</p>
+<table class='data'>
+<tr><td>
+<img src="/blog/imgs/2020/dn/models.v3.png" />
+</td></tr>
+<tr><td>
+v3 architecture
+</td></tr>
+</table>
+
+<p>the loss for G now has three parts
+</p>
+<pre>
+1. D(G(rgb_t1)) => real      # fool D
+2. L1(G(rgb_t1), dither_t1)  # reconstruct the dither
+3. L1(G(rgb_t1), dither_t0)  # don't change too much from the last frame
+</pre>
+
+<p>normally with a network that takes as input the same thing it's outputting
+   we have to be careful to include things like teacher forcing.
+   but since we don't intend to use this network for any kind of rollouts
+   we can just always feed the "true" dithers in where required.
+   having said that, rolling out the dithers from this network would be interesting :D
+</p>
+
+<h1>digression; the troublesome scene changes</h1>
+<p>the third loss objective, not changing too many pixels from the last frame,
+   works well for generally stationary shots
+   but is disastrous for scene changes :/
+</p>
+<p>consider the following graph for a sequence of frames showing the pixel difference
+   between frames.
+</p>
+<img src="/blog/imgs/2020/dn/pixel_diff_between_scenes.png" />
+
+<p>when there is a scene change we observe a clear "spike" in pixel diff. my first thought
+   was to look for these and do a full redraw for them. it's very straightforward to
+   find them (using a simple z-score based anomaly detector on a sliding window) but
+   the problem is that it doesn't pick up the troublesome case of a panning shot where we don't
+   have a scene change exactly. in these cases there is no abrupt scene change, but there
+   are a lot of pixels changing so we end up seeing a lot of ghosting.
+</p>
+<p>i spent ages tinkering with the best way to approach this before deciding that a simple
+   approach of <code>num_pixels_changed_since_last_redraw &gt; threshold</code> was good enough to decide
+   if a full redraw was required (with a cooldown to ensure we not redrawing all the time)
+</p>
+
+<h1>... and back to v3</h1>
+<p>the v3 network gets a very good result <em>very</em> quickly; unsurprisingly since the dither at time
+   t0 provided to G is a pretty good estimate of the dither at t1 :)
+   i.e. G can get a good result simply by copying it!
+</p>
+<p>the following scenario shows this effect...
+</p>
+<p>consider three sequential frames, the middle one being a scene change.
+</p>
+<img src="/blog/imgs/2020/dn/v3.scene_eg.1.png" />
+
+<p>at the very start of training the reconstruction loss is dominant and
+   we get blobby outlines of the frame.
+</p>
+<img src="/blog/imgs/2020/dn/v3.scene_eg.2.png" />
+
+<p>but as the contribution from the dither at time t0 kicks it things look good in general but
+   the frames at the scene change end up being a ghosted mix attempt to copy through the old
+   frame along with dithering the new one.
+   (depending on the relative strength of the loss terms of G).
+</p>
+<img src="/blog/imgs/2020/dn/v3.scene_eg.3.png" />
+
+
+<h1>the final result</h1>
+<p>so the v3 version generally works and i'm sure with some more tuning i could get a better result
+   but, as luck would have it, i actually find the results from v2 more appealing when testing
+   on the actual eink screen. so even though the intention was do something like v3 i'm going to end
+   up running something more like v2 (as shown in these couple of examples (though the resolution
+   does it no justice (not to mention the fact the player will run about 5000 times slower than these
+   gifs)))
+</p>
+<table class='data'><tr>
+<td><img src="/blog/imgs/2020/dn/f_00048000.gif"/></td>
+<td><img src="/blog/imgs/2020/dn/f_00067400.gif"/></td>
+</tr><tr>
+<td><img src="/blog/imgs/2020/dn/f_00082400.gif"/></td>
+<td><img src="/blog/imgs/2020/dn/f_00107045.gif"/></td>
+</tr><tr>
+<td><img src="/blog/imgs/2020/dn/f_00120600.gif"/></td>
+<td><img src="/blog/imgs/2020/dn/f_00145400.gif"/></td>
+</tr></table>
+
+
+<h1>player case</h1>
+<p>i'll update this section when i get a proper frame made (though i might try myself?) but for now the
+   prototype lives balanced precariously on a piece of foam below it's younger sibling pi zero eink screen
+   running game of life.
+</p>
+<table class='data'>
+<tr><td><img src="/blog/imgs/2020/dn/prototype.png" /></td></tr>
+<tr><td>prototype on desk</td></tr>
+</table>
+
+
+<h1>todos</h1>
+<ul>
+ <li>
+     for reconstruction and frame change i used L1 loss, but that's not exactly what we
+     want. since we want to avoid the ghosting (white changing to black resulting in grey)
+     we should try to avoid white to black but ignore black to white.
+ </li>
+
+ <li>
+     we might be able to better handle scene changes by also including a
+     loss component around the <em>next</em> frame.
+ </li>
+
+ <li>
+     there's a padding issue where i train G on patches but when it's run on the full res
+     version we get an edge artefact the size of the original patch (see image below).
+     as a hacky fix i just padded the RGB image before passing it to G in the final run, but this problem could
+     be fixed by changing the padding schema during training.
+ </li>
+</ul>
+<img src="/blog/imgs/2020/dn/todo_padding.png"/>
+
+
+<h1>code</h1>
+<p><a href="https://github.com/matpalm/dither_net">all on github</a>
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[ensemble networks]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/ensemble_nets" />
+    <id>http://matpalm.com/blog/ensemble_nets</id>
+    <published>2020-09-17T06:30:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="projects" />
+    <category scheme="http://matpalm.com/blog" term="ensemble_nets" />
+    <category scheme="http://matpalm.com/blog" term="jax" />
+    <summary type="html"><![CDATA[ensemble networks]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/ensemble_nets"><![CDATA[<h1>overview</h1>
+<p>ensemble nets are a method of representing an ensemble of
+   models as one single logical model. we use
+   <a href="https://github.com/google/jax">jax's</a>
+   <a href="https://github.com/google/jax#auto-vectorization-with-vmap">vmap</a>
+   operation to batch over not
+   just the inputs but additionally sets of model parameters.
+   we propose some
+   approaches for training ensemble nets and introduce logit dropout as
+   a way to improve ensemble generalisation as well as provide
+   a method of calculating model confidence.
+</p>
+
+<h1>background</h1>
+<p>as part of my "embedding the chickens" project i wanted to use
+   random projection embedding networks to generate pairs of similar
+   images for weak labelling. since this technique works really well
+   in an ensemble i did some playing around and got the ensemble
+   running pretty fast in jax. i wrote it up in
+   <a href="/blog/jax_random_embedding_ensemble_network/">this blog post</a>.
+   since doing that i've been wondering how to not just run an
+   ensemble net forward pass but how you might <em>train</em> one too...
+</p>
+
+<h1>dataset &amp; problem</h1>
+<p>for this problem we'll work with the
+   <a href="https://github.com/phelber/eurosat">eurosat/rgb dataset</a>.
+   eurosat/rgb is a 10 way classification task across 27,000 64x64 RGB images
+</p>
+<p>here's a sample image from each of the ten classes...
+</p>
+<img src="/blog/imgs/2020/en/sample_images.png" />
+
+
+<h1>base line model</h1>
+
+<h2>architecture</h2>
+<p>as a baseline we'll start with a simple non ensemble network. it'll consist of
+   a pretty vanilla convolutional stack, global spatial pooling, one dense layer
+   and a final 10 way classification layer.
+</p>
+<table class='data'>
+<tr><td><b>layer</b></td><td><b>shape</b></td></tr>
+<tr><td>input</td><td>(B, 64, 64, 3)</td></tr>
+<tr><td>conv2d</td><td>(B, 31, 31, 32)</td></tr>
+<tr><td>conv2d</td><td>(B, 15, 15, 64)</td></tr>
+<tr><td>conv2d</td><td>(B, 7, 7, 96)</td></tr>
+<tr><td>conv2d</td><td>(B, 3, 3, 96)</td></tr>
+<tr><td>global spatial pooling</td><td>(B, 96)</td></tr>
+<tr><td>dense</td><td>(B, 96)</td></tr>
+<tr><td>logits (i.e. dense with no activation)</td><td>(B, 10)</td></tr>
+</table>
+
+<p>all convolutions use 3x3 kernels with a stride of 2. the conv layers and the single
+   dense layer use a gelu activation. batch size is represented by <code>B</code>.
+</p>
+<p>we use no batch norm, no residual connections, nothing fancy at all.
+   we're more interested in the training than getting the absolute best value.
+   this network is small enough that we can train it fast but it still gives
+   reasonable results. residual connections would be trivial to add but batch
+   norm would be a bit more tricky given how we'll build the ensemble net later.
+</p>
+<p>we'll use <a href="https://github.com/google/objax">objax</a> to manage the model params
+   and orchestrate the training loops.
+</p>
+
+<h2>training setup</h2>
+<p>training for the baseline will be pretty standard but let's walk through it
+   so we can call out a couple of specific things for comparison with an ensemble
+   net later...
+</p>
+<p>( we'll use 2 classes in these diagrams for ease of reading though
+   the eurosat problem has 10 classes. )
+</p>
+<img src="/blog/imgs/2020/en/d.non_ensemble.png" />
+
+<p>walking through left to right...
+</p>
+<ol>
+ <li>
+     input is a batch of images; <code>(B, H, W, 3)</code>
+ </li>
+
+ <li>
+     the output of the first convolutional layers with stride=2 &amp; 32 filters will be <code>(B, H/2, W/2, 32)</code>
+ </li>
+
+ <li>
+     the network output for an example two class problem are logits shaped <code>(B, 2)</code>
+ </li>
+
+ <li>
+     for prediction probabilities we apply a softmax to the logits
+ </li>
+
+ <li>
+     for training we use cross entropy, take the mean loss and apply backprop
+ </li>
+</ol>
+<p>we'll train on 80% of the data, do hyperparam tuning on 10% (validation set) and
+   report final results on the remaining 10% (test set)
+</p>
+<p>for hyperparam tuning we'll use <a href="https://ax.dev/">ax</a> on very short runs of 30min
+   for all trials.
+   for experiment tracking we'll use <a href="https://www.wandb.com/">wandb</a>
+</p>
+<p>the hyperparams we'll tune for the baseline will be...
+</p>
+<table class='data'>
+<tr><td><b>param</b></td><td><b>description</b></td></tr>
+<tr>
+<td>max_conv_size</td>
+<td>conv layers with be sized as [32, 64, 128, 256]</br>
+up to a max size of max_conv_size.</br>
+i.e. a max_conv_size of 75 would imply sizes [32, 64, 75, 75]</br></td>
+</tr>
+<tr>
+<td>dense_kernel_size</td>
+<td>how many units in the dense layer before the logits</td>
+</tr>
+<tr>
+<td>learning_rate</td>
+<td>learning rate for optimiser</td>
+</tr>
+</table>
+
+<p>we'd usually make choices like the conv sizes being powers of 2 instead of a smooth value but
+   i was curious about the behaviour of ax for tuning.
+   also we didn't bother with a learning rate schedule; we just use simple early
+   stopping (against the validation set)
+</p>
+<img src="/blog/imgs/2020/en/single_model.all_runs.png" />
+
+<p>the best model of this group gets an accuracy of 0.913 on the validation set
+   and 0.903 on the test set. ( usually not a fan of accuracy but the classes
+   are pretty balanced so accuracy isn't a terrible thing to report. )
+</p>
+<table class='data'>
+<tr><td><b>model</td><td><b>validation</b></td><td><b>test</b></td></tr>
+<tr><td>baseline</td><td>0.913</td><td>0.903</td></tr>
+</table>
+
+
+<h1>ensemble net model</h1>
+<p>so what then is an ensemble net?
+</p>
+<p>logically we can think about our models as being functions that take two
+   things 1) the parameters of the model and 2) an input example. from
+   these they return an output.
+</p>
+<pre class="prettyprint"><code class="language-python"># pseudo code
+model(params, input) -> output
+</code></pre>
+
+<p>we pretty much always though run a batch of <code>B</code> inputs at once.
+   this can be easily represented as a leading axis on the input and allows us to
+   make better use of accelerated hardware as well as providing some benefits regarding
+   learning w.r.t gradient variance.
+</p>
+<p>jax's
+   <a href="https://github.com/google/jax#auto-vectorization-with-vmap">vmap</a>
+   function makes this trivial to implement by vectorising a call to the model
+   across a vector of inputs to return a vector of outputs.
+</p>
+<pre class="prettyprint"><code class="language-python"># pseudo code
+vmap(partial(model, params))(b_inputs) -> b_outputs
+</code></pre>
+
+<p>interestingly we can use this same functionality to batch not across independent
+   inputs but instead batch across independent sets of <code>M</code> model params. this effectively
+   means we run the <code>M</code> models in parallel. we'll call these <code>M</code> models sub models
+   from now on.
+</p>
+<pre class="prettyprint"><code class="language-python"># pseudo code
+vmap(partial(model, input))(m_params) -> m_outputs
+</code></pre>
+
+<p>and there's no reason why we can't do both batching across both a set of inputs
+   as well as a set of model params at the same time.
+</p>
+<pre class="prettyprint"><code class="language-python"># pseudo code
+vmap(partial(model)(b_inputs, m_params) -> b_m_outputs
+</code></pre>
+
+<p>for a lot more specifics on how i use jax's vmap to support this
+   see my prior post on
+   <a href="http://matpalm.com/blog/jax_random_embedding_ensemble_network/">jax random embedding ensemble nets</a>.
+</p>
+<p>and did somebody say TPUs? turns out we can make ensemble nets run
+   super fast on TPUs by simply swapping the vmap calls for pmap ones!
+   using pmap on a TPU will have each ensemble net run in parallel! see
+   <a href="https://colab.research.google.com/drive/1ijI77AlYqGOEXm5BqtnNomtUPnFr26o0?usp=sharing">this colab</a>
+   for example code running pmap on TPUs
+</p>
+
+<h2>single_input ensemble</h2>
+<p>let's walk through this in a bit more detail with an ensemble net with two sub models.
+</p>
+<img src="/blog/imgs/2020/en/d.single_input.png" />
+
+<ol>
+ <li>
+     our input is the same as for the baseline; a batch of images <code>(B, H, W, 3)</code>
+ </li>
+
+ <li>
+     the output of the first conv layer now though has an additional <code>M</code> axis to
+represent the outputs from the <code>M</code> models and results in <code>(M, B, H/2, W/2, 32)</code>
+ </li>
+
+ <li>
+     this additional <code>M</code> axis is carried all the way through to the logits <code>(M, B, 2)</code>
+ </li>
+
+ <li>
+     at this point we have <code>(M, B, 2)</code> logits but we need <code>(B, 2)</code>
+to compare against <code>(B,)</code> labels. with logits this reduction is
+very simple; just sum over the <code>M</code> axis!
+ </li>
+
+ <li>
+     for prediction probabilities we again apply a softmax
+ </li>
+
+ <li>
+     for training we again use cross entropy to calculate the mean loss and apply backprop
+ </li>
+</ol>
+<p>this gives us a way to train the sub models to act as a single ensemble unit as well as
+   a way to run inference on the ensemble net in a single forward pass.
+</p>
+<p>we'll refer to this approach as <strong>single_input</strong> since we are starting with a single
+   image for all sub models.
+</p>
+
+<h2>multi_input ensemble</h2>
+<p>an alternative approach to training is to provide a separate image per sub model.
+   how would things differ if we did that?
+</p>
+<img src="/blog/imgs/2020/en/d.multi_input.png" />
+
+<ol>
+ <li>
+     now our input has an additional <code>M</code> axis since it's a different batch per sub model.
+<code>(M, B, H, W, 3)</code>
+ </li>
+
+ <li>
+     the output of the first conv layers carries this <code>M</code> axis through <code>(M, B, H/2, W/2, 32)</code>
+ </li>
+
+ <li>
+     which is carried to the logits <code>(M, B, 2)</code>
+ </li>
+
+ <li>
+     in this case though we have <code>M</code> seperate labels for the <code>M</code> inputs so we don't have to combine the logits at all, we can just calculate the mean loss across the <code>(M, B)</code> training instances.
+ </li>
+</ol>
+<p>we'll call this approach <strong>multi_input</strong>.
+   note that this way of feeding separate images only really applies to training;
+   for inference if we want the representation of the ensemble it only really makes
+   sense to send a batch of <code>(B)</code> images, not <code>(M, B)</code>.
+</p>
+
+<h2>training the ensemble net</h2>
+<p>let's do some tuning as before but with a couple of additional hyper
+   parameters that this time we'll sweep across.
+</p>
+<p>we'll do each of the six combos of <code>[(single, 2), (single, 4), (single, 8),
+(multi, 2), (multi, 4), (multi, 8)]</code> and tune for 30 min for each.
+</p>
+<img src="/blog/imgs/2020/en/single_multi_sweeps.png" />
+
+<p>when we poke around and facet by the various params there's only one that makes
+   a difference; single_input mode consistently does better than multi_input.
+</p>
+<p>in hindsight this is not surprising i suppose since single_input mode
+   is effectively training one network with xM parameters
+   (with an odd summing-of-logits kind of bottleneck)
+</p>
+<img src="/blog/imgs/2020/en/validation_boxplot.png" />
+
+
+<h1>confusion matrix per sub model</h1>
+
+<h2>single_input ensemble</h2>
+<p>when we check the best single_input 4 sub model ensemble net we get an accuracy of 0.920
+   against the validation set and 0.901 against the test set
+</p>
+<table class='data'>
+<tr><td><b>model</td><td><b>validation</b></td><td><b>test</b></td></tr>
+<tr><td>baseline</td><td>0.913</td><td>0.903</td></tr>
+<tr><td>single_input</td><td>0.920</td><td>0.901</td></tr>
+</table>
+
+<p>looking at the confusion matrix the only
+   really thing to note is the slight confusion between 'Permanent Crop' and
+   'Herbaceous Vegetation' which is reasonable given the similarity in RGB.
+</p>
+<img src="/blog/imgs/2020/en/cm.simo.ensemble.png" />
+
+<p>we can also review the confusion matrices of each of the 4 sub models run as
+   individuals; i.e. not working as an ensemble. we observe the quality of each isn't
+   great with accuracies of [0.111, 0.634, 0.157, 0.686].
+   again makes sense since they had been trained only to work together. that first model
+   really loves 'Forests', but don't we all...
+</p>
+<table>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.simo.model_0.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.simo.model_1.png" /></td>
+</tr>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.simo.model_2.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.simo.model_3.png" /></td>
+</tr>
+</table>
+
+
+<h2>multi_input ensemble</h2>
+<p>the performance of the multi_input ensemble isn't quite as good with
+   a validation accuracy of 0.902 and test accuracy of 0.896.
+   the confusion matrix looks similar to the single_input mode version.
+</p>
+<table class='data'>
+<tr><td><b>model</td><td><b>validation</b></td><td><b>test</b></td></tr>
+<tr><td>baseline</td><td>0.913</td><td>0.903</td></tr>
+<tr><td>single_input</td><td>0.920</td><td>0.901</td></tr>
+<tr><td>multi_input</td><td>0.902</td><td>0.896</td></tr>
+</table>
+
+<img src="/blog/imgs/2020/en/cm.mimo.ensemble.png" />
+
+<p>this time though the output of each of the 4 sub models individually is much stronger
+   with accuracies of [0.842, 0.85, 0.84, 0.83, 0.86]. this makes sense
+   since they were trained to not predict as one model.
+   it is nice to see at least that the ensemble result is higher than any one model.
+   and reviewing their confusion matrices they seem to specialise in different
+   aspects with differing pairs of confused classes.
+</p>
+<table>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.mimo.model_0.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.mimo.model_1.png" /></td>
+</tr>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.mimo.model_2.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.mimo.model_3.png" /></td>
+</tr>
+</table>
+
+
+<h1>dropping logits</h1>
+<p>the main failing of the single_input approach is that the sub models
+   are trained to always operate together; that breaks some of
+   the core ideas of why we do ensembles in the first place. as i was
+   thinking about this i was reminded that the core idea of dropout is
+   quite similar; when nodes in a dense layer are running together
+   we can drop some out to ensure other nodes don't overfit to
+   expecting them to always behave in a particular way.
+</p>
+<p>so let's do the same with the sub models of the ensemble. my first thought
+   around this was that the most logical place would be at the logits. we can
+   zero out the logits of a random half of the models during training and,
+   given the ensembling is implemented by summing the logits, this effectively
+   removes those models from the ensemble.
+   the biggest con though is the waste of the forward pass of running those sub
+   models in the first place.
+   during inference we don't have to do anything in terms of masking &amp; there's no
+   need to do any rescaling ( that i can think of ).
+</p>
+<p>so how does it do? accuracy is 0.914 against the validation set and 0.911 against
+   the test set; the best result so far! TBH though, these numbers are pretty
+   close anyways so maybe we were just lucky ;)
+</p>
+<table class='data'>
+<tr><td><b>model</td><td><b>validation</b></td><td><b>test</b></td></tr>
+<tr><td>baseline</td><td>0.913</td><td>0.903</td></tr>
+<tr><td>single_input</td><td>0.920</td><td>0.901</td></tr>
+<tr><td>multi_input</td><td>0.902</td><td>0.896</td></tr>
+<tr><td>logit drop</td><td>0.914</td><td>0.911</td></tr>
+</table>
+
+<img src="/blog/imgs/2020/en/cm.simo_ld.ensemble.png" />
+
+<p>the sub models are all now doing OK with accuracies of
+   [0.764, 0.827, 0.772, 0.710]. though the sub models aren't as
+   strong as the sub models of the multi_input mode, the overall
+   performance is the best. great! seems like a nice compromise
+   between the two!
+</p>
+<table>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.simo_ld.model_0.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.simo_ld.model_1.png" /></td>
+</tr>
+<tr>
+<td><img src="/blog/imgs/2020/en/cm.simo_ld.model_2.png" /></td>
+<td><img src="/blog/imgs/2020/en/cm.simo_ld.model_3.png" /></td>
+</tr>
+</table>
+
+
+<h1>wait! don't drop logits, drop models instead!</h1>
+<p>the main problem i had with dropping logits is that there
+   is a wasted forward pass for half the sub models. then i realised
+   why run the models at all? instead of dropping logits we can just
+   choose, through advanced indexing, a random half of the models to
+   run a forward pass through. this has the same effect of running a random
+   half of the models at a time but only requires half the forward pass
+   compute. this approach of dropping models is what the code currently does.
+   (though the dropping of logits is in the git history)
+</p>
+
+<h1>using the sub models to measure confidence</h1>
+<p>ensembles also provide a clean way of measuring confidence of
+   a prediction. if the variance of predictions across sub models is low
+   it implies the ensemble as a whole is confident.
+   alternatively if the variance is high it implies the ensemble is not confident.
+</p>
+<p>with the ensemble model that has been trained with logit dropout we can
+   get an idea of this variance by considering the ensemble in a hold-one-out
+   fashion; we can obtain <code>M</code> different predictions from the ensemble
+   by running it as if each of the <code>M</code> sub models was not present (using the same
+   idea as the logit dropout).
+</p>
+<p>consider a class that the ensemble is very good at; e.g. 'Sea &amp; Lake'.
+   given a batch of 8 of these images across an ensemble net with 4 sub
+   models we get the following prediction mean and stddevs.
+</p>
+<table class='data'>
+<tr><td><b>idx</b></td>
+<td><b>y_pred</b></td>
+<td><b>mean(P(class))</b></td>
+<td><b>std(P(class))</td></b></tr>
+<tr><td>0</td><td>Sea & Lake</td><td>0.927</td><td>0.068</td></tr>
+<tr><td>1</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+<tr><td>2</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+<tr><td>3</td><td>Sea & Lake</td><td>0.999</td><td>0.001</td></tr>
+<tr><td>4</td><td>Sea & Lake</td><td>0.989</td><td>0.019</td></tr>
+<tr><td>5</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+<tr><td>6</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+<tr><td>7</td><td>Sea & Lake</td><td>1.000</td><td>0.000</td></tr>
+</table>
+
+<p>whereas when we look at a class the model is not so sure of,
+   e.g. 'Permanent Crop', we can see that for the lower probability cases
+   have a higher variance across the models.
+</p>
+<table class='data'>
+<tr><td><b>idx</b></td>
+<td><b>y_pred</b></td>
+<td><b>mean(P(class))</b></td>
+<td><b>std(P(class))</td></b></tr>
+<tr><td>0</td><td>Industrial Buildings</td><td>0.508</td><td>0.282</td></tr>
+<tr><td>1</td><td>Permanent Crop</td><td>0.979</td><td>0.021</td></tr>
+<tr><td>2</td><td>Permanent Crop</td><td>0.703</td><td>0.167</td></tr>
+<tr><td>3</td><td>Herbaceous Vegetation</td><td>0.808</td><td>0.231</td></tr>
+<tr><td>4</td><td>Permanent Crop</td><td>0.941</td><td>0.076</td></tr>
+<tr><td>5</td><td>Permanent Crop</td><td>0.979</td><td>0.014</td></tr>
+<tr><td>6</td><td>Permanent Crop</td><td>0.833</td><td>0.155</td></tr>
+<tr><td>7</td><td>Permanent Crop</td><td>0.968</td><td>0.025</td></tr>
+</table>
+
+
+<h1>conclusions</h1>
+<ul>
+ <li>
+     jax vmap provides a great way to represent an ensemble in a single ensemble net.
+ </li>
+
+ <li>
+     we have a couple of options on how to train an ensemble net.
+ </li>
+
+ <li>
+     the single_input approach gives a good result, but each sub model is poor by itself.
+ </li>
+
+ <li>
+     multi_input trains each model to predict well, and the ensemble gets a bump.
+ </li>
+
+ <li>
+     logit dropout gives a way to stop the single_input ensemble from overfitting by
+     preventing sub models from specialising.
+ </li>
+
+ <li>
+     variance across the sub models predictions gives a hint of prediction confidence.
+ </li>
+</ul>
+
+<h1>TODOs</h1>
+<ul>
+ <li>
+     compare the performance of single_input mode vs multi_input mode normalising for
+     the number of effective parameters ( recall; single_input mode, without logit dropout,
+     is basically training a single xM param large model )
+ </li>
+
+ <li>
+     what is the effect of sharing an optimiser? would it be better to train each with
+     seperate optimisers? can't see why; but might be missing something..
+ </li>
+</ul>
+
+<h1>code</h1>
+<p><a href="https://github.com/matpalm/ensemble_net">all on github</a>
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[solving cartpole... by evolving the raw bytes of a 1.4KB tflite microcontroller serialised model]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/evolving_cartpole_flat_buffers" />
+    <id>http://matpalm.com/blog/evolving_cartpole_flat_buffers</id>
+    <published>2019-09-13T00:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="projects" />
+    <summary type="html"><![CDATA[solving cartpole... by evolving the raw bytes of a 1.4KB tflite microcontroller serialised model]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/evolving_cartpole_flat_buffers"><![CDATA[<h1>what <em>is</em> cartpole?</h1>
+<p>ahhhh, good old cartpole, a favorite for baselining reinforcement learning algorithms! for those that haven't seen it the cartpole is a simple, but not completely trivial, control problem where an agent must keep an inverted pendulum balanced by nudging a cart either left or right.
+</p>
+<p><a href="https://github.com/openai/gym/wiki/CartPole-v0">the openai gym version</a> is based on an observation of 4 values (the position / velocity of the cart &amp; the angle / tip velocity of the pole) where the environment awards +1 reward for every time step the pendulum is kept up and terminates when either 1) the pole is angled too far off vertical 2) the cart moves too far from it's starting position or 3) 200 time steps have passed.
+</p>
+<p>for this experiment we'll run trials using this environment where we attempt the problem 10 times, this gives a max possible reward score of 2,000. note: a score of 1950 would pass as 'solved' according to the definition of this environment.
+</p>
+<img src="/blog/imgs/2019/ec/cartpole.png"/>
+
+
+<h1>a random action baseline</h1>
+<p>as a baseline we'll use a random agent that nudges left/right randomly.
+   as expected it's not great. running 100 trials the median is about ~220
+</p>
+<img src="/blog/imgs/2019/ec/random_choice.png"/>
+
+
+<h1>a random network baseline</h1>
+<p>let's try to represent the control using a simple network of 19 parameters
+</p>
+<pre>
+Layer (type)     Output Shape   Param #
+========================================
+i (InputLayer)   [(None, 4)]    0        # 4d input
+h1 (Dense)       (None, 2)      10       # 2 node hidden (relu)
+h2 (Dense)       (None, 2)      6        # 2 node hidden (relu)
+o (Dense)        (None, 1)      3        # P(nudge_left)
+========================================
+Total params: 19
+</pre>
+
+<p>when we try random initialisations of this network we see it generally does worse
+   than the random action, the median is now 95, but occasionally does much better.
+   recall the environment says a sustained score of 1950 is solved.
+</p>
+<img src="/blog/imgs/2019/ec/random_agent.png"/>
+
+<p>will those occasional wins be enough signal to capture with an optimisation?
+</p>
+
+<h1>the covariance matrix adaptation evolution strategy</h1>
+<p>rather than training this network with the traditional RL approach let's try
+   to evolve a solution using an evolutionary strategy!
+</p>
+<p>we'll start with the
+   covariance matrix adaptation evolution strategy
+   <a href="https://en.wikipedia.org/wiki/CMA-ES">CMS-ES</a>
+   ( using the <a href="https://pypi.org/project/cma/">cma</a> lib )
+</p>
+<p>as for all evolutionary approaches one main thing to decide is what
+   representation to use. a key design aspect of CMA is that solutions are just
+   samples from a multivariate normal &amp; this actually works well for our problem,
+   we'll just have solutions in R^19 representing the 19 weights and biases
+   of the network.
+</p>
+<p>if we evolve a population of 20 members and plot the performance
+   of the elite member from each generation we get a "solved" solution after
+   only about 8 generations..
+</p>
+<img src="/blog/imgs/2019/ec/cma.png"/>
+
+<p>with a population size of 20 that's only 160 trials, not bad! to be honest
+   in the past i'd collected x10 that #samples with a random agent
+   when filling a replay buffer before any deep RL attempt o_O
+</p>
+
+<h1>simple genetic algorithm for the 19 weights</h1>
+<p>the CMA approach works but, for reasons we'll come back to, let's try it
+   using a simpler style of
+   <a href="https://en.wikipedia.org/wiki/Genetic_algorithm">genetic algorithm</a>.
+</p>
+<p>we'll start with an initial
+   population whose weights come directly from the initialised keras model,
+   but we'll evolve them using just a standard genetic algorithm using
+   just a <a href="https://en.wikipedia.org/wiki/Crossover_%28genetic_algorithm%29">crossover operator</a>
+</p>
+<p><img src="/blog/imgs/2019/ec/OnePointCrossover.svg"/>
+   <small>image from wikipedia</small>
+</p>
+<p>the simplest genetic algorithm requires only two things from us...
+</p>
+<ol>
+ <li>
+     the ability to be able to generate new members
+ </li>
+
+ <li>
+     an implementation of the crossover function that takes two "parent" members and generates two valid new "children"
+ </li>
+</ol>
+<p>note: we'll use a really simple crossover operator; pick a random crossover point and combine the first part of one parent and the second part of the other. for a fixed length representation, like the 19 weights, this generates valid children without us having to do anything else. not all representations automatically do this; e.g. have a think about a representation for the travelling salesman problem that is just a random ordering of the cities...
+</p>
+<p>we'll use a population of 20 again and for each generation we'll
+</p>
+<ul>
+ <li>
+     keep the 2 best performing members (elitism)
+ </li>
+
+ <li>
+     introduce 2 completely new members (diversity)
+ </li>
+
+ <li>
+     "breed" the remaining 18 using crossover
+ </li>
+</ul>
+<p>in particular we won't do any form of
+   <a href="https://en.wikipedia.org/wiki/Mutation_%28genetic_algorithm%29">mutation</a> or
+   <a href="https://en.wikipedia.org/wiki/Chromosomal_inversion">inversion</a> which are common
+   operators for genetic algorithms. they would be ok with this representation,
+   but we'll leave them off to make things easier later.
+</p>
+<p>though this is a very simple approach it works well and for this problem
+   finds a solution faster than CMA; only 3 generations (60 trials)
+</p>
+<img src="/blog/imgs/2019/ec/neural_ga.png"/>
+
+
+<h1>digression : exporting a tf-lite network to a microcontroller</h1>
+<p>seemingly randomly, let's consider <a href="https://www.tensorflow.org/lite">tf-lite</a>
+   for a bit....
+</p>
+<p>tf-lite is a light weight tensorflow
+   runtime for on device inference. the big focus is for mobile but it
+   includes (experimental) support for microcontrollers too.
+</p>
+<p>the approach to building a model for a microcontroller isn't trivial but isn't
+   that hard either...
+</p>
+<ul>
+ <li>
+     train a standard keras model using whatever technique we want
+ </li>
+
+ <li>
+     optimise the model (e.g. applying <a href="https://www.tensorflow.org/lite/convert/cmdline_examples#quantization">quantisation</a> etc) in this case using <a href="https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/post_training_quantization.md"><code>tf.lite.Optimize.OPTIMIZE_FOR_SIZE</code></a>
+ </li>
+
+ <li>
+     use the <a href="https://www.tensorflow.org/lite/convert">lite converter</a> to convert the model to <a href="https://google.github.io/flatbuffers/">flatbuffer format</a>
+ </li>
+
+ <li>
+     and finally, since microcontrollers don't provide a filesystem, use a tool like <a href="https://www.google.com/search?q=xxd">xxd</a> to export the model as a byte[] we can use directly in c++ code. #l33tHax0r
+ </li>
+</ul>
+<p>for our simple network we get a 1488 element byte array like the following.
+   this is the code we'd cut and paste into our microcontroller code.
+</p>
+<pre>
+unsigned char example_tflite_exported_network[] = {
+  0x1c, 0x00, 0x00, 0x00, 0x54, 0x46, 0x4c, 0x33, 0x00, 0x00, 0x12, 0x00,
+  0x1c, 0x00, 0x04, 0x00, 0x08, 0x00, 0x0c, 0x00, 0x10, 0x00, 0x14, 0x00,
+  0x00, 0x00, 0x18, 0x00, 0x12, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
+  0xe4, 0x05, 0x00, 0x00, 0xb8, 0x01, 0x00, 0x00, 0xa0, 0x01, 0x00, 0x00,
+  0x34, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+  0x04, 0x00, 0x00, 0x00, 0xb8, 0xfa, 0xff, 0xff, 0x08, 0x00, 0x00, 0x00,
+  0x0c, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00, 0x6d, 0x69, 0x6e, 0x5f,
+  .....
+</pre>
+
+<p>two interesting observations about this pipeline are ....
+</p>
+<ol>
+ <li>
+     we can use these steps to generate random initialised keras models which we can then convert to byte arrays (generating new members)
+ </li>
+
+ <li>
+     since these representations are fixed length a simple crossover operator of slicing one part of one parent and one part of the other automatically generates a byte array that is still a valid tflite flatbuffer
+ </li>
+</ol>
+<p>so... could this bytes array be used as a representation for our
+   simple genetic algorithm? sure can!
+</p>
+
+<h1>simple genetic algorithm for the 1.4KB bytes of an exported tf-lite model</h1>
+<p>running our simple genetic algorithm against the bytes of these files works
+   pretty much just as well as against the "raw" 19 weights, just a bit slower...
+</p>
+<img src="/blog/imgs/2019/ec/lite_neural_ga.png"/>
+
+<p>why slower? consider the binary diffs below between two elite members
+   across generations. since it's the
+   raw binary format there are huge chunks of the representation aren't actually
+   weights but instead are related to the serialisation of network architecture.
+   in terms of the genetic operators we could think of these as a bit like
+   junk dna. the simple genetic algorithm "wastes time" exploring crossover in
+   these regions which are effectively constant across the population.
+   because we never use a mutation or inversion operator though we don't
+   ever interfere with
+   these and accidentally make infeasible solutions (which, incidentally,
+   causes the python process to segfault when you try to create the interpreter :/)
+</p>
+<img src="/blog/imgs/2019/ec/hexdiff.png"/>
+
+<p>finally do the models run on a microcontroller? yep :)
+</p>
+<p>( though i was too lazy to actually hook them up to a serial connection
+   and/or LEDs )
+</p>
+<p>see all the code <a href="https://github.com/matpalm/evolved_cartpole">here</a>
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[a half baked pix2pix experiment for road trip videos with teaching forcing]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/half_baked_pix2pix_road_trips" />
+    <id>http://matpalm.com/blog/half_baked_pix2pix_road_trips</id>
+    <published>2019-06-26T13:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="projects" />
+    <summary type="html"><![CDATA[a half baked pix2pix experiment for road trip videos with teaching forcing]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/half_baked_pix2pix_road_trips"><![CDATA[<p>for the last few months i've been tinkering on/off with a half baked sequential pix2pix model.
+   it's got a lot of TODOs to make it work but i've been  distracted by something else and i'll feel less
+   guilty about dropping it temporarily if i scrappily write a blog post at least...
+</p>
+
+<h2>roadtrip!</h2>
+<p>for the last month we lived in the U.S. we drove around california, utah, nevada and colorado in a huge RV.
+   occsionally i had a time lapse running on my phone which resulted in 16,000 or so stills.
+</p>
+<table class="data">
+<tr><td colspan=2>some random frames</td></tr>
+<tr><td>
+<img src="/blog/imgs/2019/p2p4rt/random_1.png"/>
+</td><td>
+<img src="/blog/imgs/2019/p2p4rt/random_2.png"/>
+</td></tr>
+<tr><td>
+<img src="/blog/imgs/2019/p2p4rt/random_3.png"/>
+</td><td>
+<img src="/blog/imgs/2019/p2p4rt/random_4.png"/>
+</td></tr>
+</table>
+
+<p>to get a sense of the time between frames here are three sequential ones ...
+</p>
+<table class="data">
+<tr><td colspan=3>three sequential frames</td></tr>
+<tr><td>
+<img src="/blog/imgs/2019/p2p4rt/eg_seq_1.png"/>
+</td><td>
+<img src="/blog/imgs/2019/p2p4rt/eg_seq_2.png"/>
+</td><td>
+<img src="/blog/imgs/2019/p2p4rt/eg_seq_3.png"/>
+</td></tr>
+</table>
+
+<p>can we train a \( next\_frame \) model that given two frames predicts the next?
+   if so, can we use it for generation by rolling out frames and feeding them back in.
+</p>
+<p>( i saw an awesome example of this a few years ago when someone did this for view out the side of a train but
+   can't find the reference now sadly :( if you know the project, please let me know! )
+</p>
+
+<h2>v1 model</h2>
+<p>the simplest formulation is just \( \hat{f_3} = next\_frame(f_1, f_2) \)
+</p>
+<p>we encode frames f1 and f2 using a shared encoder, concat the representations,
+   do a little more encoding then decode back to an image.
+   we just train on the L1 difference \(L1(f_3, \hat{f_3})\)
+</p>
+<img src="/blog/imgs/2019/p2p4rt/model_v1.png"/>
+
+<p>completely unsurprisingly, given this loss, the model just learns a weird blurry middle ground for
+   all possible frames. pretty standard for L1.
+</p>
+<p>note: i test here on a particularly difficult sequence that has pretty rare features (other cars!!) to
+   get some vague sense of how much it's memorising things...
+</p>
+<table class="data">
+<tr><td>example rollout of v1 model</td></tr>
+<tr><td>
+<img src="/blog/imgs/2019/p2p4rt/model_v1_rollout_eg.png"/>
+</td></tr>
+</table>
+
+
+<h2>v2 model</h2>
+<p>when we train the v1 model, let's consider how we use it for rollouts;
+</p>
+<ul>
+ <li>
+     we start with two known frames, \( f_1, f_2 \)
+ </li>
+
+ <li>
+     we predict the third frame by running these through the model...
+     \( \hat{f_3} = next\_frame(f_1, f_2) \)
+ </li>
+
+ <li>
+     we predict the fourth frame by refeeding this back in...
+     \( \hat{f_4} = next\_frame(f_2, \hat{f_3}) \)
+ </li>
+</ul>
+<p>this fails for too reasons; the L1 loss as before just isn't that good but additionally in the last
+   step we're asking the model to make a prediction about a frame after \( \hat{f_3} \) and given \( \hat{f_3} \)
+   isn't that much like what it's seen before, the network produces an even worse output and the problems compound.
+</p>
+<p>interestingly though for the \( \hat{f_4} = next\_frame(f_2, \hat{f_3}) \) case we actually knew what
+   it should have been, \( f_4 \), and we can use this info. basically we can tell the
+   model "look, if this is how you're screwing up \( \hat{f_3} \), at the very least here's some info about how to
+   get back on track for \( f_4 \)"
+</p>
+<p>this idea of using a later label to give direction for a intermediate prediction is called teacher forcing
+   and it's trivial to add it in by just resharing a bunch of the existing pieces to make the model
+   predict not just the next frame, but the next two frames \( \hat{f_3}, \hat{f_4} = next\_frames(f_1, f_2) \)
+</p>
+<img src="/blog/imgs/2019/p2p4rt/model_v2.png"/>
+
+<p>we train this model on the sum of the L1 losses for \( f_3 \) and \( f_4 \)
+   but continue to just use the v1 model section of the network for rollouts.
+</p>
+<p>this teacher forcing gives a bit of help and things maybe improve a bit but it's still not great.
+</p>
+<p>note: if you can see an RNN growing here you wouldn't be too far off. in hindsight maybe i should just
+   stick an LSTM between the final encoder and the decoder stacks :/
+</p>
+<table class="data">
+<tr><td>example rollout of v2 model</td></tr>
+<tr><td>
+<img src="/blog/imgs/2019/p2p4rt/model_v2_rollout_eg.png"/>
+</td></tr>
+</table>
+
+
+<h2>v3 model</h2>
+<p>the obvious next level up from L1 is to introduce a GAN loss. since the generators output is two sequential frames
+   we make this the input for the discriminator.
+</p>
+<img src="/blog/imgs/2019/p2p4rt/model_v3.png"/>
+
+<p>curiously this fails in a way i haven't seen before in a GAN...
+   the output of G oscillates between two different modes.
+   something weird to do with Gs output being two frames?
+</p>
+<table class="data">
+<tr><td>example rollout of v3 model with oscillation</td></tr>
+<tr><td>
+<img src="/blog/imgs/2019/p2p4rt/model_v3_rollout_osc_eg.png"/>
+</td></tr>
+</table>
+
+<p>if i can change D's input to be a single frame the oscillation goes away, but the results are still
+   pretty crappy.
+</p>
+<p>anyways, based on other models i've worked on that have components like this one (e.g.
+   <a href="https://ai.googleblog.com/2017/10/closing-simulation-to-reality-gap-for.html">graspgan</a> and
+   <a href="http://matpalm.com/blog/counting_bees">bnn</a> ) i know i'm at the point of tuning and tinkering
+   but i've been distracted by something else in the short term... i'll come back to though one day...
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[pybullet grasping with time contrastive network embeddings]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/pybullet_tcn_grasping" />
+    <id>http://matpalm.com/blog/pybullet_tcn_grasping</id>
+    <published>2019-06-11T13:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="projects" />
+    <summary type="html"><![CDATA[pybullet grasping with time contrastive network embeddings]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/pybullet_tcn_grasping"><![CDATA[<p><em>( with a fun exploration of easy/hard positive/negative mining )</em>
+</p>
+
+<h2>brutually short introduction to triplet loss</h2>
+<p>say we want to train a neural net whose output is an embedding of its input.
+   how would we train it?
+</p>
+<p>to train anything we need a loss function and usually that function describes exactly
+   what we want the output to be in the form of explicit labels. but for embeddings things are a little different.
+   we might not care exactly what embedding values we get, we only care about how they are related
+   for different inputs.
+</p>
+<p>one way of specifying this relationship for embeddings is with an idea called triplet loss.
+</p>
+<p>let's consider three particular instances...
+</p>
+<ol>
+ <li>
+     a random instance (we'll call this the <strong>anchor</strong>)
+ </li>
+
+ <li>
+     another instance that is somehow related to the anchor and, as such, we want close in the embedding space (we'll call this the <strong>positive</strong>)
+ </li>
+
+ <li>
+     a third instance that is somehow different to the anchor that we don't want close in the embedding space (we'll call this the <strong>negative</strong>)
+ </li>
+</ol>
+<p>triplet loss is a way of specifying that we don't care exactly where things get embedded, only that
+   the anchor should be closer to the positive than to the negative.
+</p>
+<p>we can express this idea of closer in a loss function in a simple clever way...
+</p>
+<p>consider two distances; the distance from the anchor to the positive (<code>dist_anchor_positive</code>) and
+   the distance from the anchor to the negative (<code>dist_anchor_negative</code>)
+</p>
+<p>if <code>dist_anchor_positive &lt; dist_anchor_negative</code> it means the positive is <em>closer</em> to the anchor than
+   the negative. this is good, and what we want from our embedding so things shouldn't change; i.e. should be a loss of zero.
+</p>
+<pre class="prettyprint"><code class="language-python">if dist_anchor_positive < dist_anchor_negative:
+  loss = 0
+</code></pre>
+
+<p>if <code>dist_anchor_positive &gt; dist_anchor_negative</code> though it means the positive is <em>further</em> from the anchor than
+   the negative. this is bad, we should adjust these embeddings.
+   but how much loss should we attribute to this case?
+   turns out we can literally just use the difference in these distances!
+   i.e. a little bit of loss if the difference is low, but a larger loss otherwise.
+</p>
+<pre class="prettyprint"><code class="language-python">if dist_anchor_positive > dist_anchor_negative:
+  loss = dist_anchor_positive - dist_anchor_negative
+</code></pre>
+
+<table class="data">
+<tr><td>good</td><td>bad</td></tr>
+<tr><td>
+<img src="/blog/imgs/2019/tcn_grasping/apn_good.png"/>
+</td><td>
+<img src="/blog/imgs/2019/tcn_grasping/apn_bad.png"/>
+</td></tr>
+</table>
+
+<p>these two cases can be combined very elegantly using a max with 0.
+</p>
+<pre class="prettyprint"><code class="language-python">loss = max(0, dist_anchor_positive - dist_anchor_negative)</code></pre>
+
+<p>this loss is (unsurprisingly) known as hinge loss and has a close relationship with
+   <a href="https://en.wikipedia.org/wiki/relu">relu &amp; softplus</a>
+</p>
+<table class="data">
+<tr><td>relu and softplus</td></tr>
+<tr><td><img src="/blog/imgs/2019/tcn_grasping/softplus.png"/></td></tr>
+</table>
+
+<p>a final point is that to encourage more seperation we might say that not only does the positive have
+   to be closer, it has to be closer by some fixed amount. we call this a <code>margin</code>
+</p>
+
+<h2>grasping in pybullet</h2>
+<p>let's put triplet loss aside for a bit and consider robotic grasping. we might not be able to afford
+   a physical robot but there's a lot we can play with in simulation.
+</p>
+<p>with <a href="https://pybullet.org/">pybullet</a> we can simulate a grasping setup easily! e.g. consider the following...
+</p>
+<ul>
+ <li>
+     a simple grasping environment of a table + a tray + an arm
+ </li>
+
+ <li>
+     15 <a href="https://github.com/matpalm/procedural_objects">procedurally generated objects</a> dropped into the tray
+ </li>
+
+ <li>
+     a sequence of random grasps
+ </li>
+</ul>
+<p>where a random grasp is ...
+</p>
+<ol>
+ <li>
+     move gripper to random point above tray
+ </li>
+
+ <li>
+     move gripper down into tray
+ </li>
+
+ <li>
+     close gripper
+ </li>
+
+ <li>
+     move gripper up again (&amp; fingers crossed we got something :)
+ </li>
+</ol>
+<p>during this sequence we can capture the environment by rendering the
+   view from 90 randomly placed cameras every 20 steps of the simulation
+   and continue random grasping until we have 1000 images.
+</p>
+<table class="data">
+<tr><td>different camera views from some random grasping</td></tr>
+<tr><td><img src="/blog/imgs/2019/tcn_grasping/example_grasp.png"/></td></tr>
+</table>
+
+
+<h2>time contrastive networks</h2>
+<p>given this grasping setup could we learn an embedding of camera images that represents something about the scene that
+   is agnostic to the specific camera view?
+</p>
+<p>we'd want this embedding to have a mapping that is the <em>same</em> when the scene
+   is the same, regardless of the camera angle &amp; have a mapping that is <em>different</em> when the scene is different, again
+   regardless of the camera angle. if only we had a way of describing a loss function for these kinds of pairings!
+</p>
+<p>wait. a.. minute... triplet loss!!!
+</p>
+<p>the idea of doing this was first introduced in the paper
+   <a href="https://arxiv.org/abs/1704.06888">Time-Contrastive Networks: Self-Supervised Learning from Video</a>
+   by <a href="https://ai.google/research/people/PierreSermanet">Pierre</a> and co. and in this formulation...
+</p>
+<ul>
+ <li>
+     the anchor is a camera image from a <em>random</em> view point at a <em>random</em> time
+ </li>
+
+ <li>
+     the positive is a camera image from a <em>different</em> view point but at the <em>same</em> time
+ </li>
+
+ <li>
+     the negative is a camera image from the <em>same</em> view point but at a <em>different</em> time
+ </li>
+</ul>
+<p>an example batch of four triples is the following...
+</p>
+<img src="/blog/imgs/2019/tcn_grasping/grasping_data_example_triples.png"/>
+
+
+<h3>training</h3>
+<p>let's train a very simple small model for this experiment.
+   ( the training data and loss function is more interesting than a huge model and
+   for i saw marginal improvement in a bigger model anyway... )
+</p>
+<pre class="prettyprint"><code class="language-python">______________________________________________________________________________________
+Layer (type)                 Output Shape              Param #  Comment
+======================================================================================
+inputs (InputLayer)          (None, 180, 240, 3)       0
+conv2d (Conv2D)              (None, 90, 120, 16)       1216    # 5x5 stride 2
+conv2d_1 (Conv2D)            (None, 45, 60, 32)        4640    # 3x3 stride 2
+conv2d_2 (Conv2D)            (None, 23, 30, 32)        9248    # 3x3 stride 2
+conv2d_3 (Conv2D)            (None, 12, 15, 32)        9248    # 3x3 stride 2
+flatten (Flatten)            (None, 5760)              0
+dropout (Dropout)            (None, 5760)              0       # keep = 0.5
+dense (Dense)                (None, 64)                368704
+embedding (Dense)            (None, 128)               8320
+normalise_layer (NormaliseLa (None, 128)               0       # tf.nn.l2_normalize
+======================================================================================
+Total params: 401,376
+Trainable params: 401,376
+</code></pre>
+
+<p>for the loss function we do as described above...
+   (note: a batch of B training instances is 3*B images; each instance is a triple of images)
+</p>
+<pre class="prettyprint"><code class="language-python">embeddings = model.output                                            # (3B, E)
+embeddings = tf.reshape(embeddings, (-1, 3, embedding_dim))          # (B, 3, E)
+anchor_embeddings = embeddings[:, 0]                                 # (B, E)
+positive_embeddings = embeddings[:, 1]                               # (B, E)
+negative_embeddings = embeddings[:, 2]                               # (B, E)
+dist_a_p = tf.norm(anchor_embeddings - positive_embeddings, axis=1)  # (B)
+dist_a_n = tf.norm(anchor_embeddings - negative_embeddings, axis=1)  # (B)
+constraint = dist_a_p - dist_a_n + margin                            # (B)
+per_element_hinge_loss = tf.maximum(0.0, constraint)                 # (B)
+return tf.reduce_mean(per_element_hinge_loss)                        # (1)
+</code></pre>
+
+
+<h3>evaluation</h3>
+<p>during training there are a number of interesting things to keep track of...
+</p>
+<p>firstly the relationship between <code>dist_a_p</code> and <code>dist_a_n</code>. when things are going well we want
+   the <code>dist_a_n</code> to be constantly outgrowing <code>dist_a_p</code>
+</p>
+<table class="data">
+<tr>
+<td>distance anchor negative</td>
+<td>distance anchor positive</td>
+</tr>
+<tr><td>
+<img src="/blog/imgs/2019/tcn_grasping/mean_dist_a_n.png"/>
+</td><td>
+<img src="/blog/imgs/2019/tcn_grasping/mean_dist_a_p.png"/>
+</td></tr>
+</table>
+
+<p>an interesting failure case, especially when the margin is too low, is that the model
+   just learns to map everything to the same point ( i.e. <code>dist_a_p - dist_a_n</code> is minimised well
+   when all the distances are zero :/)
+</p>
+<p>this is very visible when we eyeball the distribution of embeddings for some held out data
+</p>
+<table class="data">
+<tr>
+<td>good spread of embeddings</td>
+<td>collapsed embeddings</td>
+<tr><td>
+<img src="/blog/imgs/2019/tcn_grasping/embeddings_ok.png"/>
+</td><td>
+<img src="/blog/imgs/2019/tcn_grasping/embeddings_collapsed.png"/>
+</td></tr>
+</table>
+
+<p>but apart from the distribution of embeddings, are there other ways to evaluate the embeddings?
+</p>
+<p>one way is to compare the embeddings of a scene from some held out data. given we know the camera positions
+   we can consider a <code>reference</code> grasp sequence of N frames and find the near neighbours, in the embedded space,
+   from two other <code>target_a</code> and <code>target_b</code> camera views. we select near neighbours for <code>target_a</code> and <code>target_b</code>
+   from different runs than the <code>reference</code> to ensure it's not just picking up exact matches.
+</p>
+<table class="data">
+<tr><td>
+embedding near neighbours on held out data
+</td></tr>
+<tr><td>
+<img src="/blog/imgs/2019/tcn_grasping/near_neighbour_egs.gif"/></td></tr>
+</table>
+
+<p>we can see visually that the pose of the arms generally match.
+</p>
+<p>trouble is eyeballing things isn't really quantifiable; is there a number we can look at?
+</p>
+<p>one numerical attribute we have of the scene is the position of the arm in joint space (i.e. the seven joint angles).
+   what we can do is find the near neighbours in the embedding space based on the image but then compare based on the
+   joint positions. one very simple (naive) comparison of the positions is their euclidean distance.
+</p>
+<p>the following plot shows the distribution of joint distances between positions in the <code>reference</code> sequence
+   and the near neighbour <code>target_a</code> and <code>target_b</code> frames.
+   as a comparison point we also include the distribution of distances of random pairs (in green).
+   vertical lines represent the mean values (note: the mean for <code>target_a</code> and <code>target_b</code> end up being the same.)
+</p>
+<p>we see that the mean distances for <code>target_a</code> and <code>target_b</code> are less than <code>random</code>
+   even using this naive euclidean distance metric; i.e. the embedding space is capturing positions
+   that are closer than random pairs.
+</p>
+<img src="/blog/imgs/2019/tcn_grasping/pose_distances_from_ref.png"/>
+
+
+<h2>easy ( &amp; hard ) positive ( &amp; negative ) mining</h2>
+
+<h3>N classes and the hard negative mining problem</h3>
+<p>let's go back to thinking about just triplet loss; specifically the common use case
+   of wanting to learn embeddings for instances across N classes.
+</p>
+<p>for the N class problem...
+</p>
+<ul>
+ <li>
+     the anchor is any random instance
+ </li>
+
+ <li>
+     the positive is another instance from the <em>same</em> class
+ </li>
+
+ <li>
+     the negative is any instance from <em>any other</em> class
+ </li>
+</ul>
+<p>in this setup there is a common problem involving the selection of negatives.
+   for any particular anchor there will be many more negatives than positives so as we progress learning
+   we'll see more and more of these negatives being cases that already satisfy the distance constraint.
+   if we're just randomly picking triples we'll end up picking more and more that don't offer anything
+   towards learning (i.e. have zero loss) we call these "easy" negatives.
+   what we really want to do is focus on picking the fewer "hard" negatives.
+   but how do we know what the hard ones are?
+</p>
+<p>in the N class setup there are a number of approaches to mining hard negatives;
+   the <a href="https://arxiv.org/abs/1703.07737">In Defense of the Triplet Loss for Person Re-Identification</a> paper
+   has some great information in section 2 on two online hard triple mining variants called
+   <code>BatchHard</code> and <code>BatchAll</code> for the N class problem (though we won't describe them here)
+</p>
+
+<h3>explicit hard negatives (and positives) in the grasping setup</h3>
+<p>do we see this problem of "easy" triples in the grasping setup? oh yes.
+   consider the following graph which shows the number of elements in a batch (of size 16) that have
+   non zero loss.
+</p>
+<img src="/blog/imgs/2019/tcn_grasping/batch_count_non_zero.png"/>
+
+<p>we can see that by the 15th step we're at the point of having only 1 or 2 (sometimes 0!) instances in a batch
+   that have non zero loss (i.e. bulk of the batch has zero loss and so is contributing nothing to the training)
+</p>
+<p>can we use <code>BatchHard</code> or <code>BatchAll</code> in the grasping setup? sadly, not really since the relationship between
+   the anchors, positives and negatives are different.
+   it's ok though as there are more explicit ways of describing hard triplets in our setup.
+</p>
+<p>for the negatives it's about <em>time</em>; the closer in time a negative is to the anchor,
+   the harder it's going to be to discriminate. a small change in time =&gt; similar camera image =&gt;
+   similar embedding, but we want them to be different.
+</p>
+<p>for the positives it's about <em>camera location</em>; the closer the postive camera is to the anchor the easier it is.
+   a large change in camera position =&gt; different camera image =&gt; different embedding, but we want them to be the same.
+</p>
+<p>given this we have two ways of increasing the difficulty of learning the embeddings.
+</p>
+<ul>
+ <li>
+     pick negatives closer in time to the anchor
+ </li>
+
+ <li>
+     pick positives using a camera angle further from the anchor
+ </li>
+</ul>
+
+<h2>comparing easy vs hard negatives</h2>
+<p>we can try a couple of experiments then regarding the choice of negatives
+</p>
+<ul>
+ <li>
+     a baseline case where negatives are chosen as any frame in a run
+ </li>
+
+ <li>
+     when the negative example is chosen to be within 100 frames of the anchor
+ </li>
+
+ <li>
+     when the negative example is chosen to be within 10 frames of the anchor
+ </li>
+</ul>
+<p>choosing the negative within 10 frames is quite difficult as the negative
+   looks <em>very</em> similar to the anchor so it's perhaps unsurprising that training a model from scratch
+   with these negatives fails a lot ( the failure mode being that
+   all embeddings collapse to a single point ). we don't see this failure with the totally randomly chosen
+   frames.
+</p>
+<p>interestingly it seems that we are able to anneal at least and by training on the random frames for awhile
+   and <em>then</em> switching to harder case. this works and is stable.
+</p>
+
+<h2>TODOs</h2>
+<p>as always i've gotten distracted by something else in the short term... for now at least the TODOs i want
+   to play around with relate to avoid the wasted zero loss cases related to easy triples...
+</p>
+
+<h3>offline negative mining</h3>
+<p>if our main goal is to keep a training loop busy doing useful work (i.e. minimising zero loss cases) we
+   can farm out the checking of triples to a fleet of workers. these workers can randomly (or otherwise) sample
+   triples against a reference model and only send triples to a central trainer if they don't look easy.
+   this is something that parallelises well and we don't care necessarily about having these workers fast
+   so it's a great fit for preemptiable cpu instances (remember performance != scalability)
+   it's fine to have these workers use a slightly stale model for their reference and just update on some
+   schedule.
+</p>
+<img src="/blog/imgs/2019/tcn_grasping/cpu_workers.png"/>
+
+
+<h3>replay buffers</h3>
+<p>additional to the offline mining another win would be to borrow an idea from from offline reinforcement learning;
+   the replay buffer. if we mine triples we can use them to populate a replay buffer and then
+   sample training batch from the replay buffer.
+   the simplest approach would be to treat the buffer as a FIFO queue and expire entries based on time.
+   more complex approaches can use the importance sampling ideas to keep examples around while they continue to
+   add value to training.
+</p>
+<p>i saw huge wins by implementing <a href="https://arxiv.org/abs/1511.05952">Prioritised Experience Replay</a>
+   for my <a href="https://github.com/matpalm/malmomo/blob/master/prio_replay.py">Malmomo project</a>
+</p>
+
+<h3>hard positives</h3>
+<p>the above talks about hard negatives and hard positives but i only trained hard negatives; i should do some
+   more work on the mining of explicit hard positives.
+</p>
+
+<h3>train an actual grasping model!</h3>
+<p>the entire point of me starting this project was to try to train a grasping model but i haven't got there yet o_O
+</p>
+<p>as things are i get the feeling this embedding might be capturing something about the arm but not really anything about
+   the objects. still an open question...
+</p>
+
+<h2>code</h2>
+<p>all the code for this is <a href="https://github.com/matpalm/tcn_grasping">on github</a>
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[counting bees on a rasp pi with a conv net]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/counting_bees" />
+    <id>http://matpalm.com/blog/counting_bees</id>
+    <published>2018-05-17T12:30:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="projects" />
+    <summary type="html"><![CDATA[counting bees on a rasp pi with a conv net]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/counting_bees"><![CDATA[<h1>counting bees</h1>
+<p>the first thing i thought when we setup our bee hive was "i wonder how you could count the number of bees coming and going?"
+</p>
+<p>after a little research i discovered it seems noone has a good non intrusive system for doing it yet.
+   it can apparently be useful for all sorts of hive health checking.
+</p>
+<p>the first thing to do was collect some sample data.
+   a raspberry pi, a standard pi camera and a solar panel is a pretty simple thing to get going
+   and at 1 frame every 10 seconds you get 5,000+ images over a day (6am to 9pm).
+</p>
+<img src="/blog/imgs/2018/bnn/rasp_pi.png" />
+
+<p>here's an example image... how many bees can you count?
+</p>
+<img src="/blog/imgs/2018/bnn/single_day_eg1.png" />
+
+
+<h1>what exactly is the question?</h1>
+<p>the second thing was to decide exactly what i was trying to get the neural net to do.
+   if the task is "count bees in an image" you could arguably try to regress directly to the number
+   but it didn't feel like the easiest thing to start with and it doesn't allow any fun tracking of individual bees over frames.
+   instead i decided to focus on localising every bee in the image.
+</p>
+<p>a quick sanity check of an off the shelf single shot multi box detector didn't give great results.
+   kinda not surprisingly, especially given the density of bees around the hive entrance.
+   (protip: transfer learning is not the answer to everything)
+   but that's ok; i have a super constrained image, only have 1 class to detect and don't actually care about a bounding box as such,
+   just whether a bee is there or not. can we do something simpler?
+</p>
+
+<h2>v1: fully convolutional "bee / no bee" in a patch</h2>
+<p>my first quick experiment was a patch based "bee / no bee in image" detector. i.e. given an image patch what's the probability there is at least
+   1 bee in the image. doing this as a <a href="/blog/fully_conv/">fully convolutional</a> net on very small patches meant it could easily run on full res data.
+   this approach kinda of worked but was failing for the the hive entrance where there is a much denser region of bees.
+</p>
+
+<h2>v2: RGB image -&gt; black / white bitmap</h2>
+<p>i quickly realised this could easily be framed instead as an image to image translation problem.
+   the input is the RGB camera image and the output is a single channel image where a "white" pixel denotes the center of a bee.
+</p>
+<table class="data">
+<tr><td>RGB input (cropped)</td><td>single channel output (cropped)</td></tr>
+<tr>
+<td><img src="/blog/imgs/2018/bnn/eg1a.png"/></td>
+<td><img src="/blog/imgs/2018/bnn/eg1b.png"/></td>
+</tr>
+</table>
+
+
+<h1>labelling</h1>
+<p>step three was labelling. it wasn't too hard to roll a little <a href="https://wiki.python.org/moin/TkInter">TkInter</a> app
+   for selecting / deselecting bees on an image and saving the results in a sqlite database.
+   i spent quite a bit of time getting this tool right; anyone who's done a reasonable amount of hand labelling
+   knows the difference it can make :/ we'll see later how luckily (as we'll see) having access to a lot of samples
+   means i could get quite a good result with semi supervised approaches
+</p>
+
+<h1>the model</h1>
+<p>the architecture of the network is a very vanilla u-net.
+</p>
+<ul>
+ <li>
+     <a href="/blog/fully_conv/">a fully convolutional network</a> trained on half resolution patches but run against full resolution images
+ </li>
+
+ <li>
+     encoding is a sequence of 4 3x3 convolutions with stride 2
+ </li>
+
+ <li>
+     decoding is a sequence of nearest neighbours resizes + 3x3 convolution (stride 1) + skip connection from the encoders
+ </li>
+
+ <li>
+     final layer is a 1x1 convolution (stride 1) with sigmoid activation (i.e. binary bee / no bee choice per pixel)
+ </li>
+</ul>
+<p>after some emperical experiments i chose to only decode back to half the resolution of the input. it was good enough.
+</p>
+<p>i did the decoding using a nearest neighbour resize instead of a deconvolution pretty much out of habit.
+</p>
+<p>the network was trained with <a href="https://arxiv.org/abs/1412.6980">Adam</a>
+   and it's small enough that <a href="https://arxiv.org/abs/1502.03167">batch norm</a> didn't seem to help much.
+   i was surprised how simple and how few filters i could get away with.
+</p>
+<img src="/blog/imgs/2018/bnn/network.png"/>
+
+<p>i applied the standard sort of data augmentation you'd expect; random rotation &amp; image colour distortion. the patch based training approach means
+   we inherently get a form of random cropping. i didn't flip the images since i've always got the camera on the same side of the hive.
+</p>
+<p>one subtle aspect was the need to post process the output predictions. with a probabilistic output we get a blurry cloud around
+   where bees might be. to convert this into a hard one-bee-one-pixel decision i added
+   thresholding + connected components + centroid detection using
+   the <a href="http://scikit-image.org/docs/dev/api/skimage.measure.html">skimage measure module</a>.
+   this bit was hand rolled and tuned purely based on eyeballing results; it could totally be included in the end
+   to end stack as a learnt component though. TODO :)
+</p>
+<table class="data">
+<tr><td>input</td><td>raw model output</td><td>cluster centroids</td></tr>
+<tr>
+<td><img width="200" src="/blog/imgs/2018/bnn/eg2a.png"/></td>
+<td><img width="200" src="/blog/imgs/2018/bnn/eg2b.png"/></td>
+<td><img width="200" src="/blog/imgs/2018/bnn/eg2c.png"/></td>
+</tr>
+</table>
+
+
+<h1>generalisation over days</h1>
+
+<h2>over one day</h2>
+<p>my initial experiments were with images over a short period of a single day.
+   it was very easy to get a model running extremely well on this data with a small number of labelled images (~30)
+</p>
+<table class="data">
+<tr>
+<td>day 1 sample 1</td>
+<td>day 1 sample 2</td>
+<td>day 1 sample 3</td>
+</tr>
+<td><img src="/blog/imgs/2018/bnn/single_day_eg1.png"/></td>
+<td><img src="/blog/imgs/2018/bnn/single_day_eg2.png"/></td>
+<td><img src="/blog/imgs/2018/bnn/single_day_eg3.png"/></td>
+</tr>
+</table>
+
+
+<h2>over many days</h2>
+<p>things got more complicated when i started to include longer periods over multiple days.
+   one key aspect was the lighting difference (time of day, as well as different weather).
+   another was that i was putting the camera out manually each day and just sticking it in kinda the same spot with blue tac.
+   a third more surprising difference was that with grass growing the tops of dandelions look a lot like bees apparently
+   (i.e. the first round of trained models hadn't seen this and when it appeared it was a constant false positive)
+</p>
+<p>most of this was solved already by data augmentation and none of it was a show stopper.
+   in general the data doesn't have much variation, which is great since that allows us to get away with a simple network and training scheme.
+</p>
+<table class="data">
+<tr>
+<td>day 1 sample</td>
+<td>day 2 sample</td>
+<td>day 3 sample</td>
+</tr>
+<td><img src="/blog/imgs/2018/bnn/multiple_days_eg1.png"/></td>
+<td><img src="/blog/imgs/2018/bnn/multiple_days_eg2.png"/></td>
+<td><img src="/blog/imgs/2018/bnn/multiple_days_eg3.png"/></td>
+</tr>
+</table>
+
+
+<h1>an example of prediction</h1>
+<p>this image shows an example of the predictions. it's interesting to note this is a case where there were many more bees than any image i
+   labelled, a great validation that the fully convolutional approach trained on smaller patches works.
+</p>
+<img src="/blog/imgs/2018/bnn/rgb_labels_predictions.png"/>
+
+<p>it does ok across a range of detections; i imagine the lack of diversity in the background is a biiiiig help here and that running
+   this network on some arbitrary hive wouldn't be anywhere near as good.
+</p>
+<table class="data">
+<tr>
+<td>high density around entrance</td>
+<td>varying bee sizes</td>
+<td>high speed bees!</td>
+</tr>
+<td><img src="/blog/imgs/2018/bnn/prediction_eg_zoom_1.png"/></td>
+<td><img src="/blog/imgs/2018/bnn/prediction_eg_zoom_2.png"/></td>
+<td><img src="/blog/imgs/2018/bnn/prediction_eg_zoom_3.png"/></td>
+</tr>
+</table>
+
+
+<h1>labelling tricks</h1>
+
+<h2>semi supervised learning</h2>
+<p>the ability to get a large number of images makes this a great candidate for semi supervised learning.
+</p>
+<p>a very simple approach of ...
+</p>
+<ol>
+ <li>
+     capture 10,000 images
+ </li>
+
+ <li>
+     label 100 images &amp; train <code>model_1</code>
+ </li>
+
+ <li>
+     use <code>model_1</code> to label other 9,900 images
+ </li>
+
+ <li>
+     train <code>model_2</code> with "labelled" 10,000
+ </li>
+</ol>
+<p>... results in a model_2 that does better than model_1.
+</p>
+<p>here's an example. note that model_1 has some false positives (far left center &amp; blade of grass) and some
+   false negatives (bees around the hive entrance)
+</p>
+<table class="data">
+<tr><td>model_1</td><td>model_2</td></tr>
+<tr>
+<td><img src="/blog/imgs/2018/bnn/semi_supervised_eg_without.png"/></td>
+<td><img src="/blog/imgs/2018/bnn/semi_supervised_eg_with.png"/></td>
+</tr>
+</table>
+
+
+<h2>labelling by correcting a poor model</h2>
+<p>this kind of data is also a great example of when correcting a bad model is quicker than labelling from scratch...
+</p>
+<ol>
+ <li>
+     label 10 images &amp; train model
+ </li>
+
+ <li>
+     use model to label next 100 images
+ </li>
+
+ <li>
+     use labelling tool to <em>correct</em> the labels of these 100 images
+ </li>
+
+ <li>
+     retrain model with 110 images
+ </li>
+
+ <li>
+     repeat ....
+ </li>
+</ol>
+<p>this is very common pattern i've seen and sometimes makes you need to rethink your labelling tool a bit..
+</p>
+
+<h1>counts over time</h1>
+<p>being able to locate bees means you can count them!
+   this makes for fun graphs like this that show the number of bees over a day.
+   i love how they all get busy and race home around 4pm :)
+</p>
+<img src="/blog/imgs/2018/bnn/bees_every_10s.png"/>
+
+
+<h1>running inference on the pi</h1>
+<p>running a model for inference on the pi was a big part of this project.
+</p>
+
+<h2>directly on the pi hardware</h2>
+<p>the first baseline was to freeze the tensorflow graph and just run it directly on the pi.
+   this works without any problem, it's just the pi can only do 1 image / second :/
+</p>
+
+<h2>running on a movidius neural compute stick</h2>
+<p>i was very excited about the possibility of getting this model to run on the pi using a
+   <a href="https://developer.movidius.com/">movidus neural compute stick</a>. they are an awesome bit of kit.
+</p>
+<p>sadly it doesn't work :/ since their API to convert from a tensorflow graph to their
+   internal model format doesn't support the way i was doing decoding so i had to convert upsizing from using
+   nearest neighbours resampling to using a deconvolution. that's not a big deal, except it just doesn't work.
+   there are a bunch of little problems i've got <a href="https://github.com/matpalm/movidius_bug_reports">bug reproduction cases</a> for.
+   once they are fixed i can revisit...
+</p>
+<p>[update sep 2018] after lots of hoop jumping actually did get things running! hooray.
+   see <a href="https://github.com/matpalm/bnn/issues/8">this issue</a> for some further info.
+</p>
+
+<h3>v3 model: RGB image -&gt; bee count</h3>
+<p>this led me to the third version of my model; can we regress directly from the RGB input to a count of the bees? if we do this we can
+   avoid any problems relating to unsupported ops &amp; kernel bugs on the neural compute stick,
+   though it's unlikely this will be as good as the centroids approach of v2.
+</p>
+<p>i was originally wary of trying this since i expected it would take a lot more labelling (it's no longer a patch based system)
+   however! given a model that does pretty well at locating them, and a lot of unlabelled data, we can make a pretty good synthetic dataset
+   by applying the v2 rgb image -&gt; bee location model and just counting the number of detections.
+</p>
+<p>this model was pretty easy to train and gives reasonable results... (though it's not as good as just counting the centroids detected by the v2 model)
+</p>
+<table class="data">
+<tr><td colspan="13">sample actual vs predicted for some test data</td></tr>
+<tr><td>actual</td>
+<td>40</td><td>19</td><td>16</td><td>15</td><td>13</td><td>12</td><td>11</td><td>10</td><td>8</td><td>7</td><td>6</td><td>4</td></tr>
+<tr><td>v2 (centroids) predicted</td>
+<td>39</td><td>19</td><td>16</td><td>13</td><td>13</td><td>14</td><td>11</td><td>8</td><td>8</td><td>7</td><td>6</td><td>4</td></tr>
+<tr><td>v3 (raw count) predicted</td>
+<td>33.1</td><td>15.3</td><td>12.3</td><td>12.5</td><td>13.3</td><td>10.4</td>
+<td>9.3</td><td>8.7</td><td>6.3</td><td>7.1</td><td>5.9</td><td>4.2</td>
+</tr>
+</table>
+
+<p>... but unfortunately <em>still</em> doesn't work on the NCS. (it runs, i just can't get it to give
+   anything but random results). i've generated some
+   <a href="https://ncsforum.movidius.com/discussion/692/incorrect-inference-results-from-a-minimal-tensorflow-model#latest">more bug reproduction cases</a>
+   and again will come back to it... eventually...
+</p>
+
+<h1>next steps?</h1>
+<p>as aways there's still a million things to tinker with...
+</p>
+<ul>
+ <li>
+     get the entire thing ported to the <a href="http://jevois.org/">je vois embedded camera</a> i've done a bit of tinkering with this but wanted to have the NCS working as a baseline first. i want 120fps bee detection!!!
+ </li>
+
+ <li>
+     tracking bees over multiple frames / with multiple cameras for optical flow visualisation
+ </li>
+
+ <li>
+     more detailed study of benefit of semi supervised approach and training a larger model to label for a smaller model
+ </li>
+
+ <li>
+     investigate power usage of the NCS; how to factor that into hyperparam tuning?
+ </li>
+
+ <li>
+     switch to building a small version of farm.bot for doing some cnc controlled seedling genetic experiments (i.e. something completely different)
+ </li>
+</ul>
+
+<h1>code</h1>
+<p>all the code for this is <a href="https://github.com/matpalm/bnn">on github</a>
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[cartpole++]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/cartpole_plus_plus" />
+    <id>http://matpalm.com/blog/cartpole_plus_plus</id>
+    <published>2016-08-11T22:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="projects" />
+    <summary type="html"><![CDATA[cartpole++]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/cartpole_plus_plus"><![CDATA[<p>one of the classic control problems of reinforcement learning is the cartpole; the oldest reference to which i can find
+   is <a href="https://webdocs.cs.ualberta.ca/~sutton/papers/barto-sutton-anderson-83.pdf">Barto, Sutton &amp; Anderson's "Neuronlikw Adaptive Elements That Can Solve Difficult Learning Control Problems (1983)</a>
+</p>
+<p>it's a simple enough sounding problem; given a cart in 2d, with a pole balancing on it, move the cart left and right to keep the pole balanced (i.e. within a small angle of vertical).
+</p>
+<p>the entire problem can be described by input 4 variables; the cart position, the cart velocity, the pole angle, the pole angular velocity but even still it's surprisingly difficult to solve. there are loads of implementations of it and if you want to tinker i'd <i>highly</i> recommend starting with <a href="https://gym.openai.com/envs/CartPole-v0">openai's gym version</a>
+</p>
+<p>as soon as you've solved it though you might want to play with a more complex physics environment and for that you need a serious physics simulator, e.g. the industry standard (and fully open sourced) <a href="http://bulletphysics.org/">bullet physics</a> engine.
+</p>
+<p>the simplest cartpole i could make includes 1) the ground 2) a cart (red) and 3) a pole (green). the blue line here denotes the z-axis. ( all code and repro instructions are <a href="https://github.com/matpalm/cartpoleplusplus">on github</a> )
+</p>
+<img width="420" src="/blog/imgs/2016/cartpole/cartpole.png"/>
+
+<ul>
+ <li>
+     the cart and pole move in 3d, not 1d.
+ </li>
+
+ <li>
+     the pole is <i>not</i> connected to the cart (and since it's relatively light it makes from some crazy dynamics...)
+ </li>
+
+ <li>
+     each run is started with a push of the cart in a random direction.
+ </li>
+</ul>
+
+<h3>state representation</h3>
+<p>there are two state representations available; a low dimensional one based on the cart &amp; pole pose and a high dimensional one based on raw pixels.
+</p>
+<p>in both representations we use the idea of action repeats; per env.step we apply the choosen action 5 times, take a state snapshot, apply the action another 5 times and take another snapshot. the delta between these two snapshots provides enough information to infer velocity (if the learning algorithm finds that useful to do )
+</p>
+<ul>
+ <li>
+     the low dimensional state is (2, 2, 7)<ul>
+ <li>
+     axis=0 represents the two snapshots; 0=first, 1=second
+ </li>
+
+ <li>
+     axis=1 represents the object; 0=cart, 1=pole
+ </li>
+
+ <li>
+     axis=2 is the 7d pose; 3d postition + 4d quaternion orientation
+ </li>
+
+ <li>
+     this representation is usually just flattened to (28,) when used
+ </li>
+</ul>
+
+ </li>
+
+ <li>
+     the high dimensional state is (50, 50, 6)<ul>
+ <li>
+     <code>[:,:,0:3]</code> (the first three channels) is the RGB of a 50x50 render at first snapshot
+ </li>
+
+ <li>
+     <code>[:,:,3:6]</code> (the second three channels) is the RGB of a 50x50 render at the second snapshot
+ </li>
+
+ <li>
+     ( TODO: i concatted in the channel axis for ease of use with conv2d but conv3d is available and i should switch )
+ </li>
+</ul>
+
+ </li>
+</ul>
+<p>an example of the sequence of 50,50 renderings as seen by the network is the following (though network doesn't see the overlaid debugging info)
+</p>
+<img src="/blog/imgs/2016/cartpole/eg_5050_episode.gif"/>
+
+
+<h3>control</h3>
+<p>there are two basic methods for control; discrete and continuous
+</p>
+<ul>
+ <li>
+     the discrete control version uses 5 discrete actions; don't push, push up, down, left, right<ul>
+ <li>
+     ( i've included a "dont move" action since, once the pole is balanced, the best thing to do is stop )
+ </li>
+</ul>
+
+ </li>
+
+ <li>
+     the continuous control version uses a 2d action; the forces to apply in the x &amp; y directions.
+ </li>
+</ul>
+
+<h3>rewards</h3>
+<p>reward is just +1 for each step the pole is still upright
+</p>
+
+<h2>random agent</h2>
+<p>running this cartpole simulation with
+   <a href="https://github.com/matpalm/cartpoleplusplus/blob/master/random_action_agent.py">random actions</a>
+   gives pretty terrible performance with either random discrete or continuous control. we're lucky to get 5 or 10 steps (of a maximum 200 for our episode) in the video each time the cart skips back to the center represents the pole falling out of bounds and the sim reseting.
+</p>
+<iframe width="420" height="315" src="https://www.youtube.com/embed/buSAT-3Q8Zs" frameborder="0" allowfullscreen></iframe>
+
+
+<h2>discrete control; low dimensional</h2>
+<ul>
+ <li>
+     5 actions; go left, right, up, down, do nothing
+ </li>
+
+ <li>
+     state is cart &amp; pole poses
+ </li>
+</ul>
+
+<h3>training a deep q network</h3>
+<p>after training a vanilla <a href="https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf">dqn</a>
+   using <a href="https://github.com/matthiasplappert/keras-rl">kera-rl</a>
+   we get reasonable controller
+</p>
+<iframe width="420" height="315" src="https://www.youtube.com/embed/zteyMIvhn1U" frameborder="0" allowfullscreen></iframe>
+
+<p>the training curve is what we expect; terrible number of steps at the start then gradually getting a reasonable number
+   of full runs (steps=200). still never gets to perfect runs 100% of the time though. there's also an interesting blip around
+   episode 1,000 where it looked like it was doing OK and then diverged and recovered by about episode 7,500.
+</p>
+<img src="/blog/imgs/2016/cartpole/training_curve.png"/>
+
+
+<h3>training with likelihood ratio policy gradient</h3>
+<p>training with a <a href="https://github.com/matpalm/cartpoleplusplus/blob/master/lrpg_cartpole.py">
+   baseline likelihood ratio policy gradient algorithm</a> works well too...
+   after 12 hrs it's getting 70% success rate keeping the pole balanced.
+</p>
+<iframe width="420" height="315" src="https://www.youtube.com/embed/aricda9gs2I" frameborder="0" allowfullscreen></iframe>
+
+<p>seems very sensitive to the initialisation though; here's three runs i started at the same time. it's interesting how much
+   quicker the green one was getting good results....
+</p>
+<img src="/blog/imgs/2016/cartpole/three_pg_training_means.png"/>
+
+<p>what's <i>really</i> interesting is looking at what the blue (and actually red) models are doing....
+</p>
+<p>whereas the green one (in the video above) is constantly making adjustments these other two models (red and blue) are much happier trying to stay still, i.e. long sequences of a 0 action. if they manage to get it balanced, or even nearly so, they just stop. this prior of 0 means though that if it's <i>not</i> balanced and they wait too long they haven't got time to recover. that's really cool! digging a bit further we can see that early in training there were cases where it manages to balance the pole very quickly and then just stopping for the rest of the episode. these were very successful, compared to other runs in the same batch, and hence this prior formed; do nothing and get a great (relative) reward! it's taking a loooong time for them to recover from these early successes and, eventually, they'll have an arguably better model at convergence.
+</p>
+<p>here's the proportions of actions per run for the cases where the episode resulted in a reward of 200 (i.e. it's balanced).
+   notice how the red and blue ones don't do well for particular initial starts, these correspond to cases where the behaviour of "no action" overwhelms particular starting pushes.
+</p>
+<table>
+  <tr><th>run</th><th>stop</th><th>left</th><th>right</th><th>up</th><th>down</th></tr>
+  <tr>
+    <td>green</td>
+    <td>0.32</td>
+    <td>0.16</td>
+    <td>0.15</td>
+    <td>0.22</td>
+    <td>0.13</td>
+  </tr>
+  <tr>
+    <td>red</td>
+    <td>0.65</td>
+    <td>0.12</td>
+    <td>0.00</td>
+    <td>0.11</td>
+    <td>0.10</td>
+  </tr>
+  <tr>
+    <td>blue</td>
+    <td>0.80</td>
+    <td>0.11</td>
+    <td>0.00</td>
+    <td>0.00</td>
+    <td>0.08</td>
+  </tr>
+</table>
+
+<iframe width="420" height="315" src="https://www.youtube.com/embed/28j10F8AgCo" frameborder="0" allowfullscreen></iframe>
+
+
+<h2>continuous control; low dimensional</h2>
+<ul>
+ <li>
+     2d action; force to apply on cart in x &amp; y directions
+ </li>
+
+ <li>
+     state is cart &amp; pole poses
+ </li>
+</ul>
+
+<h3>training with deep deterministic policy gradient</h3>
+<p><a href="http://arxiv.org/abs/1509.02971">Continuous control with deep reinforcement learning</a>
+   introduced an continuous control version of deep q networks using an actor/critic model.
+</p>
+<p>my implementation for this problem is <a href="https://github.com/matpalm/cartpoleplusplus/blob/master/ddpg_cartpole.py">ddpg_cartpole.py</a> and it learns a reasonable policy though for the few long runs i've done it diverges after awhile.
+   (i've also yet to have this run stable with raw pixels (probably bugs in my code no doubt))
+</p>
+<iframe width="420" height="315" src="https://www.youtube.com/embed/8X05GA5ZKvQ" frameborder="0" allowfullscreen></iframe>
+
+
+<h2>continuous control; high dimensional</h2>
+<ul>
+ <li>
+     2d action; force to apply on cart in x &amp; y directions
+ </li>
+
+ <li>
+     state is 2 50x50 RGB images
+ </li>
+</ul>
+
+<h3>training with normalised advantage functions</h3>
+<p><a href="https://arxiv.org/abs/1603.00748">Continuous Deep Q-Learning with Model-based Acceleration</a> introduced normalised advantage functions.
+</p>
+<p>my implementation is <a href="https://github.com/matpalm/cartpoleplusplus/blob/master/naf_cartpole.py"">naf_cartpole.py</a> and i've found NAF to be a lot easier/stable to train than DDPG.
+</p>
+<p>based on raw pixels i haven't yet got a model that can balance most of the time.
+   it's definitely getting somewhere though if we look at episode length over time.
+   (caps out at 200 which is the max episode length)
+</p>
+<img src="/blog/imgs/2016/cartpole/naf_convergence.png"/>
+
+<p>here's an example of NAF at the start of training. note: these are the 50x50 images <i>as seen by the conv nets</i>
+</p>
+<p><img src="/blog/imgs/2016/cartpole/untrained/ep_00000.gif"/>
+   <img src="/blog/imgs/2016/cartpole/untrained/ep_00001.gif"/>
+   <img src="/blog/imgs/2016/cartpole/untrained/ep_00002.gif"/>
+   <img src="/blog/imgs/2016/cartpole/untrained/ep_00003.gif"/>
+   <img src="/blog/imgs/2016/cartpole/untrained/ep_00004.gif"/>
+   <img src="/blog/imgs/2016/cartpole/untrained/ep_00005.gif"/>
+   <img src="/blog/imgs/2016/cartpole/untrained/ep_00006.gif"/>
+</p>
+<p>here's some examples of eval after training for 24hrs. i can still see mistakes so it should be doing better :/
+</p>
+<p><img src="/blog/imgs/2016/cartpole/trained/ep_00000.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00001.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00002.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00003.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00004.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00005.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00006.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00007.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00008.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00009.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00010.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00011.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00012.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00013.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00014.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00015.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00016.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00017.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00018.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00019.gif"/>
+</p>
+
+<h2>next steps</h2>
+<p>anyways maybe balancing on a cart is too boring;
+   what about on a <a href="https://www.google.com/search?q=kuka+iiwa">kuka arm</a> :)
+</p>
+<img src="/blog/imgs/2016/cartpole/kuka_pole.png"/>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[learning to do laps with reinforcement learning and neural nets]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/drivebot" />
+    <id>http://matpalm.com/blog/drivebot</id>
+    <published>2016-02-13T22:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="projects" />
+    <summary type="html"><![CDATA[learning to do laps with reinforcement learning and neural nets]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/drivebot"><![CDATA[<h2>the task</h2>
+<p>how can we train a simulated bot to drive around the following track using reinforcement learning and neural networks?
+</p>
+<img src="/blog/imgs/2016/drivebot/track1.png"/>
+
+<p>let's build something using
+</p>
+<ul>
+ <li>
+     the <a href="http://stdr-simulator-ros-pkg.github.io/">standard 2d robot simulator (STDR)</a> as a general framework for simulating and
+controlling the bot ( built on top of the <a href="http://www.ros.org/">robot operating system (ROS)</a> )
+ </li>
+
+ <li>
+     <a href="https://www.tensorflow.org/">tensorflow</a> for the RL and NN side of things.
+ </li>
+</ul>
+<p>all the code can be found on <a href="https://github.com/matpalm/drivebot">github</a>
+</p>
+
+<h2>sensors</h2>
+<p>our bot has 3 sonars; one that points forward, one left and another right. like most things in ROS these sonars are made available
+   via a simple pub/sub model. each sonar publishes to a topic and our code subscribes to these topics building a 3 tuple as shown below.
+   the elements of the tuple are (the range forward, range left, range right).
+</p>
+<img src="/blog/imgs/2016/drivebot/bot.png"/>
+
+
+<h2>control</h2>
+<p>the bot is controlled by three simple commands; step forward, rotate clockwise or rotate anti clockwise.
+   for now these are distinct, i.e. while rotating the bot isn't moving forward.
+   again this is trivial in ROS, we just publish a msg representing this movement to a topic that the bot subscribes to.
+</p>
+
+<h2>progress around track</h2>
+<p>we'll use simple forward movement as a signal the bot is doing well or not;
+</p>
+<ul>
+ <li>
+     choosing to move forward and hitting a wall scores the bot -1
+ </li>
+
+ <li>
+     choosing to move forward and not hitting a wall scores the bot +1
+ </li>
+
+ <li>
+     turning left or right scores 0
+ </li>
+</ul>
+
+<h2>framing this as a reinforcement learning task</h2>
+<p>the reinforcement learning task is to learn a decision making process where given some <em>state</em> of the world an <em>agent</em>
+   chooses some <em>action</em> with the goal of maximising some <em>reward</em>.
+</p>
+<p>for our drivebot
+</p>
+<ul>
+ <li>
+     the <em>state</em> is based on the current range values of the sonar; this is all the bot knows
+ </li>
+
+ <li>
+     the <em>agent</em> is the bot itself
+ </li>
+
+ <li>
+     the <em>actions</em> are 'go forward', 'turn left' or 'turn right'
+ </li>
+
+ <li>
+     the <em>reward</em> is the score based on progress
+ </li>
+</ul>
+<p>we'll call the a tuple of \( (current state, action, reward, new state) \) an <em>event</em> and a sequence of events an <em>episode</em>.
+</p>
+<p>each episode will be run as 1) place the bot in a random location and 2) let it run until either a) it's not received
+   a positive reward in 30 events (i.e. it's probably stuck) or b) we've recorded 1,000 events.
+</p>
+
+<h1>baseline</h1>
+<p>before we do anything too fancy we need to run a baseline..
+</p>
+<pre>
+if the largest sonar reading is from the forward one:
+  go forward
+elif the largest sonar reading is from the left one:
+  turn left
+else:
+  turn right
+</pre>
+
+<p>an example episode looks like this...
+</p>
+<img src="/blog/imgs/2016/drivebot/lap_and_half_simple_policy.png"/>
+
+<p>if we run for 200 episodes we can
+</p>
+<ul>
+ <li>
+     plot the total reward for each episode and
+ </li>
+
+ <li>
+     build a frequency table of the (action, reward) pairs we observed during all episodes.
+ </li>
+</ul>
+<table><tr><td>
+<img src="/blog/imgs/2016/drivebot/stat.baseline.png"/>
+</td><td><pre>
+  freq [action, reward]
+ 47327 [F, 1]   # moved forward and made progress; +1
+ 10343 [R, 0]   # turned right
+  8866 [L, 0]   # turned left
+   200 [F, 0]   # noise (see below)
+    93 [L, 1]   # noise (see below)
+    79 [R, 1]   # noise (see below)
+    36 [F, -1]  # moved forwarded and hit wall; -1
+</pre></td></tr></table>
+
+<p>this baseline, like all good baselines, is pretty good! we can see that ~750 is about the limit of what we expect to be
+   able to get as a total reward over 1,000 events (recall turning gives no reward).
+</p>
+<p>there are some entries that i've marked as 'noise' in the frequency table, eg [R, 1], which are cases which shouldn't be possible. these
+   come about from how the simulation is run; stdr simulating the environment is run asynchronously to the bot
+   so it's possible to take an action (like turning)
+   and at the next 'tick' we've had relative movement from the action <em>before</em> (e.g. going straight). it's not a big deal and just the kind
+   of thing you have to handle with async messaging (more noise).
+</p>
+<p>also note that the baseline isn't perfect and it doesn't get a high score most of the time. there are two main causes of getting stuck.
+</p>
+<ul>
+ <li>
+     it's possible to get locked into a left, right, left, right oscillation loop when coming out of a corner.
+ </li>
+
+ <li>
+     if the bot tries to take a corner too tightly the front sonar can have a high reading but the bot can collide with the corner.
+     (note the "blind spot" between the front and left/right sonar cones)
+ </li>
+</ul>
+
+<h1>q learning</h1>
+<p>our first non baseline will be based on discrete <a href="https://en.wikipedia.org/wiki/Q-learning">q learning</a>.
+   in q learning we learn a Q(uality) function which, given a state and action, returns the <em>expected total reward</em> until
+   the end of the episode (if that action was taken).
+</p>
+<p>\( Q(state, action) = expected reward until end of episode \)
+</p>
+
+<h2>q tables</h2>
+<p>in the case that both the set of states and the set of actions are discrete we can represent the Q function as a table.
+</p>
+<p>even though our sonar readings are a continuous state (three float values) we've already been talking about a discretised
+   version of them; the mapping to one of furthest_sonar_forward, furthest_sonar_left, furthest_sonar_right.
+</p>
+<p>a q table that corresponds to the baseline policy then might look something like ...
+</p>
+<pre>
+                                     actions
+state                    go_forward  turn_left  turn_right
+furthest_sonar_forward          100         99          99
+furthest_sonar_left              95         99          90
+furthest_sonar_right             95         90          99
+</pre>
+
+<p>once we have such a table we can make optimal decisions by running \( Q(state, action) \) for all actions
+   and choosing the highest Q value.
+</p>
+<p>but how would we populate such a table in the first place?
+</p>
+
+<h2>value iteration</h2>
+<p>we'll use the idea of <em>value iteration</em>. recall that the Q function returns the expected <em>total</em> reward until
+   the end of the episode and as such it can be defined iteratively.
+</p>
+<p>given an event \( (state_1, action, reward, state_2) \) we can define \( Q(state_1, action) \) as \(reward\)  +
+   the maximum reward that's possible to get from \(state2\)
+</p>
+<p>\( Q(s_1, a) = r + max_{a'} Q(s_2, a') \)
+</p>
+<p>if a process is stochastic we can introduce a discount on future rewards, gamma, that reflects that immediate awards
+   are to be weighted more than potential future rewards. (note: our simulation is totally deterministic but it's still
+   useful to use a discount to avoid snowballing sums)
+</p>
+<p>\( Q(s_1, a) = r + gamma . max_{a'} Q(s_2, a') \)
+</p>
+<p>given this definition we can learn the q table by populating it randomly and then updating incrementally based on observed events.
+</p>
+<p>\( Q(s_1, a) = alpha . Q(s_1, a) + (1 - alpha) . (r + gamma . max_{a'} Q(s_2, a')) \)
+</p>
+<p>running this policy over 200 episodes ( \( gamma = 0.9, alpha = 0.1 \) )
+   from a randomly initialised table we get the following total rewards per episode.
+</p>
+<table><tr><td>
+<img src="/blog/imgs/2016/drivebot/stat.discrete.png"/>
+</td><td><pre>
+  freq [action, reward]
+ 52162 [F, 1]
+ 10399 [R, 0]
+  7473 [L, 0]
+  1983 [R, 1]  # noise
+  1112 [L, 1]  # noise
+   221 [F, -1]
+   191 [F, 0]  # noise
+</pre></td></tr></table>
+
+<p>this looks very much like the baseline which is not surprising since the actual q table entries end up defining the same behaviour.
+</p>
+<pre>
+                                      actions
+state                    go_forward  turn_left  turn_right
+furthest_sonar_forward          8.3        4.5         4.3
+furthest_sonar_left             2.5        2.5         5.9
+furthest_sonar_right            2.5        6.1         2.4
+</pre>
+
+<p>also note how quickly this policy was learnt. for the first few episodes the bot wasn't doing great but it only took ~10 episodes
+   to converge.
+</p>
+<p>comparing the baseline to this run it's maybe fractionally better, but not by a whole lot...
+</p>
+<img src="/blog/imgs/2016/drivebot/boxplot_comparison.1.png"/>
+
+
+<h2>continuous state</h2>
+<p>using a q table meant we needed to map our continuous state space (three sonar readings) to a discrete
+   one (furthest_sonar_forward, etc) and though this mapping <em>seems</em> like a good idea maybe we can
+   learn better representations directly from the raw sonars? and what better tool to do this than a neural network! #buzzword
+</p>
+
+<h3>inference</h3>
+<p>first let's consider the decision making side of things; given a state (the three sonar readings) which action shall we take? an initial
+   thought might be to build a network representing \( Q(s, a) \) and then run it forward once for each
+   action and pick the max Q value. this would work but we're actually going to represent things a little differently
+   and have the network output the Q values for <em>all</em> actions every time. we can simply run an arg_max over all
+   the Q values to pick the best action.
+</p>
+<img src="/blog/imgs/2016/drivebot/network_inference.svg"/>
+
+
+<h3>training</h3>
+<p>how then can we train such a network? consider again our original value update equation ...
+</p>
+<p>\( Q(s_1, a) = r + gamma . max_{a'} Q(s_2, a') \)
+</p>
+<p>we want to use our Q network in two ways.
+</p>
+<ul>
+ <li>
+     for the left hand side, s1, we want to calculate the Q value for a particular action \( a \)
+ </li>
+
+ <li>
+     for the right hand side, s2, we want to calculate the maximum Q value across all actions.
+ </li>
+</ul>
+<p>our network is already setup to do s2 well but for s1 we actually only want the Q value for one action not all
+   of them. to pull out the one we want we can use a one hot mask followed by a sum to reduce
+   to a single value. it may seem like a clumsy way to calculate it  but having the network set up like
+   this is worth it for the inference case and the calculation for s2 (both of which require all values)
+</p>
+<p>once we have these two values it's just a matter of including the reward and discount ( \(gamma\) ) and minimising
+   the difference between the two sides (called the temporal difference). squared loss seems to work fine for this problem.
+</p>
+<p>graphically the training graph looks like the following. recall that a training example is a single event
+   \( (state_1, action, reward, state_2) \) where in this network the action is represented by a one hot mask over all the actions.
+</p>
+<img src="/blog/imgs/2016/drivebot/network_training.svg"/>
+
+<p>training this network (the Q network being just a single layer
+   <a href="https://en.wikipedia.org/wiki/Multilayer_perceptron">MLP</a> with 3 nodes) gives us the following results.
+</p>
+<table><tr><td>
+<img src="/blog/imgs/2016/drivebot/stat.nn_argmax.png"/>
+</td><td><pre>
+  freq [action, reward]
+ 62644 [F, 1]
+ 36530 [R, 0]
+  6217 [F, -1]
+  3636 [R, 1]  # noise
+</pre></td></tr></table>
+
+<p>this network doesn't score as high as the discrete q table and the main reason is that it's gotten stuck in a
+   behavioural local minima.
+</p>
+<p>looking at the frequency of actions we can see this network never bothered with turning left and you can actually get a semi
+   reasonable result if you're ok just doing 180 degree turns all the time...
+</p>
+<img src="/blog/imgs/2016/drivebot/bot_180s.png"/>
+
+<p>even still this approach is (maybe) doing slightly better than the discrete case...
+</p>
+<img src="/blog/imgs/2016/drivebot/boxplot_comparison.2.png"/>
+
+<p>note there's nothing in the reward system that heavily punishes going backwards, you might "waste" some time turning around but
+   the reward system is <em>any</em> movement not just movement forward. we'll come back to this when we address a slightly harder
+   problem but for now this brings up a common problem in all decision making processes;
+   <a href="https://en.wikipedia.org/wiki/Multi-armed_bandit#Empirical_motivation">the explore/exploit tradeoff</a>.
+</p>
+
+<h3>explore / exploit</h3>
+<p>there are lots of ways of handling explore vs exploit and we'll use a simple approach that has worked well for me in the past..
+</p>
+<p>given a set of Q values for actions, say, [ 6.8, 7.7, 3.9 ] instead of just picking the max, 0.8, we'll do a weighted pick by
+   sampling from the distribution we get by normalising the values [ 0.36, 0.41, 0.21 ]
+</p>
+<p>further to this we'll either squash (or stretch) the values by raising them to a power \( rho \) before normalising them.
+</p>
+<ul>
+ <li>
+     when \(rho\) is low, e.g. \(rho\)=0.01, values are squashed and the weighted pick is more uniform.
+[ 6.8, 7.7, 3.9 ] -&gt; [ 0.3338, 0.3342, 0.3319 ] resulting in an explore like behaviour.
+ </li>
+
+ <li>
+     when \(rho\) is high, e.g. \(rho\)=20, values are stretched and the weighted pick is more like picking the maximum.
+[ 6.8, 7.7, 3.9 ] -&gt; [ 0.0768, 0.9231, 0.0000 ] resulting in an exploit like behaviour
+ </li>
+</ul>
+<p>annealing \(rho\) from a low value to a high one over training gives a smooth explore -&gt; exploit transistion.
+</p>
+<p>trying this with our network gives the following result.
+</p>
+<table><tr><td>
+<img src="/blog/imgs/2016/drivebot/stat.nn_explore.png"/>
+</td><td><pre>
+ first 200
+  freq [action, reward]
+  4598 [R, 0]
+  4564 [L, 0]
+  2862 [F, -1]
+  1735 [F, 1]
+   177 [R, 1]  # noise
+   175 [L, 1]  # noise
+    69 [F, 0]  # noise
+</pre></td><td><pre>
+ last 200
+   freq  [action, reward]
+   45789 [F, 1]
+   33986 [R, 0]
+    4596 [F, -1]
+    1274 [R, 1]  # noise
+     558 [L, 0]
+      36 [L, 1]  # noise
+       1 [F, 0]  # noise
+</pre></td></tr></table>
+
+<p>this run actually kept \(rho\) low for a couple of hundred iterations before annealing it from 0.01 to 50.
+   we can see for the first 200 episodes we have an equal mix of F, L &amp; R (so are definitely exploring)
+   but by the end of the run we're back to favoring just turning right again :/ let's take a closer look.
+</p>
+<p>the following graphs show the proportions of actions taken over time for two runs. the first is for the baseline
+   case and shows a pretty constant ratio of F/L/R over time. the second plot is quite different though. here we have
+   three distinct parts; 1) a burnin period of equal F/L/R when the bot was running 100% explore 2) a period
+   of ramping up towards exploit where we do get higher scores related to a high F amount and finally 3) where
+   we get locked into just favoring R again.
+</p>
+<table><tr>
+<td><img src="/blog/imgs/2016/drivebot/action_freq.baseline.png"/></td>
+<td><img src="/blog/imgs/2016/drivebot/action_freq.nn_explore.png"/></td>
+</tr></table>
+
+<p>what went wrong? and what can we do about it?
+</p>
+<p>there are actually two important things happening and two clever approaches to avoiding them.
+   you can read a lot more about these two approaches in deepmind's epic Playing Atari paper <a href="#ref1">[1]</a>
+</p>
+
+<h3>target networks</h3>
+<p>the first problem is related to the instability of training the Q network with <em>two</em> updates per example.
+</p>
+<p>recall that
+   each training example updates both Q(s1) and Q(s2) and it turns out it can be unstable to train both of these at the
+   same time. a simple enough workaround is to keep a full copy of the network (called the "target network") and use it
+   for evaluating Q(s2). we don't backpropogate updates to the target network and instead take a fresh copy from the Q(s1)
+   network every n training steps. (it's called the "target" network since it provides a more stationary target for Q(s1)
+   to learn against)
+</p>
+<img src="/blog/imgs/2016/drivebot/network_training_target.svg"/>
+
+
+<h3>experience replay</h3>
+<p>the second problem is related to the order of examples we are training with.
+</p>
+<p>the core sequence of an episode
+   is \( ( state_1, action_1, reward_1, state_2, action_2, reward_2, state_3, ... ) \) which for training
+   get's broken down to individual events i.e. \( ( state_1, action_1, reward_1, state_2 ) \) followed by
+   \( ( state_2, action_2, reward_2, state_3 ) \) etc. as such each event's \( state_2 \) is going to be the
+   \( state_1 \) for the next event. this type of correlation between successive examples is bad news for any iterative optimizer.
+</p>
+<p>the solution is to use 'experience replay' <a href="#ref2">[2]</a> where we simly keep old events in a memory and
+   replay them back as training examples in a random order. it's very similar to the ideas behind why we shuffle input
+   data for any learning problem.
+</p>
+
+<h2>best result</h2>
+<p>adding these two gives the best result ...
+</p>
+<table><tr><td>
+<img src="/blog/imgs/2016/drivebot/stat.nn_replay.png"/>
+</td><td><pre>
+   freq [action, reward]
+ 116850 [F, 1]
+  18594 [R, 0]
+  18418 [L, 0]
+   2050 [L, 1]   # noise
+   2026 [R, 1]   # noise
+   1681 [F, -1]
+      1 [F, 0]   # noise
+</pre></td>
+<td><img src="/blog/imgs/2016/drivebot/action_freq.nn_replay.png"/></td>
+</tr></table>
+
+<p>this run used a bot with a high \(rho\) value (i.e. maximum exploit) that was fed 1,000 events/second randomly
+   from the explore/exploit job. we can see a few episodes of doing poorly before converging quickly (note that
+   this experience replay provides events a <em>lot</em> quicker than just normal simulation)
+</p>
+<p>overall this approach nails it compared to the previous runs.
+</p>
+<img src="/blog/imgs/2016/drivebot/boxplot_comparison.png"/>
+
+<img src="/blog/imgs/2016/drivebot/walk.gif"/>
+
+
+<h2>next steps</h2>
+<ul>
+ <li>
+     a harder reward function<ul>
+ <li>
+     instead of a reward per movement we can give a reward only at discrete points on the track.
+ </li>
+</ul>
+
+ </li>
+
+ <li>
+     continuous control<ul>
+ <li>
+     instead of three discrete actions we should try to learn continuous control actions
+     (<a href="#ref3">[3]</a>) e.g. acceleration &amp; steering.
+ </li>
+
+ <li>
+     will most probably require an <a href="https://webdocs.cs.ualberta.ca/~sutton/book/ebook/node66.html">actor/critic</a> implementation
+ </li>
+</ul>
+
+ </li>
+
+ <li>
+     add an adversial net <a href="#ref4">[4]</a> as a way to transfer learn between this simulated robot and the raspberry pi powered <a href="https://www.servocity.com/html/whippersnapper_runt_rovertm__6.html">whippersnapper rover</a> i'm building.
+ </li>
+</ul>
+<img src="/blog/imgs/2016/drivebot/runt.jpg"/>
+
+
+<h2>refs &amp; readings</h2>
+<ul>
+<li id="ref1">[1] <a href="https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf">Playing Atari with Deep Reinforcement Learning (pdf)</a></li>
+<li id="ref2">[2] <a href="http://www.dtic.mil/dtic/tr/fulltext/u2/a261434.pdf">
+Reinforcement Learning for Robots Using Neural Networks (pdf)</a>
+<li id="ref3">[3] <a href="http://arxiv.org/abs/1509.02971">Continuous control with deep reinforcement learning (arxiv)</a></li>
+<li id="ref4">[4] <a href="http://arxiv.org/abs/1505.07818">Domain-Adversarial Training of Neural Networks (arxiv)</a></li>
+</ul>
+
+<p>follow along further with this project by reading my <a href="https://plus.google.com/u/0/collection/kMWoSB">google+ robot0 stream</a>
+</p>
+<p>see more of what i'm generally reading on my <a href="https://plus.google.com/u/0/collection/Y8zfZ">google+ reading stream</a>
+</p>]]></content>
+  </entry>
+  <entry>
+    <author>
+      <name></name>
+      <uri>http://matpalm.com/blog</uri>
+    </author>
+    <title type="html"><![CDATA[do all first links on wikipedia lead to philosophy?]]></title>
+    <link rel="alternate" type="text/html" href="http://matpalm.com/blog/2011/08/13/wikipedia-philosophy" />
+    <id>http://matpalm.com/blog/2011/08/13/wikipedia-philosophy</id>
+    <published>2011-08-13T15:00:00Z</published>
+    <category scheme="http://matpalm.com/blog" term="projects" />
+    <summary type="html"><![CDATA[do all first links on wikipedia lead to philosophy?]]></summary>
+    <content type="html" xml:base="http://matpalm.com/blog/2011/08/13/wikipedia-philosophy"><![CDATA[<hr>
+
+
+<h2>questions</h2>
+<p>a <a href="http://xkcd.com/903/">recent</a> xkcd posed the idea...
+</p>
+<p><i>wikipedia trivia: if you take any article, click on the first link in the article text not in parentheses or italics, and then repeat, you will eventually end up at Philosophy.</i>
+</p>
+<p>this raises a number of questions
+</p>
+<ol>
+ <li>
+     Q: though i wouldn't be surprised if it's true for <em>most</em> articles it can't be true for <em>all</em> articles. can it?
+ </li>
+
+ <li>
+     Q: what's the distribution of distances (measured in "number of clicks away") from 'Philosophy'?
+ </li>
+
+ <li>
+     Q: by this same measure what's the furthest article from 'Philosophy'?
+ </li>
+
+ <li>
+     Q: are there any other articles that are more common than 'Philosophy'?
+ </li>
+
+ <li>
+     Q: what are the common paths to 'Philosophy'?
+ </li>
+</ol>
+<p>there's only one way to find out!
+</p>
+<ol>
+ <li>
+     grab a wikipedia dump
+ </li>
+
+ <li>
+     build the graph of 'article' to 'first link to next article' (not in parentheses or italics)
+ </li>
+
+ <li>
+     do breadth first search backwards from 'Philosophy' and see what things look like
+ </li>
+</ol>
+<hr>
+
+
+<h2>getting and processing the data</h2>
+<p>for my first attempt i tried to use the <a href="http://wiki.freebase.com/wiki/WEX">freebase wikipedia dump</a>. my thought was it'd be easier
+   to deal with a preparsed dataset but it didn't turn out.
+</p>
+<p>two big problems....
+</p>
+<ol>
+ <li>
+     lots of information has been lost in the preparsing (eg. it was sometimes hard to determine if the first links were from the main body of text or from a sidebar )
+ </li>
+
+ <li>
+     some pages weren't parsed properly at all and were just blank; included ones like <a href="http://en.wikipedia.org/wiki/Greeks">Greeks</a>
+which ended up being pretty important.
+ </li>
+</ol>
+<p>instead i went for a <a href="http://dumps.wikimedia.org/enwiki/latest/">raw wikimedia dump</a>, in particular enwiki-latest-pages-articles.xml.bz2.
+   the version at the time of writing this blog was 7gb compressed &amp; 30gb uncompressed. it's already up to 9gb as of Feb 2013!
+</p>
+<p>for preprocessing there were a number of steps
+</p>
+<ol>
+ <li>
+     split the dataset into pages that represent redirects and the actual articles themselves
+ </li>
+
+ <li>
+     dereference all the redirects (to avoid redirects that redirect to other redirects)
+ </li>
+
+ <li>
+     parse all the articles; the crux of this is done with <a href="http://code.pediapress.com/wiki/wiki/mwlib">mwlib</a>
+and <a href="https://github.com/matpalm/wikipediaPhilosophy/blob/master/article_parser.py">article_parser.py</a>; to make a big list of edges of 'from' nodes (the article) and 'to' nodes (the first applicable link on the article page)
+ </li>
+
+ <li>
+     dereference the edges to make sure all redirects have been followed
+ </li>
+</ol>
+<p>some general statements before we go further
+</p>
+<ol>
+ <li>
+     wikipedia is under heavy edit churn. i've been doing this project in 15-30 minutes chunks for a few weeks and it's amazing
+      how often i'd compare the parsing to live wikipedia and find out a page had already subtely changed. god knows what it looks like currently.
+ </li>
+
+ <li>
+     i wrote all the code for this in python as i'm trying to move away from ruby to get better data related library support. everything in fact <em>except</em> for
+the depth first search which i did in java. the full graph as a dict was <em>insanely</em> slow to access, i must be doing something wrong.
+for the full details see
+<a href="http://www.github.com/matpalm/wikipediaPhilosophy">the code on this project</a>. git cloning the project and executing the README
+as a shell script may [1] do something close to all the steps from start to finish. <small>[1] or it might not</small>
+ </li>
+</ol>
+<p>the end result of the parsing is a list of 3.6e6 edges of the form 'article' -&gt; 'first link to next article' (after following redirects).
+</p>
+<p>all the 'article's are unique but there are only 500e3 distinct 'next article's which is already very interesting; it means less than 15% of articles
+   on wikipedia are represented by one of these first links; this graph is very "bushy" (ie lots of leaf nodes).
+</p>
+<p>to calculate the distance from 'Philosophy' for all articles it's a straight forward
+   <a href="http://en.wikipedia.org/wiki/Breadth_first_search">breadth first search</a> and
+   because this search doesnt <a href="http://en.wikipedia.org/wiki/Graph_cycle">cycle</a> back to 'Philosophy' again it ends
+   up building a <a href="http://en.wikipedia.org/wiki/Tree_(graph_theory)">tree</a>.
+</p>
+<hr>
+
+
+<h2>the results</h2>
+<p>with this tree we can start answering some of our original questions ...
+</p>
+<hr>
+
+
+<h3>Q: though i wouldn't be surprised if it's true for <em>most</em> articles it can't be true for <em>all</em> articles. can it?</h3>
+<p>seems it's not true for all articles; 3.5e6 articles lead to 'Philosophy' but 100e3 don't.
+</p>
+<p>these 100e3 fall into two types
+</p>
+<p>1) 50e3 of them end up in cycles. this is a remarkably low count given 3.5e6 make it to 'Philosophy'.
+</p>
+<p>the vast majority of the cycles are of length 2; eg <strong>Waste management -&gt; Waste collection -&gt; Waste management</strong>
+</p>
+<p>( my favorite that i stumbled across is <strong>Sand fence -&gt; Snow fence -&gt; Sand fence</strong></br>
+   the first sentence of Snow fence being "A snow fence is a structure, similar to a sand fence ..."</br>
+   the first sentence of Sand fence being "A sand fence is a structure similar to a snow fence ..." )
+</p>
+<p>2) the other 50e3 are dead ends; all sorts of examples for this, mainly around pages that were never written or have been deleted.
+</p>
+<p>eg <strong>Windsurfing -&gt; Surface water sports -&gt; Discing</strong> (which has deleted)
+</p>
+<hr>
+
+
+<h3>Q: what's the distribution of distances of articles from 'Philosophy'?</h3>
+<p>the bulk of the articles are between 10 to 30 clicks away...
+</p>
+<img src="http://matpalm.com/wikipediaPhilosophy/num_articles__number_clicks__philosophy.png"/>
+
+<p>i've trimmed this graph at 70 clicks away since there's a long tail of one single path that is 1001 articles long.
+</p>
+<p><strong>List of state leaders in 1977 -&gt; List of state leaders in 1976 -&gt; List of state leaders in 1975 -&gt;
+.... -&gt; List of state leaders in 1001 -&gt; List of state leaders in 1000 -&gt; Fatimid Caliphate -&gt; Arab people
+-&gt; Panethnicity -&gt; Ethnic group -&gt; Social group -&gt; Social sciences -&gt; List of academic disciplines
+-&gt; Academia -&gt; Community -&gt; Living -&gt; Life -&gt; Physical body -&gt; Physics -&gt; Natural science -&gt; Science
+-&gt; Knowledge -&gt; Fact -&gt; Information -&gt; Sequence -&gt; Mathematics -&gt; Quantity -&gt; Property (philosophy)
+-&gt; Modern philosophy -&gt; Philosophy</strong>
+</p>
+<p>seems a bit of a "meta article" outlier we can ignore.
+</p>
+<p>( there's an interesting dip at a distance of 19 too; wonder what's going on there? )
+</p>
+<hr>
+
+
+<h3>Q: what's the furthest article from 'Philosophy'?</h3>
+<p>'Violet &amp; Daisy' is the longest chain i found that didn't include "meta" pages with some kind of sequence number in it. it's 36 articles from 'Philosophy'.
+</p>
+<p><strong>Violet &amp; Daisy -&gt; Saoirse Ronan -&gt; BAFTA Award for Best Actress in a Supporting Role -&gt; British Academy Film Awards -&gt;
+ British Academy of Film and Television Arts -&gt; David Lean -&gt; Order of the British Empire -&gt; Chivalric order -&gt; Knight -&gt;
+ Warrior -&gt; Combat -&gt; Violence -&gt; Psychological manipulation -&gt; Social influence -&gt; Conformity -&gt; Unconscious mind -&gt;
+ Germans -&gt; Germanic peoples -&gt; Proto-Indo-Europeans -&gt; Proto-Indo-European language -&gt; Linguistic reconstruction -&gt;
+ Internal reconstruction -&gt; Language -&gt; Human -&gt; Extant taxon -&gt; Biology -&gt; Natural science -&gt; Science -&gt; Knowledge -&gt;
+ Fact -&gt; Information -&gt; Sequence -&gt; Mathematics -&gt; Quantity -&gt; Property (philosophy) -&gt; Modern philosophy -&gt; Philosophy</strong>
+</p>
+<hr>
+
+
+<h3>Q: are there any other articles that are "more common" than 'Philosophy'?</h3>
+<p>with 95+% of articles clicking through to 'Philosophy' it's not possible for there to be another unconnected graph with an article more represented than
+   'Philosophy'.
+</p>
+<p>but if we <em>continue</em> to click through past 'Philosophy' we see we're in a short cycle of 12 articles...
+</p>
+<p><strong>Philosophy -&gt; Reason -&gt; Natural science -&gt; Science -&gt; Knowledge -&gt; Fact -&gt; Information -&gt; Sequence -&gt; Mathematics -&gt;
+ Quantity -&gt; Property (philosophy) -&gt; Modern philosophy -&gt; Philosophy</strong>
+</p>
+<p>so really <em>any</em> of these are reasonable candidates and are equally good as 'Philosophy' itself for this game.
+</p>
+<hr>
+
+
+<h3>Q: what are the common paths into 'Philosophy'?</h3>
+<p>as mentioned the breadth first search builds a tree of articles with 'Philosophy' at it's root.
+</p>
+<p>one metric we can assign to each article in this tree is the number of descendant articles it has.</br>
+   'Philosophy', as the root, has all articles as descendants so it's number is 3.5e6 and it's rank 1.</br>
+   the next ranked by number of descendants is 'Modern philosophy' with 3.4e6 descendants;
+   ( ie of the 3.5e6 articles that eventually led to 'Philosophy' only 100e3 of them <em>didn't</em> click through 'Modern Philosophy').
+</p>
+<p>by ranking articles by this metric we can observe the core structure of the tree.
+</p>
+<p><hr>
+   in fact for the top 10 ranked articles it's hardly a tree, just the chain ...
+</p>
+<p><a href="http://matpalm.com/wikipediaPhilosophy/top10.png"><img src="http://matpalm.com/wikipediaPhilosophy/top10.png" width="100%"/></a>
+</p>
+<p><small>(width of the edge is proportional to the number of descendants)</small>
+</p>
+<p>it turns out that 3e6 articles (85% of the lot) get to 'Philosophy' through 'Science'.
+</p>
+<p><hr>
+   in fact it's not until we consider up to the 20th ranked item, 'Biology', before it actually becomes a tree structure ...
+</p>
+<p><a href="http://matpalm.com/wikipediaPhilosophy/top20.png"><img src="http://matpalm.com/wikipediaPhilosophy/top20.png" width="100%"/></a>
+</p>
+<p><small>(click for a bigger version)</small>
+</p>
+<p><hr>
+   when we consider the top 200 things start to look a bit more interesting ...
+</p>
+<script src="http://zoom.it/adTw.js?width=auto&height=500px"></script>
+
+<p><hr>
+   and by the top 1000 things are starting to lose an obvious core structure ...
+</p>
+<script src="http://zoom.it/QyGA.js?width=auto&height=500px"></script>
+
+<p>( though dot's a pretty poor layout engine for this one, i should redo this one )
+</p>
+
+<h2>conclusions</h2>
+<p>so i managed to answer the main questions i had, but it's a fun dataset so there's lots more to do yet!
+</p>
+<p>todos include
+</p>
+<ol>
+ <li>
+     a better layout for the top 1000 or so
+ </li>
+
+ <li>
+     redo with a more recent wiki dump to see what's changed
+ </li>
+
+ <li>
+     what happened at a depth of 19 articles?
+ </li>
+</ol>]]></content>
+  </entry>
+</feed>

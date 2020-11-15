@@ -1,0 +1,423 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="counting-bees-on-a-rasp-pi-with-a-conv-net"></a>
+  <h2 class="blog_post_title"><a href="/blog/counting_bees" rel="bookmark" title="Permanent Link to counting bees on a rasp pi with a conv net">counting bees on a rasp pi with a conv net</a></h2>
+  <small>May 17, 2018 at 12:30 PM | categories:
+
+<a href='/blog/tag/projects'>projects</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <h1>counting bees</h1>
+<p>the first thing i thought when we setup our bee hive was "i wonder how you could count the number of bees coming and going?"
+</p>
+<p>after a little research i discovered it seems noone has a good non intrusive system for doing it yet.
+   it can apparently be useful for all sorts of hive health checking.
+</p>
+<p>the first thing to do was collect some sample data.
+   a raspberry pi, a standard pi camera and a solar panel is a pretty simple thing to get going
+   and at 1 frame every 10 seconds you get 5,000+ images over a day (6am to 9pm).
+</p>
+<img src="/blog/imgs/2018/bnn/rasp_pi.png" />
+
+<p>here's an example image... how many bees can you count?
+</p>
+<img src="/blog/imgs/2018/bnn/single_day_eg1.png" />
+
+
+<h1>what exactly is the question?</h1>
+<p>the second thing was to decide exactly what i was trying to get the neural net to do.
+   if the task is "count bees in an image" you could arguably try to regress directly to the number
+   but it didn't feel like the easiest thing to start with and it doesn't allow any fun tracking of individual bees over frames.
+   instead i decided to focus on localising every bee in the image.
+</p>
+<p>a quick sanity check of an off the shelf single shot multi box detector didn't give great results.
+   kinda not surprisingly, especially given the density of bees around the hive entrance.
+   (protip: transfer learning is not the answer to everything)
+   but that's ok; i have a super constrained image, only have 1 class to detect and don't actually care about a bounding box as such,
+   just whether a bee is there or not. can we do something simpler?
+</p>
+
+<h2>v1: fully convolutional "bee / no bee" in a patch</h2>
+<p>my first quick experiment was a patch based "bee / no bee in image" detector. i.e. given an image patch what's the probability there is at least
+   1 bee in the image. doing this as a <a href="/blog/fully_conv/">fully convolutional</a> net on very small patches meant it could easily run on full res data.
+   this approach kinda of worked but was failing for the the hive entrance where there is a much denser region of bees.
+</p>
+
+<h2>v2: RGB image -&gt; black / white bitmap</h2>
+<p>i quickly realised this could easily be framed instead as an image to image translation problem.
+   the input is the RGB camera image and the output is a single channel image where a "white" pixel denotes the center of a bee.
+</p>
+<table class="data">
+<tr><td>RGB input (cropped)</td><td>single channel output (cropped)</td></tr>
+<tr>
+<td><img src="/blog/imgs/2018/bnn/eg1a.png"/></td>
+<td><img src="/blog/imgs/2018/bnn/eg1b.png"/></td>
+</tr>
+</table>
+
+
+<h1>labelling</h1>
+<p>step three was labelling. it wasn't too hard to roll a little <a href="https://wiki.python.org/moin/TkInter">TkInter</a> app
+   for selecting / deselecting bees on an image and saving the results in a sqlite database.
+   i spent quite a bit of time getting this tool right; anyone who's done a reasonable amount of hand labelling
+   knows the difference it can make :/ we'll see later how luckily (as we'll see) having access to a lot of samples
+   means i could get quite a good result with semi supervised approaches
+</p>
+
+<h1>the model</h1>
+<p>the architecture of the network is a very vanilla u-net.
+</p>
+<ul>
+ <li>
+     <a href="/blog/fully_conv/">a fully convolutional network</a> trained on half resolution patches but run against full resolution images
+ </li>
+
+ <li>
+     encoding is a sequence of 4 3x3 convolutions with stride 2
+ </li>
+
+ <li>
+     decoding is a sequence of nearest neighbours resizes + 3x3 convolution (stride 1) + skip connection from the encoders
+ </li>
+
+ <li>
+     final layer is a 1x1 convolution (stride 1) with sigmoid activation (i.e. binary bee / no bee choice per pixel)
+ </li>
+</ul>
+<p>after some emperical experiments i chose to only decode back to half the resolution of the input. it was good enough.
+</p>
+<p>i did the decoding using a nearest neighbour resize instead of a deconvolution pretty much out of habit.
+</p>
+<p>the network was trained with <a href="https://arxiv.org/abs/1412.6980">Adam</a>
+   and it's small enough that <a href="https://arxiv.org/abs/1502.03167">batch norm</a> didn't seem to help much.
+   i was surprised how simple and how few filters i could get away with.
+</p>
+<img src="/blog/imgs/2018/bnn/network.png"/>
+
+<p>i applied the standard sort of data augmentation you'd expect; random rotation &amp; image colour distortion. the patch based training approach means
+   we inherently get a form of random cropping. i didn't flip the images since i've always got the camera on the same side of the hive.
+</p>
+<p>one subtle aspect was the need to post process the output predictions. with a probabilistic output we get a blurry cloud around
+   where bees might be. to convert this into a hard one-bee-one-pixel decision i added
+   thresholding + connected components + centroid detection using
+   the <a href="http://scikit-image.org/docs/dev/api/skimage.measure.html">skimage measure module</a>.
+   this bit was hand rolled and tuned purely based on eyeballing results; it could totally be included in the end
+   to end stack as a learnt component though. TODO :)
+</p>
+<table class="data">
+<tr><td>input</td><td>raw model output</td><td>cluster centroids</td></tr>
+<tr>
+<td><img width="200" src="/blog/imgs/2018/bnn/eg2a.png"/></td>
+<td><img width="200" src="/blog/imgs/2018/bnn/eg2b.png"/></td>
+<td><img width="200" src="/blog/imgs/2018/bnn/eg2c.png"/></td>
+</tr>
+</table>
+
+
+<h1>generalisation over days</h1>
+
+<h2>over one day</h2>
+<p>my initial experiments were with images over a short period of a single day.
+   it was very easy to get a model running extremely well on this data with a small number of labelled images (~30)
+</p>
+<table class="data">
+<tr>
+<td>day 1 sample 1</td>
+<td>day 1 sample 2</td>
+<td>day 1 sample 3</td>
+</tr>
+<td><img src="/blog/imgs/2018/bnn/single_day_eg1.png"/></td>
+<td><img src="/blog/imgs/2018/bnn/single_day_eg2.png"/></td>
+<td><img src="/blog/imgs/2018/bnn/single_day_eg3.png"/></td>
+</tr>
+</table>
+
+
+<h2>over many days</h2>
+<p>things got more complicated when i started to include longer periods over multiple days.
+   one key aspect was the lighting difference (time of day, as well as different weather).
+   another was that i was putting the camera out manually each day and just sticking it in kinda the same spot with blue tac.
+   a third more surprising difference was that with grass growing the tops of dandelions look a lot like bees apparently
+   (i.e. the first round of trained models hadn't seen this and when it appeared it was a constant false positive)
+</p>
+<p>most of this was solved already by data augmentation and none of it was a show stopper.
+   in general the data doesn't have much variation, which is great since that allows us to get away with a simple network and training scheme.
+</p>
+<table class="data">
+<tr>
+<td>day 1 sample</td>
+<td>day 2 sample</td>
+<td>day 3 sample</td>
+</tr>
+<td><img src="/blog/imgs/2018/bnn/multiple_days_eg1.png"/></td>
+<td><img src="/blog/imgs/2018/bnn/multiple_days_eg2.png"/></td>
+<td><img src="/blog/imgs/2018/bnn/multiple_days_eg3.png"/></td>
+</tr>
+</table>
+
+
+<h1>an example of prediction</h1>
+<p>this image shows an example of the predictions. it's interesting to note this is a case where there were many more bees than any image i
+   labelled, a great validation that the fully convolutional approach trained on smaller patches works.
+</p>
+<img src="/blog/imgs/2018/bnn/rgb_labels_predictions.png"/>
+
+<p>it does ok across a range of detections; i imagine the lack of diversity in the background is a biiiiig help here and that running
+   this network on some arbitrary hive wouldn't be anywhere near as good.
+</p>
+<table class="data">
+<tr>
+<td>high density around entrance</td>
+<td>varying bee sizes</td>
+<td>high speed bees!</td>
+</tr>
+<td><img src="/blog/imgs/2018/bnn/prediction_eg_zoom_1.png"/></td>
+<td><img src="/blog/imgs/2018/bnn/prediction_eg_zoom_2.png"/></td>
+<td><img src="/blog/imgs/2018/bnn/prediction_eg_zoom_3.png"/></td>
+</tr>
+</table>
+
+
+<h1>labelling tricks</h1>
+
+<h2>semi supervised learning</h2>
+<p>the ability to get a large number of images makes this a great candidate for semi supervised learning.
+</p>
+<p>a very simple approach of ...
+</p>
+<ol>
+ <li>
+     capture 10,000 images
+ </li>
+
+ <li>
+     label 100 images &amp; train <code>model_1</code>
+ </li>
+
+ <li>
+     use <code>model_1</code> to label other 9,900 images
+ </li>
+
+ <li>
+     train <code>model_2</code> with "labelled" 10,000
+ </li>
+</ol>
+<p>... results in a model_2 that does better than model_1.
+</p>
+<p>here's an example. note that model_1 has some false positives (far left center &amp; blade of grass) and some
+   false negatives (bees around the hive entrance)
+</p>
+<table class="data">
+<tr><td>model_1</td><td>model_2</td></tr>
+<tr>
+<td><img src="/blog/imgs/2018/bnn/semi_supervised_eg_without.png"/></td>
+<td><img src="/blog/imgs/2018/bnn/semi_supervised_eg_with.png"/></td>
+</tr>
+</table>
+
+
+<h2>labelling by correcting a poor model</h2>
+<p>this kind of data is also a great example of when correcting a bad model is quicker than labelling from scratch...
+</p>
+<ol>
+ <li>
+     label 10 images &amp; train model
+ </li>
+
+ <li>
+     use model to label next 100 images
+ </li>
+
+ <li>
+     use labelling tool to <em>correct</em> the labels of these 100 images
+ </li>
+
+ <li>
+     retrain model with 110 images
+ </li>
+
+ <li>
+     repeat ....
+ </li>
+</ol>
+<p>this is very common pattern i've seen and sometimes makes you need to rethink your labelling tool a bit..
+</p>
+
+<h1>counts over time</h1>
+<p>being able to locate bees means you can count them!
+   this makes for fun graphs like this that show the number of bees over a day.
+   i love how they all get busy and race home around 4pm :)
+</p>
+<img src="/blog/imgs/2018/bnn/bees_every_10s.png"/>
+
+
+<h1>running inference on the pi</h1>
+<p>running a model for inference on the pi was a big part of this project.
+</p>
+
+<h2>directly on the pi hardware</h2>
+<p>the first baseline was to freeze the tensorflow graph and just run it directly on the pi.
+   this works without any problem, it's just the pi can only do 1 image / second :/
+</p>
+
+<h2>running on a movidius neural compute stick</h2>
+<p>i was very excited about the possibility of getting this model to run on the pi using a
+   <a href="https://developer.movidius.com/">movidus neural compute stick</a>. they are an awesome bit of kit.
+</p>
+<p>sadly it doesn't work :/ since their API to convert from a tensorflow graph to their
+   internal model format doesn't support the way i was doing decoding so i had to convert upsizing from using
+   nearest neighbours resampling to using a deconvolution. that's not a big deal, except it just doesn't work.
+   there are a bunch of little problems i've got <a href="https://github.com/matpalm/movidius_bug_reports">bug reproduction cases</a> for.
+   once they are fixed i can revisit...
+</p>
+<p>[update sep 2018] after lots of hoop jumping actually did get things running! hooray.
+   see <a href="https://github.com/matpalm/bnn/issues/8">this issue</a> for some further info.
+</p>
+
+<h3>v3 model: RGB image -&gt; bee count</h3>
+<p>this led me to the third version of my model; can we regress directly from the RGB input to a count of the bees? if we do this we can
+   avoid any problems relating to unsupported ops &amp; kernel bugs on the neural compute stick,
+   though it's unlikely this will be as good as the centroids approach of v2.
+</p>
+<p>i was originally wary of trying this since i expected it would take a lot more labelling (it's no longer a patch based system)
+   however! given a model that does pretty well at locating them, and a lot of unlabelled data, we can make a pretty good synthetic dataset
+   by applying the v2 rgb image -&gt; bee location model and just counting the number of detections.
+</p>
+<p>this model was pretty easy to train and gives reasonable results... (though it's not as good as just counting the centroids detected by the v2 model)
+</p>
+<table class="data">
+<tr><td colspan="13">sample actual vs predicted for some test data</td></tr>
+<tr><td>actual</td>
+<td>40</td><td>19</td><td>16</td><td>15</td><td>13</td><td>12</td><td>11</td><td>10</td><td>8</td><td>7</td><td>6</td><td>4</td></tr>
+<tr><td>v2 (centroids) predicted</td>
+<td>39</td><td>19</td><td>16</td><td>13</td><td>13</td><td>14</td><td>11</td><td>8</td><td>8</td><td>7</td><td>6</td><td>4</td></tr>
+<tr><td>v3 (raw count) predicted</td>
+<td>33.1</td><td>15.3</td><td>12.3</td><td>12.5</td><td>13.3</td><td>10.4</td>
+<td>9.3</td><td>8.7</td><td>6.3</td><td>7.1</td><td>5.9</td><td>4.2</td>
+</tr>
+</table>
+
+<p>... but unfortunately <em>still</em> doesn't work on the NCS. (it runs, i just can't get it to give
+   anything but random results). i've generated some
+   <a href="https://ncsforum.movidius.com/discussion/692/incorrect-inference-results-from-a-minimal-tensorflow-model#latest">more bug reproduction cases</a>
+   and again will come back to it... eventually...
+</p>
+
+<h1>next steps?</h1>
+<p>as aways there's still a million things to tinker with...
+</p>
+<ul>
+ <li>
+     get the entire thing ported to the <a href="http://jevois.org/">je vois embedded camera</a> i've done a bit of tinkering with this but wanted to have the NCS working as a baseline first. i want 120fps bee detection!!!
+ </li>
+
+ <li>
+     tracking bees over multiple frames / with multiple cameras for optical flow visualisation
+ </li>
+
+ <li>
+     more detailed study of benefit of semi supervised approach and training a larger model to label for a smaller model
+ </li>
+
+ <li>
+     investigate power usage of the NCS; how to factor that into hyperparam tuning?
+ </li>
+
+ <li>
+     switch to building a small version of farm.bot for doing some cnc controlled seedling genetic experiments (i.e. something completely different)
+ </li>
+</ul>
+
+<h1>code</h1>
+<p>all the code for this is <a href="https://github.com/matpalm/bnn">on github</a>
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/counting_bees";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+     xmlns:atom="http://www.w3.org/2005/Atom"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+     >
+  <channel>
+    <title>brain of mat kelcey</title>
+    <link>http://matpalm.com/blog</link>
+    <description>thoughts from a data scientist wannabe</description>
+    <generator>Blogofile</generator>
+    <sy:updatePeriod>hourly</sy:updatePeriod>
+    <sy:updateFrequency>1</sy:updateFrequency>
+    <item>
+      <title>metric learning for image similarity search in objax</title>
+      <link>http://matpalm.com/blog/objax_metric_learning</link>
+      <category><![CDATA[objax]]></category>
+      <category><![CDATA[jax]]></category>
+      <guid>http://matpalm.com/blog/objax_metric_learning</guid>
+      <description>metric learning for image similarity search in objax</description>
+      <content:encoded><![CDATA[<p>i recently ported by
+   <a href="https://keras.io/">keras.io</a>
+   <a href="https://keras.io/examples/vision/metric_learning/">metric learning for image similarity search</a>
+   tutorial to use
+   <a href="https://objax.readthedocs.io/en/latest/">objax</a>.
+</p>
+<p>check it out in
+   <a href="https://github.com/google/objax/blob/master/examples/tutorials/metric-learning.ipynb">this tutorial</a>
+   and let me know what you think!
+</p>]]></content:encoded>
+    </item>
+  </channel>
+</rss>

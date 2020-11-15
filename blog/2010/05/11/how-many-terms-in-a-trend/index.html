@@ -1,0 +1,125 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="how-many-terms-in-a-trend-"></a>
+  <h2 class="blog_post_title"><a href="/blog/2010/05/11/how-many-terms-in-a-trend/" rel="bookmark" title="Permanent Link to how many terms in a trend?">how many terms in a trend?</a></h2>
+  <small>May 11, 2010 at 07:46 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p>i've been poking around with a simple trending algorithm over the last few weeks and have uncovered a problem that, like most interesting ones, i'm not sure how to solve. the question revolves around discovering multi terms trends. 
+</p>
+<p>a sensible place to start when looking for trends is to consider single terms but what if though we ended up with three equally trending terms 'happy', 'new' and 'year'? it's pretty obvious that the actual trend is 'happy new year' but what is the best way to express this as a single trend in an algorithmic sense?
+</p>
+<p>one approach i've been playing with is to collect unigrams, bigrams and trigrams (1,2,3 term 'phrases') and consider the cases where the terms overlap. basically if 'happy new year' is trending then, in some sense, we can ignore trends for 'happy new', 'new year', 'happy', 'new' and 'year'. but does this result in to many false positives? would we miss 'happy' as a trend if lots of people were chirpy about the change of year (as they usually are, on new years eve)
+</p>
+<p>rather than outright ignore we could somehow reduce the weighting by removing the double counting.
+</p>
+<p>eg if we had 3 trends;  (free beer,11), (free,12) &amp; (beer,25)
+   we can take 11 (from the 2gram) off both 1grams to give  (free beer,11), (free,1) &amp; (beer,14)
+   showing that 'beer', outside of the phrase 'free beer', is perhaps a trend in itself (as it should be)
+</p>
+<p>this feels like it might work but would be non trivial (read: fun) to implement
+</p>
+<p>another slightly different problem is around the handling of retweeting. my experiments have shown a huge amount of the 'trends' found are related to retweets, which is fine in itself, but it gives quite strange trends since the retweeted portion of the text is usually quite long.
+</p>
+<p>for example; say lots of people are retweeting something and, as some people do, are adding various bits and pieces at the beginning and end; eg 'RT @bob omg i just found a peanut' or 'omg i just found a peanut; via @bob lucky him!!'
+</p>
+<p>if we're considering bigrams (which i am in my current implementation) we end up with an odd selection of trends such as 'just found', 'a peanut', 'omg i', 'found a', 'i just' and in these cases it'd be great to be able to just stitch them together into the common retweeted element 'omg i just found a peanut'. 
+</p>
+<p>we could 'solve' this problem by not just considering 1,2 and 3 grams but considering <em>all</em> possible n-grams for each tweet and employing the technique we spoke of above of reducing the counts. it'd almost be feasible, since tweets are never that long, but feels uber clumsy and i'd hate to see the order statistic of that algorithm ;)
+</p>
+<p>this seems more like a stitching problem of some kind;  eg if we have 4 grams 'omg i just found', 'i just found a', 'just found a peanut' perhaps we can identify the non trivial overlap and stitch them together (?)
+</p>
+<p>not sure, there are a number of things to try. was hoping that brain dumping some of this would help me see the light but nothing obvious jumps out :(
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2010/05/11/how-many-terms-in-a-trend/";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

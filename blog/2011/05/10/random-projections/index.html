@@ -1,0 +1,173 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="dimensionality-reduction-using-random-projections."></a>
+  <h2 class="blog_post_title"><a href="/blog/2011/05/10/random-projections/" rel="bookmark" title="Permanent Link to dimensionality reduction using random projections.">dimensionality reduction using random projections.</a></h2>
+  <small>May 10, 2011 at 08:31 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p>previously i've discussed <a href="http://matpalm.com/lsa_via_svd/intro.html">dimensionality reduction using SVD and PCA</a> but another interesting technique is using a random projection.
+</p>
+<p>in a random projection we project A (a NxM matrix) to A' (a NxO, O &lt; M) by the transform AP=A' where P is a MxO matrix with random values.</br>
+   ( well not totally random, each column must have unit length (ie entries in each column must add to 1) )
+</p>
+<p>though the results of this reduction are generally not as good as the results from SVD or PCA it has two huge benefits
+</p>
+<ul>
+ <li>
+     can be done <em>without</em> needing to hold P in memory (since it's entries can be generated multiple times using a seeded RNG)
+ </li>
+
+ <li>
+     and more importantly it's <em>really</em> fast 
+ </li>
+</ul>
+<p>how good is it compared to PCA i wonder? let's have a play around...
+</p>
+<p>consider the 2d dataset of two clear clusters of points around (2,2) and (8,8)
+</p>
+<img src="/blog/imgs/2011/05/2d_data.png"/>
+
+<p>the following shows 5 random projections to 1d compared to a 1d PCA reduction (done using <a href="http://www.cs.waikato.ac.nz/ml/weka/">weka</a>) 
+</p>
+<img src="/blog/imgs/2011/05/2d_to_1d_projections.png"/>
+
+<p>there was a clear seperation between the 2 classes in 2d and it's retained in 3 out of the 5 projections even though we're using <em>half</em> the space going from 2d to 1d.</br>
+   ( the 2nd random projection actually looks very similiar to PCA )
+</p>
+<p>what about some higher dimensions?
+</p>
+<p>let's generate the same two clusters but in 10d; ie around the points (2,2,2,2,2,2,2,2,2,2) and (8,8,8,8,8,8,8,8,8,8)
+</p>
+<p>though we can't plot this easily there are 2 useful visualisations of the data
+</p>
+<p>a scatterplot, which is pretty uninteresting actually...
+</p>
+<img src="/blog/imgs/2011/05/10d_scatterplot.png"/>
+
+<p>or a 2d tour through the 10d space
+</p>
+<p><object width="425" height="344"><param name="movie" value="http://www.youtube.com/v/QrJQDSFTg-k?hl=en&fs=1"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="http://www.youtube.com/v/QrJQDSFTg-k?hl=en&fs=1" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="425" height="344"></embed></object>
+</p>
+<p>(check out <a href="http://vimeo.com/12292239">my screencast on ggobi</a> if you're after a better idea of what this tour represents)
+</p>
+<p>lets compare 5 random projections to PCA when projecting from 10d to 1d</br>
+   this time not so good... only one projection gets the clusters seperated, and only just.
+</p>
+<img src="/blog/imgs/2011/05/10d_to_1d_projections.png"/>
+
+<p>what about projecting to 2d? 
+</p>
+<table>
+<tr><td>PCA</td><td>run1</td><td>run2</td><td>run3</td><td>run4</td><td>run5</td></tr>
+<tr><td><img width="190" src="/blog/imgs/2011/05/10d_to_2d_PCA.png"/></td>
+    <td><img width="190" src="/blog/imgs/2011/05/10d_to_2d_run1.png"/></td>
+    <td><img width="190" src="/blog/imgs/2011/05/10d_to_2d_run2.png"/></td>
+    <td><img width="190" src="/blog/imgs/2011/05/10d_to_2d_run3.png"/></td>
+    <td><img width="190" src="/blog/imgs/2011/05/10d_to_2d_run4.png"/></td>
+    <td><img width="190" src="/blog/imgs/2011/05/10d_to_2d_run5.png"/></td></tr>
+</table>
+
+<p>PCA is by the cleanest with the x-axis representing the clusters and the y-axis representing the in cluster variance. </br>
+   it clearly shows how the dataset can be projection to 1d, we only needed the first (x-axis) principal component.
+</p>
+<p>the projections aren't too bad, all but 1 of them has the 2 clusters linearly seperable.
+</p>
+<p>so in summary i think it's pretty good if you need to do something super fast. in these experiments i was using a pretty contrived dataset but was trying to be quite aggressive in going from
+   10d to 1d. 
+</p>
+<p>i wonder what, if any, difference there would be with sparse data?
+</p>
+<p>&lt; random evening hackery /&gt;
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2011/05/10/random-projections/";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

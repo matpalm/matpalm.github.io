@@ -1,0 +1,181 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="initing-the-biases-in-a-classifer-to-closer-match-training-data"></a>
+  <h2 class="blog_post_title"><a href="/blog/initing_the_biases_in_a_classifer_to_closer_match_training_data" rel="bookmark" title="Permanent Link to initing the biases in a classifer to closer match training data">initing the biases in a classifer to closer match training data</a></h2>
+  <small>February 27, 2020 at 12:00 PM | categories:
+
+<a href='/blog/tag/short_tute'>short_tute</a>, <a href='/blog/tag/three_strikes_rule'>three_strikes_rule</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p><i>this post is part of my three-strikes-rule series; the third time someone asks
+   me about something, i have to write it up</i>
+</p>
+<p>if we start with a simple model and run some data through it before it's trained
+   we very roughly get a uniform distribution of outputs. this is since the layers are
+   setup to generally output around zero and the biases of the denses layers are init'd as zero.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; from tensorflow.keras.layers import *
+&gt;&gt;&gt; from tensorflow.keras.models import Model
+&gt;&gt;&gt;
+&gt;&gt;&gt; inp = Input(shape=(4,), name='input')
+&gt;&gt;&gt; out = Dense(units=5, activation='softmax')(inp)
+&gt;&gt;&gt;
+&gt;&gt;&gt; model = Model(inputs=inp, outputs=out)
+&gt;&gt;&gt;
+&gt;&gt;&gt; X = np.random.random(size=(16, 4)).astype(np.float32)
+&gt;&gt;&gt; model(X)
+
+array([[0.27802917, 0.21119164, 0.13478227, 0.13102761, 0.24496922],
+       [0.24828927, 0.2713407 , 0.17112398, 0.17032027, 0.13892575],
+       [0.15432678, 0.37243405, 0.18875667, 0.18821105, 0.09627141],
+       [0.22438918, 0.3494182 , 0.16165043, 0.1623524 , 0.10218978],
+       [0.36323798, 0.1736943 , 0.11997112, 0.11338428, 0.22971232],
+       [0.21113336, 0.2970533 , 0.19298542, 0.18329948, 0.11552842],
+       [0.18894033, 0.3023035 , 0.17413773, 0.17320155, 0.16141686],
+       [0.25081626, 0.24333045, 0.17587633, 0.17023188, 0.15974507],
+       [0.28999767, 0.2593622 , 0.13038006, 0.13167746, 0.18858269],
+       [0.28792346, 0.21455322, 0.17145245, 0.1603238 , 0.16574705],
+       [0.3028727 , 0.20455441, 0.11584676, 0.11711189, 0.2596142 ],
+       [0.19915669, 0.34796396, 0.1685621 , 0.17137761, 0.1129396 ],
+       [0.36104262, 0.20813489, 0.12217646, 0.11595868, 0.1926873 ],
+       [0.34652707, 0.20086858, 0.13397619, 0.12669212, 0.191936  ],
+       [0.31914416, 0.1853605 , 0.1266775 , 0.12235387, 0.24646394],
+       [0.21416464, 0.29376236, 0.17110644, 0.17128557, 0.14968103]], dtype=float32)
+
+</code></pre>
+
+<p>but if we know the expected distribution of class labels (e.g. from training data)
+   we can seed the bias values in the classifier layer (<code>out</code>) to have it reproduce
+   these proportions at the start of training.
+</p>
+<p>we do this with a <code>bias_initializer</code>.
+</p>
+<p>this can sometimes speed training up.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; from scipy.special import logit
+&gt;&gt;&gt;
+&gt;&gt;&gt; def observed_proportion_logits(shape, dtype=None, partition_info=None):
+&gt;&gt;&gt;     # assume following counts of labels in training data
+&gt;&gt;&gt;     class_counts = np.array([10, 5, 5, 100, 100])
+&gt;&gt;&gt;     # normalise them and return as logits
+&gt;&gt;&gt;     class_proportions = class_counts / np.sum(class_counts)
+&gt;&gt;&gt;     return logit(class_proportions)
+&gt;&gt;&gt;
+&gt;&gt;&gt; inp = Input(shape=(4,), name='input')
+&gt;&gt;&gt; out = Dense(units=5,
+&gt;&gt;&gt;             bias_initializer=observed_proportion_logits,
+&gt;&gt;&gt;             activation='softmax')(inp)
+&gt;&gt;&gt;
+&gt;&gt;&gt; model = Model(inputs=inp, outputs=out)
+&gt;&gt;&gt;
+&gt;&gt;&gt; X = np.random.random(size=(16, 4)).astype(np.float32)
+&gt;&gt;&gt; np.around(model(X), decimals=3)
+
+array([[0.024, 0.024, 0.02 , 0.404, 0.528],
+       [0.032, 0.027, 0.015, 0.326, 0.6  ],
+       [0.025, 0.017, 0.014, 0.404, 0.54 ],
+       [0.028, 0.021, 0.019, 0.348, 0.585],
+       [0.037, 0.019, 0.023, 0.419, 0.502],
+       [0.029, 0.019, 0.025, 0.445, 0.481],
+       [0.033, 0.026, 0.024, 0.335, 0.582],
+       [0.016, 0.02 , 0.013, 0.413, 0.537],
+       [0.027, 0.016, 0.022, 0.501, 0.434],
+       [0.037, 0.026, 0.027, 0.432, 0.478],
+       [0.022, 0.017, 0.025, 0.532, 0.404],
+       [0.028, 0.025, 0.021, 0.433, 0.493],
+       [0.019, 0.013, 0.017, 0.48 , 0.471],
+       [0.035, 0.021, 0.023, 0.397, 0.524],
+       [0.036, 0.016, 0.014, 0.294, 0.64 ],
+       [0.015, 0.014, 0.018, 0.45 , 0.504]], dtype=float32)
+
+</code></pre>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/initing_the_biases_in_a_classifer_to_closer_match_training_data";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

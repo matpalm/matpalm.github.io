@@ -1,0 +1,222 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="fully-convolutional-networks"></a>
+  <h2 class="blog_post_title"><a href="/blog/fully_conv" rel="bookmark" title="Permanent Link to fully convolutional networks">fully convolutional networks</a></h2>
+  <small>April 06, 2018 at 06:00 PM | categories:
+
+<a href='/blog/tag/short_tute'>short_tute</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <h1>the standard convolutional classifier</h1>
+<p>the most familiar form of a convolutional network to most people is the type used for classifying images.
+</p>
+<p>we can think of these types of networks as being made up of two halves.
+</p>
+<p>the first is a sequence of convolutional layers with some form of spatial downsampling; e.g. pooling or having a stride &gt; 1 ...
+</p>
+<table class="data">
+<tr><td> some input                             </td><td> (64, 64, 3)  </td></tr>
+<tr><td> a convolution; stride 2, kernel size 8 </td><td> (32, 32, 8)  </td></tr>
+<tr><td> and another (kernel size 16)           </td><td> (16, 16, 16) </td></tr>
+<tr><td> and another (kernel size 32)           </td><td> (8, 8, 32)   </td></tr>
+</table>
+
+<p>... followed by a second half which is a sequence of fully connected layers ...
+</p>
+<table class="data">
+<tr><td> output from convolutions </td><td>   (8, 8, 32) </td></tr>
+<tr><td> flattened                </td><td>   (2048)     </td></tr>
+<tr><td> fully connected to 128   </td><td>   (128)      </td></tr>
+<tr><td> fully connected to 10    </td><td>   (10)       </td></tr>
+</table>
+
+<p>(note: here, and following, we're going to ignore any leading batch dimension)
+</p>
+<p>in these networks the first half "squeezes" spatial information into depth information while the second half acts as a standard classifier.
+</p>
+<p>one property of any fully connected layer is that the number of parameters is dictated by the input size;
+   in this example of a classifier it's the flattened size of the final volume of the first half (the 2048d vector)
+</p>
+<p>this idea of the number of parameters being linked to the input size is <b>not</b> the case for the layers in
+   the first half though; there the number of parameters is not dictated by the input size but instead by the kernel size
+   and number of output channels. specifically the spatial size of the input doesn't matter.
+</p>
+<p>e.g. using pooling for downsampling for any arbitrary (H, W) ...
+</p>
+<table class="data">
+<tr><td> input                              </td><td> (H, W, 3)        </td></tr>
+<tr><td> convolution, stride=1, #kernels=5  </td><td> (H, W, 5)        </td></tr>
+<tr><td> pooling, size=2                    </td><td> (H//2, W//2, 5)  </td></tr>
+</table>
+
+<p>... vs stride &gt; 1 for downsampling.
+</p>
+<table class="data">
+<tr><td> input                             </td><td> (H, W, 3)       </td></tr>
+<tr><td> convolution, stride=2, #kernels=5 </td><td> (H//2, W//2, 5) </td></tr>
+</table>
+
+<p>so in our original example the first half of the network going from <code>(64, 64, 4)</code> to <code>(8, 8, 32)</code>
+   <em>could</em> actually be applied to an input of any spatial size. if for example we gave an input
+   of <code>(128, 128, 4)</code> we'd get an output of <code>(16, 16, 32)</code>. <b>but!</b> you wouldn't though be able to run
+   this <code>(16, 16, 32)</code> through the second classifier half, since the size of the flattened tensor would now
+   be the wrong size.
+</p>
+
+<h1>fully convolutional networks</h1>
+<p>now let's consider the common architecture for an image to image network. again it has two halves.
+</p>
+<p>the first half is like the prior example; some convolutions with a form of downsampling as a way of
+   trading spatial information for channel information.
+</p>
+<p>but the second half isn't a classifier, it's the reverse of the first half; a sequence of convolutions with some form of upsampling;
+</p>
+<p>this upsampling can can either deconvolutions with a stride&gt;1 or something like nearest neighbour upsampling
+</p>
+<p>e.g.
+</p>
+<table class="data">
+<tr><td>some input                       </td><td> (64, 64, 3)  </td></tr>
+<tr><td>convolution                      </td><td> (64, 64, 8)  </td></tr>
+<tr><td>pooling                          </td><td> (32, 32, 8)  </td></tr>
+<tr><td>convolution                      </td><td> (32, 32, 16) </td></tr>
+<tr><td>pooling                          </td><td> (16, 16, 16) </td></tr>
+<tr><td>nearest neigbour upsample resize </td><td> (32, 32, 16) </td></tr>
+<tr><td>convolution                      </td><td> (32, 32, 8)  </td></tr>
+<tr><td>nearest neigbour upsample resize </td><td> (64, 64, 8)  </td></tr>
+<tr><td>convolution                      </td><td> (64, 64, 3)  </td></tr>
+</table>
+
+<p>we can see that <em>none</em> of these operations require a fixed spatial size, so it's fine to apply them to an image of whatever size,
+   even something like <code>(128000, 128000, 3)</code> which would produce an output of <code>(128000, 128000, 3)</code>. this ability to apply to huge images
+   is a great trick for when you're dealing with huge image data like medical scans.
+</p>
+<p>so what does it mean then for a network to be "fully convolutional"? for me it's basically not using any
+   operations that require a fixed tensor size as input.
+</p>
+<p>in this above example we'd say we're training on "patches" on <code>(64, 64)</code>. these would probably be random crops within a larger image
+   and, note, that means that each training image doesn't even need to be the same resolution or aspect (as long as it's larger than 64x64)
+</p>
+
+<h2>1x1 convolutions</h2>
+<p>a 1x1 kernel in a convolutional layer at first appears a bit strange. why would you bother?
+</p>
+<p>consider a volume of <code>(1, 1, 3)</code> that we apply a 1x1 convolution to. with a kernel size of 5 we'd end up getting a volume of <code>(1, 1, 5)</code>.
+   an interesting interpretation of this is that it's exactly equivalent to having a fully connected layer between 3 inputs and 5 outputs.
+</p>
+<p>a volume then of, say, <code>(10, 20, 3)</code> that we apply this same convolution to gives a volume of <code>(10, 20, 5)</code>
+   so what what we're doing is equivalent to applying the same fully connected "layer" <em>per pixel</em> to the <code>(10, 20)</code> input.
+</p>
+<p>tie this in with the idea of the fully convolutional network...
+</p>
+<table class="data">
+<tr><td> some input                                                      </td><td> (64, 64, 3)  </td></tr>
+<tr><td> some convolutions + downsampling                                </td><td> (32, 32, 8)  </td></tr>
+<tr><td> more convolutions + downsampling                                </td><td> (16, 16, 16) </td></tr>
+<tr><td> more convolutions + downsampling                                </td><td> (8, 8, 32)   </td></tr>
+<tr><td> a 1x1 convolution, stride=1 & kernel size 10                    </td><td> (8, 8, 10)   </td></tr>
+<tr><td> a 1x1 convolution, stride=1, kernel size 1 & sigmoid activation </td><td> (8, 8, 1)    </td></tr>
+</table>
+
+<p>what we've got is like our original classifier example but that's operating in a fully convolutional way; the last three layers
+   are the same as a sequence of fully connected layers going from 32 to 10 to 1 output, but across an 8x8 grid in parallel.
+</p>
+<p>and as before we'd be able to train this on an input of <code>(64, 64, 3)</code> with an output of <code>(8, 8, 1)</code> but apply it to whatever
+   multiple of in the input size we'd like. e.g. an input <code>(640, 320, 3)</code> would result in output of <code>(80, 40, 1)</code>
+</p>
+<p>we can think of this final <code>(80, 40, 1)</code> as kind of similar to a 10x5 heat map across whatever is being captured by the <code>(8, 8, 1)</code> output.
+</p>
+<p>the papers were i first saw these ideas were
+   <a href="https://arxiv.org/abs/1312.6229">OverFeat (Sermanet et al)</a> &amp;
+   <a href="https://arxiv.org/abs/1312.4400">Network in Network (Lin et al)</a>
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/fully_conv";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

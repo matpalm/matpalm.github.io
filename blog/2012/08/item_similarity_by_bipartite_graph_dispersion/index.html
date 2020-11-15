@@ -1,0 +1,196 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="item-similarity-by-bipartite-graph-dispersion"></a>
+  <h2 class="blog_post_title"><a href="/blog/2012/08/item_similarity_by_bipartite_graph_dispersion" rel="bookmark" title="Permanent Link to item similarity by bipartite graph dispersion">item similarity by bipartite graph dispersion</a></h2>
+  <small>August 20, 2012 at 08:00 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p>the basis of most recommendation systems is the ability to rate similarity between items. there are <i>lots</i> of different ways to do this. 
+</p>
+<p>one model is based the idea of an <a href="http://en.wikipedia.org/wiki/Interest_Graph">interest graph</a> where the nodes of the graph are users and items 
+   and the edges of the graph represent an interest, whatever that might mean for the domain. 
+</p>
+<p>if we only allow edges between users and items the graph is <a href="http://en.wikipedia.org/wiki/Bipartite_graph">bipartite</a>.
+</p>
+<p>let's consider a simple example of 3 users and 3 items; user1 likes item1, user2 likes all three items and user3 likes just item3.
+</p>
+<table class="data">
+<tr><td><img src="/blog/imgs/2012/bgd/fig1.png"/></td></tr>
+<tr><td>fig1</br>user / item interest graph</td></tr>
+</table>
+
+<p>one way to model similiarity between items is as follows....
+</p>
+<p>let's consider a token starting at item1. we're going to repeatedly "bounce" this token back and forth between the items and the users based on the interest edges.
+</p>
+<p>so, since item1 is connected to user1 and user2 we'll pick one of them randomly and move the token across. it's 50/50 which of user1 or user2 we end up at (fig2).
+</p>
+<p>next we bounce the token back to the items; if the token had gone to user1 then it has to go back to item1 since user1 has no other edges, but if it had gone to user2 it could back to any
+   of the three items with equal probability; 1/3rd. 
+</p>
+<p>the result of this is that the token has 0.66 chance of ending up back at item1 and equal 0.16 chance of ending up at either item2 or item3 (fig3)
+</p>
+<table class="data">
+<tr><td><img src="/blog/imgs/2012/bgd/fig2.png"/></td><td><img src="/blog/imgs/2012/bgd/fig3.png"/></td></tr>
+<tr><td>fig2</br>dispersing from item1 to users</td><td>fig3</br>dispersing back from users to items</td></tr>
+</table>
+
+<p>( note this is different than if we'd started at item2. in that case we'd have gone to user2 with certainity and then it would have been uniformly 
+   random which of the items we'd ended up at )
+</p>
+<p>for illustration let's do another iteration... 
+</p>
+<p>bouncing back to the users item1's 0.66 gets split 50/50 between user1 and user2. all of item2's 0.16 goes to user2 and item3 splits it's 0.16 between user2 and user3.
+   we end up with fig4 (no, not <a href="http://www.youtube.com/watch?v=VKrNGKO47ss">that</a> figure 4).
+   bouncing back to the items we get to fig5.
+</p>
+<table class="data">
+<tr><td><img src="/blog/imgs/2012/bgd/fig4.png"/></td><td><img src="/blog/imgs/2012/bgd/fig5.png"/></td></tr>
+<tr><td>fig4</td><td>fig5</td></tr>
+</table>
+
+<p>if we keep repeating things we
+   converge on the values <pre>{item1: 0.40, item2: 0.20, item3: 0.40}</pre> and these represent the probabilities of ending up in a particular item if we bounced forever. 
+</p>
+<p>note since this is convergent it also doesn't actually matter which item we'd started at, it would always get the same result in the limit.
+</p>
+<p>to people familiar with <a href="http://en.wikipedia.org/wiki/Power_method">power methods</a> this convergence is no surprise. you might also recognise a similiarity between this and the most famous
+   power method of them all, <a href="http://en.wikipedia.org/wiki/PageRank">pagerank</a>.
+</p>
+<p>so what has this all got to do with item similiarity? 
+</p>
+<p>well, the values of the probabilities might all converge to the same set regardless of which item we start at 
+   <b>but</b> each item gets there in different ways. 
+</p>
+<p>most importantly we can capture this difference by taking away a bit of probability each iteration of the dispersion.
+</p>
+<p>so, again, say we start at item1. after we go to users and back to items we are at fig3 again. 
+</p>
+<p>but this time, before we got back to the users side, let's take away a small proportion of the probability mass, say, 1/4. this would be 0.16 for item1 and 0.04 for item2 and 
+   item3. this leaves us with fig6.
+</p>
+<table class="data">
+<tr><td><img src="/blog/imgs/2012/bgd/fig3.png"/></td><td><img src="/blog/imgs/2012/bgd/fig6.png"/></td></tr>
+<tr><td>fig3 (again)</td><td>fig6</td></tr>
+</table>
+
+<p>we can then repeat iteratively as before, items -&gt; users -&gt; items -&gt; users. but each time we are on the items side we take away 1/4 of the mass until it's all gone.
+</p>
+<table class="data">
+<tr> <td>iteration</td> <td>taken from</br>item1</td> <td>taken from</br>item2</td> <td>taken from</br>item3</td> </tr>
+<tr> <td>1</td>         <td>0.16</td>  <td>0.04</td>  <td>0.04</td>  </tr>
+<tr> <td>2</td>         <td>0.09</td>  <td>0.04</td>  <td>0.05</td>  </tr>
+<tr> <td>3</td>         <td>0.06</td>  <td>0.02</td>  <td>0.05</td>  </tr>
+<tr> <td>...</td>       <td>...</td>   <td>...</td>   <td>...</td>   </tr>
+<tr> <td>final sum</td> <td>0.50</td>  <td>0.20</td>  <td>0.30</td>  </tr>
+</table>
+
+<p>if we do the same for item2 and item3 we get different values...
+</p>
+<table class="data">
+<tr> <td>starting at</td> <td>total taken</br> from item1</td> <td>total taken</br> from item2</td> <td>total taken</br> from item3</td> </tr>
+<tr> <td>item1</td>       <td>0.50</td>  <td>0.20</td>  <td>0.30</td>  </tr>
+<tr> <td>item2</td>       <td>0.38</td>  <td>0.24</td>  <td>0.38</td>  </tr>
+<tr> <td>item3</td>       <td>0.30</td>  <td>0.20</td>  <td>0.50</td>  </tr>
+</table>
+
+<p>finally these totals can be used as features for a pairwise comparison of the items. intuitively we can see that for any row wise similarity function we might choose to use 
+   sim(item1, item3) &gt; sim(item1, item2) or sim(item2, item3)
+</p>
+<p>one last thing to consider is that the amount of decay, 1/4 in the above example, is of course configurable and we get different results using a value between 0.0 and 1.0.
+</p>
+<p>a very low value, ~= 0.0, produces the limit value, all items being classed the same. a higher value, ~= 1.0, stops the iterations after only one "bounce" and
+   represents the minimal amount of dispersal.
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2012/08/item_similarity_by_bipartite_graph_dispersion";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

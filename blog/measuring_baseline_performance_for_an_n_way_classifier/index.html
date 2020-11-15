@@ -1,0 +1,182 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="measuring-baseline-random-performance-for-an-n-way-classifier"></a>
+  <h2 class="blog_post_title"><a href="/blog/measuring_baseline_performance_for_an_n_way_classifier" rel="bookmark" title="Permanent Link to measuring baseline random performance for an N way classifier">measuring baseline random performance for an N way classifier</a></h2>
+  <small>April 11, 2020 at 12:34 PM | categories:
+
+<a href='/blog/tag/short_tute'>short_tute</a>, <a href='/blog/tag/three_strikes_rule'>three_strikes_rule</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p><i>this post is part of my three-strikes-rule series; the third time someone asks
+   me about something, i have to write it up</i>
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.metrics import *
+</code></pre>
+
+<p>consider an 5 way classifier with varying level of support per class;
+   specifically 100 examples of class0, class1 and 20 examples of class2, 3 and 4.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; training_data_support = [100, 100, 20, 20, 20]
+</code></pre>
+
+<p>what's the simplest way to measure what baseline performance is from a random classifier is?
+   We often want to know this value to ensure we don't have silly bugs and/or we are getting some signal from the data beyond random choice.
+</p>
+<p>firstly let's expand things to a dense set of labels (since sklearn metrics don't work with a sparse set)
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; y_true = np.concatenate([np.repeat(i, n) for i, n in enumerate(training_data_support)])
+&gt;&gt;&gt; y_true
+
+array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+       3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4,
+       4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4])
+
+</code></pre>
+
+<p>we can do random predictions proportional to the support in the training data
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; training_data_proportions = training_data_support / np.sum(training_data_support)
+&gt;&gt;&gt; y_pred = np.random.choice(range(len(training_data_support)),
+&gt;&gt;&gt;                           p=training_data_proportions,
+&gt;&gt;&gt;                           size=sum(training_data_support))
+&gt;&gt;&gt; y_pred
+
+array([1, 0, 0, 1, 1, 1, 0, 3, 1, 1, 3, 1, 1, 1, 2, 0, 1, 4, 1, 1, 1, 1,
+       0, 2, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 4, 2, 1, 4, 0, 2, 1, 0, 1,
+       1, 0, 1, 4, 0, 2, 0, 0, 1, 1, 0, 1, 2, 4, 3, 0, 1, 1, 2, 1, 2, 3,
+       0, 0, 0, 2, 1, 0, 0, 0, 1, 1, 0, 0, 1, 3, 3, 1, 1, 1, 3, 1, 0, 1,
+       0, 0, 1, 0, 1, 1, 4, 1, 3, 3, 1, 1, 1, 0, 0, 1, 0, 2, 1, 0, 1, 0,
+       4, 0, 2, 0, 3, 1, 0, 1, 1, 2, 1, 1, 1, 3, 0, 2, 0, 0, 0, 1, 1, 0,
+       2, 0, 0, 0, 1, 0, 0, 1, 2, 1, 1, 0, 1, 1, 4, 1, 0, 3, 2, 0, 2, 0,
+       1, 3, 4, 1, 2, 0, 1, 0, 0, 1, 4, 0, 1, 3, 4, 1, 0, 1, 0, 1, 1, 4,
+       0, 0, 3, 0, 1, 1, 1, 2, 2, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0,
+       0, 4, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 3, 1, 1, 2, 1, 3,
+       1, 1, 0, 1, 3, 0, 4, 3, 0, 2, 0, 0, 3, 4, 0, 1, 0, 4, 2, 1, 1, 1,
+       0, 1, 0, 1, 2, 1, 3, 0, 2, 0, 1, 1, 1, 0, 0, 0, 1, 1])
+
+</code></pre>
+
+<p>from this we can calculate standard metrics; if we can't beat these, we've done
+   something realllllly wrong :/
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; confusion_matrix(y_true, y_pred)
+
+array([[29, 47,  9,  9,  6],
+       [40, 36, 11,  6,  7],
+       [ 7, 10,  1,  2,  0],
+       [ 7,  5,  2,  3,  3],
+       [ 7, 10,  2,  1,  0]])
+
+&gt;&gt;&gt; print(classification_report(y_true, y_pred))
+
+precision    recall  f1-score   support
+               0       0.32      0.29      0.31       100
+               1       0.33      0.36      0.35       100
+               2       0.04      0.05      0.04        20
+               3       0.14      0.15      0.15        20
+               4       0.00      0.00      0.00        20
+        accuracy                           0.27       260
+       macro avg       0.17      0.17      0.17       260
+    weighted avg       0.27      0.27      0.27       260
+
+</code></pre>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/measuring_baseline_performance_for_an_n_way_classifier";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

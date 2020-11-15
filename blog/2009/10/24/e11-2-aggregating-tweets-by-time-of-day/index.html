@@ -1,0 +1,210 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="e11.2-aggregating-tweets-by-time-of-day"></a>
+  <h2 class="blog_post_title"><a href="/blog/2009/10/24/e11-2-aggregating-tweets-by-time-of-day/" rel="bookmark" title="Permanent Link to e11.2 aggregating tweets by time of day">e11.2 aggregating tweets by time of day</a></h2>
+  <small>October 24, 2009 at 01:02 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p>for v3 lets aggregate by time of the day, should make for an interesting animation
+</p>
+<p>browsing the data there are lots of other lat longs in data, not just iPhone: and ÜT: there are also one tagged with Coppó:, Pre:, etc perhaps should just try to take anything that looks like a lat long.
+</p>
+<p>furthermore lets switch to a bigger dataset again, 4.7e6 tweets from Oct 13 07:00 thru Oct 19 17:00,
+</p>
+<p>i've been streaming all my tweets ( <a href="http://matpalm.com/blog/2009/10/16/e11-0-tweets-around-the-world/">as previously discussed</a> ) and been storing them in a directory json_stream
+</p>
+<p>here are the steps...
+</p>
+
+<h2>1. extract locations</h2>
+<p>use a streaming script to take a tweet in json form and emit the tweet time and location string
+</p>
+<pre>export HADOOP_STREAMING_JAR=$HADOOP_HOME/contrib/streaming/hadoop-*-streaming.jar
+hadoop jar $HADOOP_STREAMING_JAR \
+ -mapper <a href="http://github.com/matpalm/rtw_tweet/blob/master/v3/extract_locations.rb">./extract_locations.rb</a> -reducer /bin/cat \
+ -input json_stream -output locations</pre>
+
+<p>sample output (4.7e6 tuples) { time, location string }
+</p>
+<pre>Wed Oct 14 22:01:41 +0000 2009    iPhone: -23.492420,-46.846916
+Wed Oct 14 22:01:41 +0000 2009    Ottawa
+Wed Oct 14 22:01:41 +0000 2009    DA HOOD
+Wed Oct 14 22:01:42 +0000 2009    Earth</pre>
+
+
+<h2>2. pluck lat longs from locations</h2>
+<p>make another pass and extract possible lat lons from the location strings
+</p>
+<pre>hadoop jar $HADOOP_STREAMING_JAR \
+ -mapper <a href="http://github.com/matpalm/rtw_tweet/blob/master/v3/extract_lat_longs_from_locations.rb">./extract_lat_longs_from_locations.rb</a> -reducer /bin/cat \
+ -input locations -output lat_lons</pre>
+
+<p>sample output (reduces down to 320e3 data points) { time, lat, lon }
+</p>
+<pre>Wed Oct 14 22:01:41 +0000 2009    -23.49242    -46.846916
+Wed Oct 14 22:05:25 +0000 2009    35.670086    139.740766
+Wed Oct 14 22:11:35 +0000 2009    41.37731257    -74.68153942
+Wed Oct 14 22:15:18 +0000 2009    51.503212    5.478329</pre>
+
+
+<h2>3. bucket data into timeslices and points for a map</h2>
+<p>we need to project the times into 10min slots; ie 00:05 will be slot 0, 00:12 will be slot 1.
+</p>
+<p>also use to project the lat lons to x and y coords (0-&gt;1) using a simple <a href="http://en.wikipedia.org/wiki/Mercator_projection">mercator</a> projection
+</p>
+<pre>hadoop jar $HADOOP_STREAMING_JAR \
+ -mapper <a href="http://github.com/matpalm/rtw_tweet/blob/master/v3/lat_long_to_merc_and_bucket.rb">./lat_long_to_merc_and_bucket.rb</a> -reducer /bin/cat \
+ -cmdenv BUCKET_SIZE=0.005 \
+ -input lat_lons -output x_y_points</pre>
+
+<p>sample output { timeslice, normalised x position, normalised y position }
+</p>
+<pre>122     0.48    0.205
+122     0.295   0.26
+122     0.29    0.26
+123     0.265   0.265</pre>
+
+<p>as a slight digression before we move onto aggregating per timeslice here's a pic of all 320e3 tweets on a heatmap.
+</p>
+<p>some interesting noise on the greenwich meridian, must be incorrectly identified lat lons during the <a href="http://github.com/matpalm/rtw_tweet/blob/master/v3/extract_lat_longs_from_locations.rb">./extract_lat_longs_from_locations.rb</a> step.
+</p>
+
+<h3>log10 tweet location (click for a hires version)</h3>
+<p><a href="http://matpalm.com/rtw_tweet/v3/hi_res_320e3_log.jpg"><img class="size-full wp-image-149" title="lo_res_320e3_log" src="/blog/imgs/2009/10/lo_res_320e3_log.jpg" alt="log10 tweet location, click for a hires version" width="640" height="496" /></a>
+</p>
+
+<h2>4. aggregate (x,y) pairs per timeslice</h2>
+<p>next we aggreate, per timeslice, the frequency of points each x,y point.
+   we'll do this with a pig script, <a href="http://github.com/matpalm/rtw_tweet/blob/master/v3/aggregate_per_timeslice.pig">aggregate_per_timeslice.pig</a>
+</p>
+<pre>
+# aggregating per timeslice
+pts = load 'x_y_points/part-00000' as (timeslice:int, x:float, y:float);
+pts2 = group pts by (timeslice,x,y);
+pts3 = foreach pts2 generate $0, COUNT($1) ;
+pts4 = foreach pts3 generate $0.$0, $0.$1, $0.$2, $1 as freq;
+pts5 = order pts4 by timeslice;
+store pts5 into 'aggregated_freqs';</pre>
+
+<p>results in the tuples in 'aggregated_freqs' { timeslice, normalised x position, normalised y position, frequency }
+</p>
+<pre>0    0.0    0.32    1
+0    0.06    0.325    9
+0    0.065    0.33    1
+0    0.08    0.17    2
+0    0.155    0.225    8</pre>
+
+<p>we need to normalise each frequency value for drawing on the map and would have like to have done this in pig also but turns out there isn't a log function in v0.3 of pig (??)
+</p>
+<p>will have to do scaling when generating the images. isn't such a big deal since the dataset is quite small at this stage but was trying to use this whole thing as an excuse to learn pig :(
+</p>
+
+<h2>5. take aggregated_freqs and make 144 heat map images</h2>
+<p>use a simple script to read through the aggregated_freqs and generate a heap map for each frame
+</p>
+<pre><a href="http://github.com/matpalm/rtw_tweet/blob/master/v3/heat_maps.rb">heat_maps.rb</a> aggregated_freqs 0.005 frames</pre>
+
+
+<h2>6. convert to animation</h2>
+<p>next bundle stills into an animation and upload to youtube
+</p>
+<pre>mencoder mencoder "mf://frames/*" -mf fps=25 -o rtw_tweet_v3.avi -ovc x264 -x264encopts bitrate=750</pre>
+<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="425" height="344" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0"><param name="allowFullScreen" value="true" /><param name="allowscriptaccess" value="always" /><param name="src" value="http://www.youtube.com/v/cSnGI33CwP0&amp;hl=en&amp;fs=1&amp;" /><param name="allowfullscreen" value="true" /><embed type="application/x-shockwave-flash" width="425" height="344" src="http://www.youtube.com/v/cSnGI33CwP0&amp;hl=en&amp;fs=1&amp;" allowscriptaccess="always" allowfullscreen="true"></embed></object>
+
+## 7. conclusions
+
+1. didn't really end up using hadoop's power that much; streaming jobs that use just cat as a reducer as just a parallel way of doing 1:1 string mapping
+1. aggregation was really easy in pig but lack of Log function is annoying; could have written a <a href="http://wiki.apache.org/pig/UDFManual">UDF</a>, and there probably already is one but i couldn't find it
+1. this visualisation came out pretty lame; funny to see how the really swish visualisations rely far more on pretty colours and smooth lines than the data itself. there are a bundle of things i could do with this one but it's time to move on to something else.
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2009/10/24/e11-2-aggregating-tweets-by-time-of-day/";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

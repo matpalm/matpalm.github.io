@@ -1,0 +1,202 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="finding-names-in-common-crawl"></a>
+  <h2 class="blog_post_title"><a href="/blog/2012/08/18/finding_names_in_common_crawl" rel="bookmark" title="Permanent Link to finding names in common crawl">finding names in common crawl</a></h2>
+  <small>August 18, 2012 at 08:00 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p>the central offering from <a href="http://commoncrawl.org/">common crawl</a> is the raw bytes they've downloaded and, though this is useful for some people, a lot of us just want
+   the visible text of web pages. luckily they've done this extraction as a part of post processing the crawl and it's freely available too!
+</p>
+
+<h2>getting the data</h2>
+<p>the first thing we need to do is determine which segments of the crawl are valid and ready for use (the crawl is always ongoing)
+</p>
+<pre><code>$ s3cmd get s3://aws-publicdatasets/common-crawl/parse-output/valid_segments.txt
+$ head -n3 valid_segments.txt
+1341690147253
+1341690148298
+1341690149519
+</code></pre><p>given these segment ids we can lookup the related textData objects.
+</p>
+<p>if you just want one grab it's name using something like ...
+</p>
+<pre><code>$ s3cmd ls s3://aws-publicdatasets/common-crawl/parse-output/segment/1341690147253/ 2&gt;/dev/null \
+ | grep textData | head -n1 | awk '{print $4}'
+s3://aws-publicdatasets/common-crawl/parse-output/segment/1341690147253/textData-00000
+</code></pre><p>but if you want the lot you can get the listing with ...
+</p>
+<pre><code>$ cat valid_segments.txt \
+ | xargs -I{} s3cmd ls s3://aws-publicdatasets/common-crawl/parse-output/segment/{}/ \
+ | grep textData | awk '{print $4}' &gt; all_valid_segments.tsv
+</code></pre><p>( note: this listing is roughly 200,000 textData files and takes awhile to fetch )
+</p>
+<p>each textData file is a hadoop sequence files, the key being the crawled url and the value being the extracted visible text.
+</p>
+<p>to have a quick look at one you can get hadoop to dump the sequence file contents with ...
+</p>
+<pre><code>$ hadoop fs -text textData-00000 | less
+http://webprofessionals.org/intel-to-acquire-mcafee-moving-into-online-security-ny-times/       Web Professionals
+Professional association for web designers, developers, marketers, analysts and other web professionals.
+Home
+...
+The company’s share price has fallen about 20 percent in the last five years, closing on Wednesday at $19.59 a share.
+Intel, however, has been bulking up its software arsenal. Last year, it bought Wind River for $884 million, giving it a software maker with a presence in the consumer electronics and wireless markets.
+With McAfee, Intel will take hold of a company that sells antivirus software to consumers and businesses and a suite of more sophisticated security products and services aimed at corporations.
+</code></pre><p>( note: the visible text is broken into <i>one line</i> per block element from the original html. as such the value in the key/value pairs includes carriage returns and, for something like less, gets
+   outputted as being seperate lines )
+</p>
+
+<h2>extracting noun phrases</h2>
+<p>now that we have some text, what can we do with it? one thing is to look for noun phrases and the quickest simplest way is to use something like
+   the python <a href="http://nltk.org/">natural language toolkit</a>. it's certainly not the fastest to run but for most people would be
+   the quickest to get going.
+</p>
+<p><a href="https://github.com/matpalm/common-crawl-quick-hacks/blob/master/finding_names/extract_noun_phrases.py">extract_noun_phrases.py</a> is an example of doing sentence then word tokenisation, pos tagging and finally noun chunk phrase extraction.
+</p>
+<p>given the text ...
+</p>
+<pre><code>Last year, Microsoft bought Wind River for $884 million. This makes it the largest software maker with a presence in North Kanada.
+</code></pre><p>it extract noun phrases ...
+</p>
+<pre><code>Microsoft
+Wind River
+North Kanada
+</code></pre><p>to run this at larger scale we can wrap it in a simple streaming job
+</p>
+<pre><code>hadoop jar $HADOOP_HOME/hadoop-streaming.jar \
+ -input textDataFiles \
+ -output counts \
+ -mapper extract_noun_phrases.py \
+ -reducer aggregate \
+ -file extract_noun_phrases.py
+</code></pre><p>run it across a small 50mb sample of textData files the top noun phrases extracted ...
+</p>
+<table class="data">
+<tr><td><b>rank</b></td><td><b>phrase</b></td><td><b>freq</b></td></tr>
+<tr><td>     1  </td><td>  10094 </td><td>Posted</td></tr>
+<tr><td>     2  </td><td>   9597 </td><td>November</td></tr>
+<tr><td>     3  </td><td>   9553 </td><td>February</td></tr>
+<tr><td>     4  </td><td>   8929 </td><td>Copyright</td></tr>
+<tr><td>     5  </td><td>   8726 </td><td>September</td></tr>
+<tr><td>     6  </td><td>   8709 </td><td>January</td></tr>
+<tr><td>     7  </td><td>   8434 </td><td>April</td></tr>
+<tr><td>     8  </td><td>   8307 </td><td>August</td></tr>
+<tr><td>     9  </td><td>   7963 </td><td>October</td></tr>
+<tr><td>    10  </td><td>   7963 </td><td>December</td></tr>
+</table>
+
+<p>this is not terribly interesting and the main thing that's going on here is that this is just being extracted from the boiler plate of the pages. one tough problem when dealing with visible text on a web page is that it might be visible but that doesn't mean it's interesting to the actual content of the page. here we see 'posted' and 'copyright', we're just extracting the chrome of the page.
+</p>
+<p>check out the full list of values with freq &gt;= 20 <a href="https://github.com/matpalm/common-crawl-quick-hacks/blob/master/finding_names/noun_phrases.freq_over_20.tsv">here</a> there are some more
+   interesting ones a bit later
+</p>
+
+<h2>notes</h2>
+<p>so it's fun to look at noun phrases but i've actually brushed over some key details here
+</p>
+<ul>
+ <li>
+     not filtering on english text first generates a <i>lot</i> of "noise". "G úûv ÝT M", "U ŠDú T" and "Y CKdñˆô" are not terribly interesting english noun phrases.
+ </li>
+
+ <li>
+     running this at scale you'd probably want to change from streaming and start using an in process java library like <a href="http://nlp.stanford.edu/software/lex-parser.shtml">the stanford parser</a>
+ </li>
+
+ <li>
+     when it comes to actually doing named entity recognition it's a bit more complex. there's <a href="http://blog.wavii.com/2012/08/16/bush-is-back/">a wavii blog post</a> from <a href="https://twitter.com/mkbubba">manish</a> that talks a bit more about it.
+ </li>
+</ul>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2012/08/18/finding_names_in_common_crawl";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

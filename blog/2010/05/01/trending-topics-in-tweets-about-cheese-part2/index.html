@@ -1,0 +1,355 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="trending-topics-in-tweets-about-cheese;-part2"></a>
+  <h2 class="blog_post_title"><a href="/blog/2010/05/01/trending-topics-in-tweets-about-cheese-part2/" rel="bookmark" title="Permanent Link to trending topics in tweets about cheese; part2">trending topics in tweets about cheese; part2</a></h2>
+  <small>May 01, 2010 at 04:54 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p>prototyping in ruby was a great way to prove the concept but my main motivation for this project was to play some more with pig.
+</p>
+<p>the main approach will be
+</p>
+<ol>
+ <li>
+     maintain a relation with one record per token
+ </li>
+
+ <li>
+     fold 1 hours worth of new data at a time into the model
+ </li>
+
+ <li>
+     check the entries for the latest hour for any trends
+ </li>
+</ol>
+<p>the <a href="http://github.com/matpalm/trending/blob/master/pig/trending.pig">full version is on github</a>. read on for a line by line walkthrough!
+</p>
+<p>the ruby impl used the simplest approach possible for calculating mean and standard deviation; just keep a record of 
+   all the values seen so far and recalculate for each new value.
+</p>
+<p>for our pig version we'll take a fixed space approach. rather than keep <em>all</em> the values for
+   each time series it turns out we can get away with storing just 3...
+</p>
+<ol>
+ <li>
+     num_occurences: the number of values
+ </li>
+
+ <li>
+     mean: the current mean of all values
+ </li>
+
+ <li>
+     mean_sqrs: the current mean of the squares of all values
+ </li>
+</ol>
+<p>the idea is that the mean<sub>n+1</sub> = ( n * mean<sub>n</sub> + new value ) / n+1
+</p>
+<p>and that the standard deviation<sub>n+1</sub> can be calculated from n, the mean<sub>n</sub> and the mean of the squares<sub>n</sub> as we'll see below
+</p>
+<p>let's say we've already run it 6 times and we're now folding in the 7th chunk of per-hour data
+</p>
+<p>the data up to now shows the following</br>
+   token 'a' has been seen in all 6 chunks with frequencies [1,2,1,2,1,1]; μ=1.33 ρ=0.51</br>
+   token 'b' has been seen in 3 chunks with frequencies [1,2,2]; μ=1.66 ρ=0.57</br>
+   token 'c' has been seen in 3 chunks with frequencies [3,4,2]; μ=3 ρ=1
+</p>
+<p>the first thing is to load the existing version of the model, in this case stored in the file 'data/model/006'
+   it contains everything we need for checking the trending for each token
+</p>
+<div class="pygments_murphy"><pre><span></span>&gt; model = load &#39;data/model/006&#39; as (token:chararray, num_occurences:int, mean:float, mean_sqrs:float);
+&gt; describe model;
+model: {token: chararray, 
+        num_occurences: int, 
+        mean: float, 
+        mean_sqrs: float}
+&gt; dump model;
+(a,6,1.333333F,2.0F)
+(b,3,1.666666F,3.0F)
+(c,3,3.0F,9.666666F)
+</pre></div>
+
+<p>this tells us we've seen the token 'a' in 6 previous chunks, the average time we saw it was 1.3 times per chunk and the mean_sqrs (for the standard deviation
+   calculation) is 2
+</p>
+<p>( as a reminder of how we're using these values to calculate a trending score see <a href="/blog/2010/04/27/trending-topics-in-tweets-about-cheese-part1/">part 1</a> )
+</p>
+<p>next we load the new hour's worth of data, in this case contained in 'data/chunks/006'
+</p>
+<div class="pygments_murphy"><pre><span></span>&gt; next_chunk = load &#39;data/chunks/006&#39;;
+&gt; dump next_chunk;
+(a b a a)
+(d b d a d)
+</pre></div>
+
+<p>from the text we want to get the frequency of the tokens and we do this using <a href="https://github.com/matpalm/trending/blob/master/pig/tokenizer.py">tokenizer.py</a> which utilises the uber awesome <a href="http://www.nltk.org/">NLTK</a>
+</p>
+<div class="pygments_murphy"><pre><span></span>&gt; define tokenizer `python tokenizer.py` cache(&#39;data/tokenizer.py#tokenizer.py&#39;);
+&gt; tokens = stream next_chunk through tokenizer as (token:chararray);
+&gt; describe tokens;   
+tokens: {token: chararray}
+&gt; dump tokens;
+(a)
+(b)
+(a)
+(a)
+(d)
+(b)
+(d)
+(a)
+(d)
+</pre></div>
+
+<p>calculating the frequencies of the tokens is a simple two step process of first grouping by the key...
+</p>
+<div class="pygments_murphy"><pre><span></span>&gt; tokens_grouped = group tokens by token PARALLEL 1;
+&gt; describe tokens_grouped;
+tokens_grouped: {group: chararray,
+                 tokens: {token: chararray}}
+&gt; dump tokens_grouped;
+(a,{(a),(a),(a),(a)})
+(b,{(b),(b)})
+(d,{(d),(d),(d)})
+</pre></div>
+
+<p>...and then generating the key, frequency pairs
+</p>
+<div class="pygments_murphy"><pre><span></span>&gt; chunk = foreach tokens_grouped generate group as token, SIZE(tokens) as freq;
+&gt; dump chunk;
+(a,4L)
+(b,2L)
+(d,3L)
+</pre></div>
+
+<p>next we join the model with this latest chunk
+</p>
+<div class="pygments_murphy"><pre><span></span>&gt; cogrouped = cogroup model by token, chunk by token;
+&gt; describe cogrouped;
+cogrouped: {group: chararray,
+            model: {token: chararray,
+                    num_occurences: int,
+                    mean: float,
+                    mean_sqrs: float},
+            chunk: {token: chararray,
+                    freq: long}}
+&gt; dump cogrouped;
+(a,{(a,6,1.333333F,2.0F)},{(a,4L)})
+(b,{(b,3,1.666666F,3.0F)},{(b,2L)})
+(c,{(c,3,3.0F,9.666666F)},{})
+(d,{},{(d,3L)})
+</pre></div>
+
+<p>and doing this allows us to break the data into three distinct relations...
+</p>
+<ol>
+ <li>
+     entries where token was just in the model; these continue to the next iteration untouched as there is nothing to update
+ </li>
+
+ <li>
+     entries where token was just in the chunk; these are being seen for the first time and contribute new model entries
+ </li>
+
+ <li>
+     entries where token was in both; these need a trending check and will require the chunk being folded into the model 
+ </li>
+</ol>
+<div class="pygments_murphy"><pre><span></span>&gt; split cogrouped into
+        just_model_grped if IsEmpty(chunk),
+        just_chunk_grped if IsEmpty(model),
+        in_both_grped    if not IsEmpty(chunk) and not IsEmpty(model);
+&gt; dump just_model_grped;
+(c,{(c,3,3.0F,9.666666F)},{})
+&gt; dump just_chunk_grped;
+(d,{},{(d,3L)})
+&gt; dump in_both_grped;
+(a,{(a,6,1.333333F,2.0F)},{(a,4L)})
+(b,{(b,3,1.666666F,3.0F)},{(b,2L)})
+</pre></div>
+
+<p>each of these can be processed in turn.
+</p>
+<p>firstly entries where the token was only the model (ie not in the chunk) pass to next generation of model untouched
+</p>
+<div class="pygments_murphy"><pre><span></span>&gt; model_n1__just_model = foreach just_model_grped generate flatten(model);
+&gt; dump model_n1__just_model;
+(c,3,3.0F,9.666666F)
+</pre></div>
+
+<p>secondly entries where the token was only in the chunk (ie not in the model) contribute new model entries for the next generation
+</p>
+<div class="pygments_murphy"><pre><span></span>&gt; just_chunk_entries = foreach just_chunk_grped generate flatten(chunk);
+&gt; model_n1__just_chunk = foreach just_chunk_entries generate token, 1, freq, freq*freq;
+&gt; dump model_n1__just_chunk;
+(d,1,3L,9L)
+</pre></div>
+
+<p>finally, and the most interestingly, when the token was in both the model and the chunk we need to....
+</p>
+<p>flatten the data out a bit
+</p>
+<div class="pygments_murphy"><pre><span></span>&gt; describe in_both_grped;
+in_both_grped: {group: chararray,
+                model: {token: chararray,
+                        num_occurences: int,
+                        mean: float,
+                        mean_sqrs: float},
+                chunk: {token: chararray,
+                        freq: long}}
+&gt; in_both_flat = foreach in_both_grped generate flatten(model), flatten(chunk);
+&gt; describe in_both_flat;
+in_both_flat: {model::token: chararray,
+               model::num_occurences: int,
+               model::mean: float,
+               model::mean_sqrs: float,
+               chunk::token: chararray,
+               chunk::freq: long}
+&gt; dump in_both_flat;
+(a,6,1.333333F,2.0F,a,4L)
+(b,3,1.666666F,3.0F,b,2L)
+</pre></div>
+
+<p>do a trending check (note the comparison of freq of iter:n is done against mean/sd of iter:n-1)
+</p>
+<div class="pygments_murphy"><pre><span></span>&gt; trending = foreach in_both_flat {
+               sd_lhs = num_occurences * mean_sqrs;
+               sd_rhs = num_occurences * (mean*mean);
+               sd = sqrt( (sd_lhs-sd_rhs) / num_occurences ); 
+               fraction_of_sd_over_mean = ( sd==0 ? 0 : (freq-mean)/sd );
+               generate model::token as token, fraction_of_sd_over_mean as trending_score; 
+ }
+&gt; describe trending;
+trending: {token: chararray,
+           trending_score: double}
+&gt; dump trending;
+(a,5.656845419750436)
+(b,0.7071049267408686)
+</pre></div>
+
+<p>this result tells us that token 'a' is well over what was expected and is seriously trending</br>
+   with a frequency of 4 in this hour's chunk it's 5.6 times the standard deviation (ρ=0.51) over it's mean frequency (μ=1.33)
+</p>
+<p>token 'b' isn't really trending</br>
+   with a frequency of 2 in this hour's chunk it's not even one (0.7) standard deviation (ρ=0.57) over it's mean frequency (μ=1.66)
+</p>
+<p>at this stage we can do whatever we want with the trending scores, perhaps save the top 10 off.
+</p>
+<div class="pygments_murphy"><pre><span></span>trending_sorted = order trending by trending_score desc PARALLEL 1;
+top_trending = limit trending_sorted 10 PARALLEL 1;
+store top_trending into &#39;data/trending/006&#39;;
+</pre></div>
+
+<p>after the trending check we need to fold the chunk into the existing model
+</p>
+<div class="pygments_murphy"><pre><span></span>&gt; model_n1__folded = foreach in_both_flat {
+                       new_total = (mean * num_occurences) + freq;
+                       new_total_sqrs = (mean_sqrs * num_occurences) + (freq*freq);
+                       num_occurences = num_occurences + 1;
+                       mean = new_total / num_occurences;
+                       mean_sqrs = new_total_sqrs / num_occurences;
+                       generate model::token, num_occurences, mean, mean_sqrs;
+};
+&gt; dump model_n1__folded;
+(a,7,1.7142855F,4.0F)
+(b,4,1.7499995F,3.25F)
+</pre></div>
+
+<p>and finally combine with the previous parts we had broken out before to make the new generation of the model!
+</p>
+<div class="pygments_murphy"><pre><span></span>&gt; model_n1 = union model_n1__just_model, 
+                   model_n1__just_chunk, 
+                   model_n1__folded;
+&gt; store model_n1 into &#39;data/model/007&#39;;
+</pre></div>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2010/05/01/trending-topics-in-tweets-about-cheese-part2/";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

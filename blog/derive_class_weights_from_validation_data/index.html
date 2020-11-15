@@ -1,0 +1,198 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="deriving-class_weights-from-validation-data"></a>
+  <h2 class="blog_post_title"><a href="/blog/derive_class_weights_from_validation_data" rel="bookmark" title="Permanent Link to deriving class_weights from validation data">deriving class_weights from validation data</a></h2>
+  <small>March 03, 2020 at 06:00 PM | categories:
+
+<a href='/blog/tag/short_tute'>short_tute</a>, <a href='/blog/tag/three_strikes_rule'>three_strikes_rule</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p><i>this post is part of my three-strikes-rule series; the third time someone asks
+   me about something, i have to write it up</i>
+</p>
+<p>when training a model we often want to weight instances differently to reflect either
+</p>
+<ol>
+ <li>
+     an imbalance in the <em>amount</em> of data per class or
+ </li>
+
+ <li>
+     an imbalance in the <em>difficulty</em> across classes
+ </li>
+</ol>
+<p>the required weights for
+   case 1) can be done by checking ratios in training data;
+   case 2) though requires checking how a model does against validation data.
+</p>
+<p>this post walks through a simple example of 2)
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.metrics import log_loss
+</code></pre>
+
+<p>consider a 4-way classification problem with 10 examples
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; K = 4
+&gt;&gt;&gt; y_true = [3,1,1,0,2,0,1,2,3,3]
+&gt;&gt;&gt; N = len(y_true)
+</code></pre>
+
+<p>pretend the model produces the following predictions.
+   we can see that the model does well for classes 2 &amp; 3, but 0 &amp; 1 are confused a bit.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt;                                           # y_true
+&gt;&gt;&gt; y_pred = np.array([[0.0, 0.1, 0.1, 0.8],  # 3
+&gt;&gt;&gt;                    [0.4, 0.5, 0.0, 0.1],  # 1
+&gt;&gt;&gt;                    [0.5, 0.3, 0.1, 0.1],  # 1
+&gt;&gt;&gt;                    [0.4, 0.3, 0.1, 0.2],  # 0
+&gt;&gt;&gt;                    [0.1, 0.1, 0.8, 0.0],  # 2
+&gt;&gt;&gt;                    [0.7, 0.1, 0.1, 0.1],  # 0
+&gt;&gt;&gt;                    [0.3, 0.6, 0.1, 0.0],  # 1
+&gt;&gt;&gt;                    [0.0, 0.1, 0.9, 0.0],  # 2
+&gt;&gt;&gt;                    [0.1, 0.0, 0.0, 0.9],  # 3
+&gt;&gt;&gt;                    [0.0, 0.1, 0.1, 0.8]]) # 3
+</code></pre>
+
+<p>we can use the sklearn api to calculate the per class loss.
+   for a softmax based classifier <code>log_loss</code> is what we want (since it's what is being directly
+   optimised).( though the formulation is simple it's worth using a lib to avoid weird
+   numerical instabilities. note: though for a reasonable number of classes might need to
+   set a higher epsilon in the <code>log_loss</code> call )
+</p>
+<p>as expected we can see the loss for confused classes 0 &amp; 1 are higher than classes 2 &amp; 3.
+</p>
+<p>( note: sklearn <code>log_loss</code> doesn't work on a sparse version of <code>y_true</code>
+   so we need to convert to a one_hot representation for the call )
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; y_true_one_hot = np.zeros((N, K))
+&gt;&gt;&gt; y_true_one_hot[np.arange(N), y_true] = 1.0
+&gt;&gt;&gt;
+&gt;&gt;&gt; losses = []
+&gt;&gt;&gt; for clazz in range(K):
+&gt;&gt;&gt;     losses.append(log_loss(y_true=y_true_one_hot[:, clazz],
+&gt;&gt;&gt;                            y_pred=y_pred[:, clazz]))
+&gt;&gt;&gt;
+&gt;&gt;&gt; losses
+
+[0.3044334455393211,
+     0.3291423130879737,
+     0.09606671609189957,
+     0.10908727165739374]
+
+</code></pre>
+
+<p>next we need to convert these to values suitable for <code>class_weights</code>.
+   one way to do this is with a smoothing (via an exponentiation) followed by a normalisation.
+</p>
+<p>as expected, each smoothing value puts more class weights on the confused classes 0 &amp; 1.
+</p>
+<p>the degenerate <code>smoothing=0</code> case results in a uniform weighting as expected.
+</p>
+<pre class="prettyprint"><code class="language-python">&gt;&gt;&gt; def class_weights_for(losses, smoothing):
+&gt;&gt;&gt;   # smoothing -> 0.0 => uniform class weights; acts as a noop, i.e. class weights are all 1.0
+&gt;&gt;&gt;   # smoothing -> 1.0 => uses log loss value for class weights; probably too destructive ...
+&gt;&gt;&gt;   smoothed_losses = np.power(losses, smoothing)           # smooth values
+&gt;&gt;&gt;   normalised = smoothed_losses / np.sum(smoothed_losses)
+&gt;&gt;&gt;   return normalised * len(normalised)                     # rescale all to (0, 1)
+&gt;&gt;&gt;
+&gt;&gt;&gt; for smoothing in [0, 0.001, 0.01, 0.1, 1.0]:
+&gt;&gt;&gt;   print("smoothing=%0.3f => class_weights=%s" % (smoothing, class_weights_for(losses, smoothing)))
+
+smoothing=0.000 => class_weights=[1. 1. 1. 1.]
+    smoothing=0.001 => class_weights=[1.0005254  1.00060348 0.99937205 0.99949908]
+    smoothing=0.010 => class_weights=[1.00525187 1.00603665 0.9937238  0.99498768]
+    smoothing=0.100 => class_weights=[1.05225581 1.0604995  0.93762546 0.94961924]
+    smoothing=1.000 => class_weights=[1.45187861 1.56971809 0.45815338 0.52024992]
+
+</code></pre>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/derive_class_weights_from_validation_data";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

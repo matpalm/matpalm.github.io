@@ -1,0 +1,270 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="brutally-short-intro-to-theano-word-embeddings"></a>
+  <h2 class="blog_post_title"><a href="/blog/2015/03/28/theano_word_embeddings" rel="bookmark" title="Permanent Link to brutally short intro to theano word embeddings">brutally short intro to theano word embeddings</a></h2>
+  <small>March 28, 2015 at 01:00 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <h1>embedding lookup tables</h1>
+<p>one thing in theano i couldn't immediately find examples for was a simple embedding lookup table, a critical component for anything with NLP. turns out that it's just one of those things that's so simple no one bothered writing it down :/
+</p>
+<p>tl;dr : you can just use <a href="http://docs.scipy.org/doc/numpy/reference/arrays.indexing.html">numpy indexing</a> and everything just works.
+</p>
+
+<h1>numpy / theano indexing</h1>
+<p>consider the following theano.tensor example of 2d embeddings for 5 items. each row represents a seperate embeddable item.
+</p>
+<pre class="prettyprint linenums">
+>>> E = np.random.randn(5, 2)
+>>> t_E = theano.shared(E)
+>>> t_E.eval()
+array([[-0.72310919, -1.81050727],
+       [ 0.2272197 , -1.23468159],
+       [-0.59782901, -1.20510837],
+       [-0.55842279, -1.57878187],
+       [ 0.63385967, -0.35352725]])
+</pre>
+
+<p>to pick a subset of the embeddings it's as simple as just using <a href="http://deeplearning.net/software/theano/library/tensor/basic.html#indexing">indexing</a>.
+   for example to get the third &amp; first embeddings it's ...
+</p>
+<pre class="prettyprint linenums">
+>>> idxs = np.asarray([2, 0])
+>>> t_E[idxs].eval()
+array([[-0.59782901, -1.20510837],   # third row of E
+       [-0.72310919, -1.81050727]])  # first row of E
+</pre>
+
+<p>if we want to concatenate them into a single vector (a common operation when we're feeding up to, say, a densely connected hidden layer),
+   it's a <a href="http://deeplearning.net/software/theano/library/tensor/basic.html#theano.tensor.reshape">reshape</a>
+</p>
+<pre class="prettyprint linenums">
+>>> t_E[idxs].reshape((1, -1)).eval()
+array([[-0.59782901, -1.20510837, -0.72310919, -1.81050727]])  # third & first row concatenated
+</pre>
+
+<p>all the required multi dimensional operations you need for batching just work too..
+</p>
+<p>eg. if we wanted to run a batch of size 2 with the first batch item being the third &amp; first embeddings and the second batch item being the
+   fourth &amp; fourth embeddings we'd do the following...
+</p>
+<pre class="prettyprint linenums">
+>>> idxs = np.asarray([[2, 0], [3, 3]])  # batch of size 2, first example in batch is pair [2, 0], second example in batch is [3, 3]
+>>> t_E[idxs].eval()
+array([[[-0.59782901, -1.20510837],    # third row of E
+        [-0.72310919, -1.81050727]],   # first row of E
+       [[-0.55842279, -1.57878187],    # fourth row of E
+        [-0.55842279, -1.57878187]]])  # fourth row of E
+>>> t_E[idxs].reshape((idxs.shape[0], -1)).eval()
+array([[-0.59782901, -1.20510837, -0.72310919, -1.81050727],   # first item in batch; third & first row concatenated
+       [-0.55842279, -1.57878187, -0.55842279, -1.57878187]])  # second item in batch; fourth row duplicated
+</pre>
+
+<p>this type of packing of the data into matrices is crucial to enable linear algebra libs and GPUs to really fire up.
+</p>
+
+<h1>a trivial full end to end example</h1>
+<p>consider the following as-simple-as-i-can-think-up "network" that uses embeddings;
+</p>
+<p>given 6 items we want to train 2d embeddings such that the first two items have the same embeddings, the third and fourth have the same embeddings and the last two
+   have the same embeddings. additionally we want all other combos to have different embeddings.
+</p>
+<p>the <i>entire</i> theano code (sans imports) is the following..
+</p>
+<p>first we initialise the embedding matrix as before
+</p>
+<pre class="prettyprint linenums">
+E = np.asarray(np.random.randn(6, 2), dtype='float32')
+t_E = theano.shared(E)
+</pre>
+
+<p>the "network" is just a dot product of two embeddings ...
+</p>
+<pre class="prettyprint linenums:3">
+t_idxs = T.ivector()
+t_embedding_output = t_E[t_idxs]
+t_dot_product = T.dot(t_embedding_output[0], t_embedding_output[1])
+</pre>
+
+<p>... where the training cost is a an L1 penality against the "label" of 1.0 for the pairs we want to have the same embeddings and
+   0.0 for the ones we want to have a different embeddings.
+</p>
+<pre class="prettyprint linenums:6">
+t_label = T.iscalar()
+gradient = T.grad(cost=abs(t_label - t_dot_product), wrt=t_E)
+updates = [(t_E, t_E - 0.01 * gradient)]
+train = theano.function(inputs=[t_idxs, t_label], outputs=[], updates=updates)
+</pre>
+
+<p>we can generate training examples by randomly picking two elements and assigning label 1.0 for the pairs 0 &amp; 1, 2 &amp; 3 and 4 &amp; 6 (and 0.0 otherwise) and every once in awhile
+   write them out to a file.
+</p>
+<pre class="prettyprint linenums:10">
+print "i n d0 d1"
+for i in range(0, 10000):
+    v1, v2 = random.randint(0, 5), random.randint(0, 5)
+    label = 1.0 if (v1/2 == v2/2) else 0.0
+    train([v1, v2], label)
+    if i % 100 == 0:
+        for n, embedding in enumerate(t_E.get_value()):
+            print i, n, embedding[0], embedding[1]
+</pre>
+
+<p>plotting this shows the convergence of the embeddings (labels denote initial embedding location)...
+</p>
+<img src="/blog/imgs/2015/twe/dp_embeddings.png" />
+
+<p>0 &amp; 1 come together, as do 2 &amp; 3 and 4 &amp; 5. ta da!
+</p>
+
+<h2>a note on dot products</h2>
+<p>it's interesting to observe the effect of this (somewhat) arbitrary cost function i picked.
+</p>
+<p>for the pairs where we wanted the embeddings to be same the cost function, \( |1 - a \cdot b | \), is minimised when the dotproduct is 1 and this happens when the vectors
+   are the same and have unit length. you can see this is case for pairs 0 &amp; 1 and 4 &amp; 5 which have come together and ended up on the unit circle. but what about 2 &amp; 3?
+   they've gone to the origin and the dotproduct of the origin with itself is 0, so it's <em>maximising</em> the cost, not minimising it! why?
+</p>
+<p>it's because of the other constraint we added. for all the pairs we wanted the embeddings to be different the cost function, \( |0 - a \cdot b | \), is minimised when
+   the dotproduct is 0. this happens when the vectors are orthogonal. both 0 &amp; 1 and 4 &amp; 5 can be on the unit sphere and orthogonal but for them to be both orthogonal
+   to 2 &amp; 3 <em>they</em> have to be at the origin. since my loss is an L1 loss (instead of, say, a L2 squared loss) the pair 2 &amp; 3 is overall better at the origin because it
+   gets more from minimising this constraint than worrying about the first.
+</p>
+<p>the pair 2 &amp; 3 has come together not because we were training embeddings to be the same but because we were also training them to be different.
+   this wouldn't be a problem if we were using 3d embeddings since they could all be both on the unit sphere and orthogonal at the same time.
+</p>
+<p>you can also see how the points never fully converge. in 2d with this loss it's impossible to get the cost down to 0 so they continue to get bumped around. in 3d, as
+   just mentioned, the cost can be 0 and the points would converge.
+</p>
+
+<h2>a note on inc_subtensor optimisation</h2>
+<p>there's one non trivial optimisation you can do regarding your embeddings that relates to how sparse the embedding update is.
+   in the above example we have 6 embeddings in total and, even though we only update 2 of them at a time, we are calculating the
+   gradient with respect to the <em>entire</em> t_E matrix. the end result is that we calculate (and apply) a gradient that for the majority of rows is just zeros.
+</p>
+<pre class="prettyprint">
+...
+gradient = T.grad(cost=abs(t_label - t_dot_product), wrt=t_E)
+updates = [(t_E, t_E - 0.01 * gradient)]
+...
+print gradient.eval({t_idxs: [1, 2], t_label: 0})
+[[  0.00000000e+00   0.00000000e+00]
+ [  9.60363150e-01   2.22545816e-04]
+ [  1.00614786e+00  -3.63630615e-03]
+ [  0.00000000e+00   0.00000000e+00]
+ [  0.00000000e+00   0.00000000e+00]
+ [  0.00000000e+00   0.00000000e+00]]
+</pre>
+
+<p>you can imagine how much sparser things are when you've got 1M embeddings and are only updating &lt;10 per example :/
+</p>
+<p>rather than do all this wasted work we can be a bit more explicit about both how we want the gradient calculated and updated
+   by using <a href="http://deeplearning.net/software/theano/library/tensor/basic.html#theano.tensor.inc_subtensor">inc_subtensor</a>
+</p>
+<pre class="prettyprint">
+...
+t_embedding_output = t_E[t_idxs]
+...
+gradient = T.grad(cost=abs(t_label - t_dot_product), wrt=t_embedding_output)
+updates = [(t_E, T.inc_subtensor(t_embedding_output, -0.01 * gradient))]
+...
+print gradient.eval({t_idxs: [1, 2], t_label: 0})
+[[  9.60363150e-01   2.22545816e-04]
+ [  1.00614786e+00  -3.63630615e-03]]
+</pre>
+
+<p>and of course you should only do this once you've <a href="http://matpalm.com/blog/2015/02/22/the_curse_of_gpufromhost/">proven it's the slow part...</a>
+</p>
+<p><a href="https://gist.github.com/matpalm/bf2e71564e87e6c36081">for code, see this gist</a>
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2015/03/28/theano_word_embeddings";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

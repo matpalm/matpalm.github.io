@@ -1,0 +1,205 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="ggplot-posixct-cheat-sheet"></a>
+  <h2 class="blog_post_title"><a href="/blog/2012/03/18/ggplot_posix_cheat_sheet" rel="bookmark" title="Permanent Link to ggplot posixct cheat sheet">ggplot posixct cheat sheet</a></h2>
+  <small>March 18, 2012 at 08:00 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <h2>ggplot posixct cheat sheet</h2>
+<p>after having to google this stuff three times in the last few months i'm writing it down here so i can just cut and paste next time...
+</p>
+
+<h3>data with arbitrary date time stamp</h3>
+<pre>
+> d = read.delim('data.tsv',header=F,as.is=T,col.names=c('dts_str','freq'))
+> # YEAR MONTH DAY HOUR
+> head(d,3)
+        dts_str  freq
+1 2012_01_01_00 18393
+2 2012_01_01_01 20536
+3 2012_01_01_02 91840
+> tail(d,3)
+          dts_str   freq
+732 2012_01_31_21 103107
+733 2012_01_31_22 108921
+734 2012_01_31_23  78629
+> summary(d$freq)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  10590   63620   82680   86770  105700  169900 
+</pre>
+
+
+<h3>parse arbitrary strange format to a datetime</h3>
+<pre>
+> d$dts = as.POSIXct(d$dts_str, format="%Y_%m_%d_%H")
+
+> head(d,3)
+        dts_str  freq                 dts
+1 2012_01_01_00 18393 2012-01-01 00:00:00
+2 2012_01_01_01 20536 2012-01-01 01:00:00
+3 2012_01_01_02 91840 2012-01-01 02:00:00
+
+> ggplot(d, aes(dts, freq)) + geom_point() + scale_x_datetime(major="10 days", minor="1 day", format="%d-%b-%Y")
+
+</pre>
+
+<img src="/blog/imgs/2012/ggplot_posixct/p1.png"/>
+
+
+<h3>plots by day of week; summary</h3>
+<pre>
+> d$dow = as.factor(format(d$dts, format="%a"))  # day of week
+> head(d,3)
+        dts_str  freq                 dts dow
+1 2012_01_01_00 18393 2012-01-01 00:00:00 Sun
+2 2012_01_01_01 20536 2012-01-01 01:00:00 Sun
+3 2012_01_01_02 91840 2012-01-01 02:00:00 Sun
+> ggplot(d,aes(dow,freq)) 
+ + geom_boxplot()
+ + geom_smooth(aes(group=1)) 
+ + scale_x_discrete(limits=c('Mon','Tue','Wed','Thu','Fri','Sat','Sun')) # provide explicit factor ordering
+ + xlab('day of week') + ylab('freq') + opts(title='freq by day of week')
+</pre>
+
+<img src="/blog/imgs/2012/ggplot_posixct/p2.png"/>
+
+
+<h3>plots by day of week; totals</h3>
+<pre>
+> by_dow = ddply(d, "dow", summarize, freq=sum(freq))
+> ggplot(by_dow,aes(dow,freq)) + geom_bar() + 
+ scale_x_discrete(limits=c('Mon','Tue','Wed','Thu','Fri','Sat','Sun')) + 
+ xlab('day of week') + ylab('freq') + opts(title='total freq by day of week')  
+</pre>
+
+<img src="/blog/imgs/2012/ggplot_posixct/p3.png"/>
+
+
+<h3>plots by hour of day; summary</h3>
+<pre>
+> d$hr = format(d$dts, format="%H")
+> head(d,3)
+        dts_str  freq                 dts dow hr
+1 2012_01_01_00 18393 2012-01-01 00:00:00 Sun 00
+2 2012_01_01_01 20536 2012-01-01 01:00:00 Sun 01
+3 2012_01_01_02 91840 2012-01-01 02:00:00 Sun 02
+> ggplot(d,aes(hr,freq)) + geom_boxplot() + geom_smooth(aes(group=1)) + 
+ xlab('hr of day') + ylab('freq') + opts(title='freq by hr of day')
+</pre>
+
+<img src="/blog/imgs/2012/ggplot_posixct/p4.png"/>
+
+
+<h3>plots by hour of day; totals</h3>
+<pre>
+> by_hr = ddply(d, "hr", summarize, freq=sum(freq))
+> ggplot(by_hr,aes(hr,freq)) + geom_bar() + 
+ xlab('hr of day') + ylab('freq') + opts(title='total freq by hr of day')
+</pre>
+
+<img src="/blog/imgs/2012/ggplot_posixct/p5.png"/>
+
+
+<h3>seperate weekday from weekend</h3>
+<pre>
+d$weekend = 'weekday'
+d[d$dow=='Sat'|d$dow=='Sun',]$weekend = 'weekend' # terrible style :(
+ggplot(d,aes(hr,freq)) 
+ + geom_boxplot(aes(fill=weekend))
+ + geom_smooth(aes(group=weekend)) 
+ + xlab('hr of day') + ylab('freq') + opts(title='freq by hr of day')
+</pre>
+
+<img src="/blog/imgs/2012/ggplot_posixct/p6.png"/>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2012/03/18/ggplot_posix_cheat_sheet";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

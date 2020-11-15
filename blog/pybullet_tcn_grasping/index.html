@@ -1,0 +1,505 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="pybullet-grasping-with-time-contrastive-network-embeddings"></a>
+  <h2 class="blog_post_title"><a href="/blog/pybullet_tcn_grasping" rel="bookmark" title="Permanent Link to pybullet grasping with time contrastive network embeddings">pybullet grasping with time contrastive network embeddings</a></h2>
+  <small>June 11, 2019 at 01:00 PM | categories:
+
+<a href='/blog/tag/projects'>projects</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p><em>( with a fun exploration of easy/hard positive/negative mining )</em>
+</p>
+
+<h2>brutually short introduction to triplet loss</h2>
+<p>say we want to train a neural net whose output is an embedding of its input.
+   how would we train it?
+</p>
+<p>to train anything we need a loss function and usually that function describes exactly
+   what we want the output to be in the form of explicit labels. but for embeddings things are a little different.
+   we might not care exactly what embedding values we get, we only care about how they are related
+   for different inputs.
+</p>
+<p>one way of specifying this relationship for embeddings is with an idea called triplet loss.
+</p>
+<p>let's consider three particular instances...
+</p>
+<ol>
+ <li>
+     a random instance (we'll call this the <strong>anchor</strong>)
+ </li>
+
+ <li>
+     another instance that is somehow related to the anchor and, as such, we want close in the embedding space (we'll call this the <strong>positive</strong>)
+ </li>
+
+ <li>
+     a third instance that is somehow different to the anchor that we don't want close in the embedding space (we'll call this the <strong>negative</strong>)
+ </li>
+</ol>
+<p>triplet loss is a way of specifying that we don't care exactly where things get embedded, only that
+   the anchor should be closer to the positive than to the negative.
+</p>
+<p>we can express this idea of closer in a loss function in a simple clever way...
+</p>
+<p>consider two distances; the distance from the anchor to the positive (<code>dist_anchor_positive</code>) and
+   the distance from the anchor to the negative (<code>dist_anchor_negative</code>)
+</p>
+<p>if <code>dist_anchor_positive &lt; dist_anchor_negative</code> it means the positive is <em>closer</em> to the anchor than
+   the negative. this is good, and what we want from our embedding so things shouldn't change; i.e. should be a loss of zero.
+</p>
+<pre class="prettyprint"><code class="language-python">if dist_anchor_positive < dist_anchor_negative:
+  loss = 0
+</code></pre>
+
+<p>if <code>dist_anchor_positive &gt; dist_anchor_negative</code> though it means the positive is <em>further</em> from the anchor than
+   the negative. this is bad, we should adjust these embeddings.
+   but how much loss should we attribute to this case?
+   turns out we can literally just use the difference in these distances!
+   i.e. a little bit of loss if the difference is low, but a larger loss otherwise.
+</p>
+<pre class="prettyprint"><code class="language-python">if dist_anchor_positive > dist_anchor_negative:
+  loss = dist_anchor_positive - dist_anchor_negative
+</code></pre>
+
+<table class="data">
+<tr><td>good</td><td>bad</td></tr>
+<tr><td>
+<img src="/blog/imgs/2019/tcn_grasping/apn_good.png"/>
+</td><td>
+<img src="/blog/imgs/2019/tcn_grasping/apn_bad.png"/>
+</td></tr>
+</table>
+
+<p>these two cases can be combined very elegantly using a max with 0.
+</p>
+<pre class="prettyprint"><code class="language-python">loss = max(0, dist_anchor_positive - dist_anchor_negative)</code></pre>
+
+<p>this loss is (unsurprisingly) known as hinge loss and has a close relationship with
+   <a href="https://en.wikipedia.org/wiki/relu">relu &amp; softplus</a>
+</p>
+<table class="data">
+<tr><td>relu and softplus</td></tr>
+<tr><td><img src="/blog/imgs/2019/tcn_grasping/softplus.png"/></td></tr>
+</table>
+
+<p>a final point is that to encourage more seperation we might say that not only does the positive have
+   to be closer, it has to be closer by some fixed amount. we call this a <code>margin</code>
+</p>
+
+<h2>grasping in pybullet</h2>
+<p>let's put triplet loss aside for a bit and consider robotic grasping. we might not be able to afford
+   a physical robot but there's a lot we can play with in simulation.
+</p>
+<p>with <a href="https://pybullet.org/">pybullet</a> we can simulate a grasping setup easily! e.g. consider the following...
+</p>
+<ul>
+ <li>
+     a simple grasping environment of a table + a tray + an arm
+ </li>
+
+ <li>
+     15 <a href="https://github.com/matpalm/procedural_objects">procedurally generated objects</a> dropped into the tray
+ </li>
+
+ <li>
+     a sequence of random grasps
+ </li>
+</ul>
+<p>where a random grasp is ...
+</p>
+<ol>
+ <li>
+     move gripper to random point above tray
+ </li>
+
+ <li>
+     move gripper down into tray
+ </li>
+
+ <li>
+     close gripper
+ </li>
+
+ <li>
+     move gripper up again (&amp; fingers crossed we got something :)
+ </li>
+</ol>
+<p>during this sequence we can capture the environment by rendering the
+   view from 90 randomly placed cameras every 20 steps of the simulation
+   and continue random grasping until we have 1000 images.
+</p>
+<table class="data">
+<tr><td>different camera views from some random grasping</td></tr>
+<tr><td><img src="/blog/imgs/2019/tcn_grasping/example_grasp.png"/></td></tr>
+</table>
+
+
+<h2>time contrastive networks</h2>
+<p>given this grasping setup could we learn an embedding of camera images that represents something about the scene that
+   is agnostic to the specific camera view?
+</p>
+<p>we'd want this embedding to have a mapping that is the <em>same</em> when the scene
+   is the same, regardless of the camera angle &amp; have a mapping that is <em>different</em> when the scene is different, again
+   regardless of the camera angle. if only we had a way of describing a loss function for these kinds of pairings!
+</p>
+<p>wait. a.. minute... triplet loss!!!
+</p>
+<p>the idea of doing this was first introduced in the paper
+   <a href="https://arxiv.org/abs/1704.06888">Time-Contrastive Networks: Self-Supervised Learning from Video</a>
+   by <a href="https://ai.google/research/people/PierreSermanet">Pierre</a> and co. and in this formulation...
+</p>
+<ul>
+ <li>
+     the anchor is a camera image from a <em>random</em> view point at a <em>random</em> time
+ </li>
+
+ <li>
+     the positive is a camera image from a <em>different</em> view point but at the <em>same</em> time
+ </li>
+
+ <li>
+     the negative is a camera image from the <em>same</em> view point but at a <em>different</em> time
+ </li>
+</ul>
+<p>an example batch of four triples is the following...
+</p>
+<img src="/blog/imgs/2019/tcn_grasping/grasping_data_example_triples.png"/>
+
+
+<h3>training</h3>
+<p>let's train a very simple small model for this experiment.
+   ( the training data and loss function is more interesting than a huge model and
+   for i saw marginal improvement in a bigger model anyway... )
+</p>
+<pre class="prettyprint"><code class="language-python">______________________________________________________________________________________
+Layer (type)                 Output Shape              Param #  Comment
+======================================================================================
+inputs (InputLayer)          (None, 180, 240, 3)       0
+conv2d (Conv2D)              (None, 90, 120, 16)       1216    # 5x5 stride 2
+conv2d_1 (Conv2D)            (None, 45, 60, 32)        4640    # 3x3 stride 2
+conv2d_2 (Conv2D)            (None, 23, 30, 32)        9248    # 3x3 stride 2
+conv2d_3 (Conv2D)            (None, 12, 15, 32)        9248    # 3x3 stride 2
+flatten (Flatten)            (None, 5760)              0
+dropout (Dropout)            (None, 5760)              0       # keep = 0.5
+dense (Dense)                (None, 64)                368704
+embedding (Dense)            (None, 128)               8320
+normalise_layer (NormaliseLa (None, 128)               0       # tf.nn.l2_normalize
+======================================================================================
+Total params: 401,376
+Trainable params: 401,376
+</code></pre>
+
+<p>for the loss function we do as described above...
+   (note: a batch of B training instances is 3*B images; each instance is a triple of images)
+</p>
+<pre class="prettyprint"><code class="language-python">embeddings = model.output                                            # (3B, E)
+embeddings = tf.reshape(embeddings, (-1, 3, embedding_dim))          # (B, 3, E)
+anchor_embeddings = embeddings[:, 0]                                 # (B, E)
+positive_embeddings = embeddings[:, 1]                               # (B, E)
+negative_embeddings = embeddings[:, 2]                               # (B, E)
+dist_a_p = tf.norm(anchor_embeddings - positive_embeddings, axis=1)  # (B)
+dist_a_n = tf.norm(anchor_embeddings - negative_embeddings, axis=1)  # (B)
+constraint = dist_a_p - dist_a_n + margin                            # (B)
+per_element_hinge_loss = tf.maximum(0.0, constraint)                 # (B)
+return tf.reduce_mean(per_element_hinge_loss)                        # (1)
+</code></pre>
+
+
+<h3>evaluation</h3>
+<p>during training there are a number of interesting things to keep track of...
+</p>
+<p>firstly the relationship between <code>dist_a_p</code> and <code>dist_a_n</code>. when things are going well we want
+   the <code>dist_a_n</code> to be constantly outgrowing <code>dist_a_p</code>
+</p>
+<table class="data">
+<tr>
+<td>distance anchor negative</td>
+<td>distance anchor positive</td>
+</tr>
+<tr><td>
+<img src="/blog/imgs/2019/tcn_grasping/mean_dist_a_n.png"/>
+</td><td>
+<img src="/blog/imgs/2019/tcn_grasping/mean_dist_a_p.png"/>
+</td></tr>
+</table>
+
+<p>an interesting failure case, especially when the margin is too low, is that the model
+   just learns to map everything to the same point ( i.e. <code>dist_a_p - dist_a_n</code> is minimised well
+   when all the distances are zero :/)
+</p>
+<p>this is very visible when we eyeball the distribution of embeddings for some held out data
+</p>
+<table class="data">
+<tr>
+<td>good spread of embeddings</td>
+<td>collapsed embeddings</td>
+<tr><td>
+<img src="/blog/imgs/2019/tcn_grasping/embeddings_ok.png"/>
+</td><td>
+<img src="/blog/imgs/2019/tcn_grasping/embeddings_collapsed.png"/>
+</td></tr>
+</table>
+
+<p>but apart from the distribution of embeddings, are there other ways to evaluate the embeddings?
+</p>
+<p>one way is to compare the embeddings of a scene from some held out data. given we know the camera positions
+   we can consider a <code>reference</code> grasp sequence of N frames and find the near neighbours, in the embedded space,
+   from two other <code>target_a</code> and <code>target_b</code> camera views. we select near neighbours for <code>target_a</code> and <code>target_b</code>
+   from different runs than the <code>reference</code> to ensure it's not just picking up exact matches.
+</p>
+<table class="data">
+<tr><td>
+embedding near neighbours on held out data
+</td></tr>
+<tr><td>
+<img src="/blog/imgs/2019/tcn_grasping/near_neighbour_egs.gif"/></td></tr>
+</table>
+
+<p>we can see visually that the pose of the arms generally match.
+</p>
+<p>trouble is eyeballing things isn't really quantifiable; is there a number we can look at?
+</p>
+<p>one numerical attribute we have of the scene is the position of the arm in joint space (i.e. the seven joint angles).
+   what we can do is find the near neighbours in the embedding space based on the image but then compare based on the
+   joint positions. one very simple (naive) comparison of the positions is their euclidean distance.
+</p>
+<p>the following plot shows the distribution of joint distances between positions in the <code>reference</code> sequence
+   and the near neighbour <code>target_a</code> and <code>target_b</code> frames.
+   as a comparison point we also include the distribution of distances of random pairs (in green).
+   vertical lines represent the mean values (note: the mean for <code>target_a</code> and <code>target_b</code> end up being the same.)
+</p>
+<p>we see that the mean distances for <code>target_a</code> and <code>target_b</code> are less than <code>random</code>
+   even using this naive euclidean distance metric; i.e. the embedding space is capturing positions
+   that are closer than random pairs.
+</p>
+<img src="/blog/imgs/2019/tcn_grasping/pose_distances_from_ref.png"/>
+
+
+<h2>easy ( &amp; hard ) positive ( &amp; negative ) mining</h2>
+
+<h3>N classes and the hard negative mining problem</h3>
+<p>let's go back to thinking about just triplet loss; specifically the common use case
+   of wanting to learn embeddings for instances across N classes.
+</p>
+<p>for the N class problem...
+</p>
+<ul>
+ <li>
+     the anchor is any random instance
+ </li>
+
+ <li>
+     the positive is another instance from the <em>same</em> class
+ </li>
+
+ <li>
+     the negative is any instance from <em>any other</em> class
+ </li>
+</ul>
+<p>in this setup there is a common problem involving the selection of negatives.
+   for any particular anchor there will be many more negatives than positives so as we progress learning
+   we'll see more and more of these negatives being cases that already satisfy the distance constraint.
+   if we're just randomly picking triples we'll end up picking more and more that don't offer anything
+   towards learning (i.e. have zero loss) we call these "easy" negatives.
+   what we really want to do is focus on picking the fewer "hard" negatives.
+   but how do we know what the hard ones are?
+</p>
+<p>in the N class setup there are a number of approaches to mining hard negatives;
+   the <a href="https://arxiv.org/abs/1703.07737">In Defense of the Triplet Loss for Person Re-Identification</a> paper
+   has some great information in section 2 on two online hard triple mining variants called
+   <code>BatchHard</code> and <code>BatchAll</code> for the N class problem (though we won't describe them here)
+</p>
+
+<h3>explicit hard negatives (and positives) in the grasping setup</h3>
+<p>do we see this problem of "easy" triples in the grasping setup? oh yes.
+   consider the following graph which shows the number of elements in a batch (of size 16) that have
+   non zero loss.
+</p>
+<img src="/blog/imgs/2019/tcn_grasping/batch_count_non_zero.png"/>
+
+<p>we can see that by the 15th step we're at the point of having only 1 or 2 (sometimes 0!) instances in a batch
+   that have non zero loss (i.e. bulk of the batch has zero loss and so is contributing nothing to the training)
+</p>
+<p>can we use <code>BatchHard</code> or <code>BatchAll</code> in the grasping setup? sadly, not really since the relationship between
+   the anchors, positives and negatives are different.
+   it's ok though as there are more explicit ways of describing hard triplets in our setup.
+</p>
+<p>for the negatives it's about <em>time</em>; the closer in time a negative is to the anchor,
+   the harder it's going to be to discriminate. a small change in time =&gt; similar camera image =&gt;
+   similar embedding, but we want them to be different.
+</p>
+<p>for the positives it's about <em>camera location</em>; the closer the postive camera is to the anchor the easier it is.
+   a large change in camera position =&gt; different camera image =&gt; different embedding, but we want them to be the same.
+</p>
+<p>given this we have two ways of increasing the difficulty of learning the embeddings.
+</p>
+<ul>
+ <li>
+     pick negatives closer in time to the anchor
+ </li>
+
+ <li>
+     pick positives using a camera angle further from the anchor
+ </li>
+</ul>
+
+<h2>comparing easy vs hard negatives</h2>
+<p>we can try a couple of experiments then regarding the choice of negatives
+</p>
+<ul>
+ <li>
+     a baseline case where negatives are chosen as any frame in a run
+ </li>
+
+ <li>
+     when the negative example is chosen to be within 100 frames of the anchor
+ </li>
+
+ <li>
+     when the negative example is chosen to be within 10 frames of the anchor
+ </li>
+</ul>
+<p>choosing the negative within 10 frames is quite difficult as the negative
+   looks <em>very</em> similar to the anchor so it's perhaps unsurprising that training a model from scratch
+   with these negatives fails a lot ( the failure mode being that
+   all embeddings collapse to a single point ). we don't see this failure with the totally randomly chosen
+   frames.
+</p>
+<p>interestingly it seems that we are able to anneal at least and by training on the random frames for awhile
+   and <em>then</em> switching to harder case. this works and is stable.
+</p>
+
+<h2>TODOs</h2>
+<p>as always i've gotten distracted by something else in the short term... for now at least the TODOs i want
+   to play around with relate to avoid the wasted zero loss cases related to easy triples...
+</p>
+
+<h3>offline negative mining</h3>
+<p>if our main goal is to keep a training loop busy doing useful work (i.e. minimising zero loss cases) we
+   can farm out the checking of triples to a fleet of workers. these workers can randomly (or otherwise) sample
+   triples against a reference model and only send triples to a central trainer if they don't look easy.
+   this is something that parallelises well and we don't care necessarily about having these workers fast
+   so it's a great fit for preemptiable cpu instances (remember performance != scalability)
+   it's fine to have these workers use a slightly stale model for their reference and just update on some
+   schedule.
+</p>
+<img src="/blog/imgs/2019/tcn_grasping/cpu_workers.png"/>
+
+
+<h3>replay buffers</h3>
+<p>additional to the offline mining another win would be to borrow an idea from from offline reinforcement learning;
+   the replay buffer. if we mine triples we can use them to populate a replay buffer and then
+   sample training batch from the replay buffer.
+   the simplest approach would be to treat the buffer as a FIFO queue and expire entries based on time.
+   more complex approaches can use the importance sampling ideas to keep examples around while they continue to
+   add value to training.
+</p>
+<p>i saw huge wins by implementing <a href="https://arxiv.org/abs/1511.05952">Prioritised Experience Replay</a>
+   for my <a href="https://github.com/matpalm/malmomo/blob/master/prio_replay.py">Malmomo project</a>
+</p>
+
+<h3>hard positives</h3>
+<p>the above talks about hard negatives and hard positives but i only trained hard negatives; i should do some
+   more work on the mining of explicit hard positives.
+</p>
+
+<h3>train an actual grasping model!</h3>
+<p>the entire point of me starting this project was to try to train a grasping model but i haven't got there yet o_O
+</p>
+<p>as things are i get the feeling this embedding might be capturing something about the arm but not really anything about
+   the objects. still an open question...
+</p>
+
+<h2>code</h2>
+<p>all the code for this is <a href="https://github.com/matpalm/tcn_grasping">on github</a>
+</p>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/pybullet_tcn_grasping";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

@@ -1,0 +1,236 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="an-exercise-in-handling-mislabelled-training-data"></a>
+  <h2 class="blog_post_title"><a href="/blog/2011/10/03/mislabelled-training-data" rel="bookmark" title="Permanent Link to an exercise in handling mislabelled training data">an exercise in handling mislabelled training data</a></h2>
+  <small>October 03, 2011 at 08:00 PM | categories:
+
+<a href='/blog/tag/uncategorized'>Uncategorized</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <h2>intro</h2>
+<p>as part of my <a href="https://github.com/matpalm/diy_twitter_client">diy twitter client project</a> 
+   i've been using the <a href="https://dev.twitter.com/docs/streaming-api/methods">twitter sample streams</a> as a source
+   of unlabelled data for some <a href="http://en.wikipedia.org/wiki/Mutual_information">mutual information</a> analysis. 
+   these streams are a great source of random tweets but 
+   include a lot of non english content. extracting the english tweets would be pretty straight forward if the ['user']['lang'] 
+   field of a tweet was 100% representative of the tweet's language but a lot of the times it's not; can we use
+   these values at least as a starting point?
+</p>
+<p>one approach to seeing how consistent the relationship between user_lang and the tweet language is to
+</p>
+<ol>
+ <li>
+     train a classifier for predicting the tweet's language assuming the user_lang field is correct
+ </li>
+
+ <li>
+     have the classifier reclassify the same tweets and see which ones stand out as being misclassified
+ </li>
+</ol>
+<p>yes, yes, i realise that testing against the same data you've trained against is a big no no but i'm curious...
+</p>
+
+<h2>method</h2>
+<p>let's start with 100,000 tweets taken from the <a href="https://dev.twitter.com/docs/streaming-api/methods">sample stream</a>. 
+   we'll use <a href="https://github.com/JohnLangford/vowpal_wabbit/wiki">vowpal wabbit</a> for the classifier and extract features as follows...
+</p>
+<ol>
+ <li>
+     lower case the tweet text.
+ </li>
+
+ <li>
+     remove hashtags, user mentions and urls.
+ </li>
+
+ <li>
+     split the text into character unigrams, bigrams and trigrams.
+ </li>
+</ol>
+<p>we treat tweets marked as user_lang=en as the +ve case for the classifier (class 1) and all other tweets as the -ve case (class 0).
+</p>
+<p>the standard output for predictions from vowpal is a value from 0.0 (not english) to 1.0 (english) but we'll use the raw prediction values instead; 
+   the magnitude of these in some way describes the model's confidence in the decision.
+</p>
+
+<h2>results</h2>
+<p>when we reclassify the tweets the model does pretty well (not surprisingly given we're testing against the same data we trained against)
+</p>
+<p>some examples include..
+   <pre><b>
+   tweet text      watching a episode of law &amp; order this sad awww
+   marked english? 1.0 ( yes )
+   raw prediction  0.998317 ( model agrees it's english )
+   tweet text      こけむしは『高杉晋助、沖田総悟、永倉新八、神威、白石蔵ノ介』に誘われています。誰を選ぶ？
+   marked english? 0.0 ( marked as ja )
+   raw prediction  -1.06215 ( model agrees, <em>definitely</em> not english )
+   </b></pre>
+</p>
+<p>it's not getting 100% (what classifier ever can?) and in part it's since the labelling is "incorrect" at times. 
+</p>
+<p>we can use 
+   <a href="http://osmot.cs.cornell.edu/kddcup/software.html">perf</a> to check the accuracy of the model (though it's not really checking "accuracy", more like 
+   checking "agreement") and doing this we can see the classifier is correct roughlty 82% of the time.
+</p>
+<div class="pygments_murphy"><pre><span></span>&gt; accuracy
+ [1] 0.82496 0.81260 0.82690 0.82654 0.82454 0.82354 0.82078 0.82023 0.82120 0.81990
+&gt; summary(accuracy)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
+ 0.8126  0.8204  0.8224  0.8221  0.8249  0.8269
+</pre></div>
+
+<p><small>(see <a href="https://github.com/matpalm/mislabelled-training-data/blob/master/evaluate.sh">evaluate.sh</a> for the code to reproduce this)</small>
+</p>
+
+<h2>analysis</h2>
+<p>so it generally does well but the most interesting cases are when the model <b>doesn't</b> agree with the label. 
+</p>
+<pre><b>
+tweet text      [천국이 RT이벤트]2011 대한민국 소비자신뢰 대표브랜드 대상수상! 알바천국이 여러분의 사랑에힘입어
+marked english? 1.0 ( hmmm, not sure this is in english :/ )
+raw prediction  -0.52598 ( ie model thinks it's not english )
+"disagreement"  1.52598
+</b></pre>
+
+<p>this is great! the model has correctly identified this instance is mislabelled. however sometimes the model disagrees and is wrong...
+</p>
+<pre><b>
+tweet text      поняла …что она совсем не нужна ему.
+marked english? 0.0 ( fair enough, looks russian to me.. )
+prediction:     5.528163 ( model strongly thinks it's english )
+"disagreement"  5.528163
+</b></pre>
+
+<p>a bit of poking through the tweets shows that there are enough russian tweets marked as english for it to be learnt as english...
+</p>
+
+<h2>"correcting" the labels</h2>
+<p>we can score each tweet based on how much the model disagrees (mean square error of "disagreement" across the multiple runs) and we see, at least for the top 200, that
+   the model was right the vast majority of the time (ie the language of the tweet isn't the user_lang).
+</p>
+<p>what we can do then is trust the model and change the user_lang as required for the top, say, 100 and reiterate.
+</p>
+<p>if we do this overall iteration 10 times we see a gradual improvement in the model.
+</p>
+<img src="/blog/imgs/2011/10/acc_vs_runs.png" />
+
+<p>comparing the first run (r01) to the last (r10) the mean has risen a little bit from 0.8245 to 0.8298 and a 
+   t-test thinks this change is significant (p-value = 0.002097 &lt; 0.05); though it's not really that huge an improvement
+</p>
+
+<h2>but an even simpler solution</h2>
+<p>the iterative solution was novel but it turns out there's a much better solution; make a first pass on the data and if you see 
+   one of the common non english characters и, の, ل or น just mark the tweet as non english.
+</p>
+<p>if we do this we get an immediate improvement
+</p>
+<img src="/blog/imgs/2011/10/before_and_update_lang_set.png" />
+
+<div class="pygments_murphy"><pre><span></span>&gt; summary(updated)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.8144  0.8308  0.8339  0.8326  0.8359  0.8382 
+</pre></div>
+
+<p>and you don't need a t-test to see this change is significant :)
+</p>
+
+<h2>tl;dr</h2>
+<ol>
+ <li>
+     a supervised classifier can be used in an iterative sense to do unsupervised work
+ </li>
+
+ <li>
+     but never forget a simple solution can often be the best!
+ </li>
+</ol>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/2011/10/03/mislabelled-training-data";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+

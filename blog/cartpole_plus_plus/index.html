@@ -1,0 +1,362 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <title>brain of mat kelcey</title>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="/blog/feed" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0"
+href="/blog/feed/atom/index.xml" />
+<link rel='stylesheet' href='/css/pygments_murphy.css' type='text/css' />
+<link rel='stylesheet' href='/css/table.css' type='text/css' />
+<link rel="stylesheet" href="/css/prettify.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/prettify.js"></script>
+
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="content">
+      
+  <div style="float:right">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+ <input value="matpalm.com" name="sitesearch" type="hidden">
+ <input size="25" name="q" id="query" type="text" value="">&nbsp;
+ <input name="Search" value="Search" type="submit">
+</form>
+</div>
+
+
+<div style="float:right; padding-right:3em">
+<a href="http://twitter.com/mat_kelcey"><img src="/blog/imgs/twit.png"></img></a>
+<a href="https://github.com/matpalm"><img src="/blog/imgs/github.png"></img></a>
+</div>
+
+<h1><a href="/blog">brain of mat kelcey</a></h1>
+
+<hr/>
+
+
+      <div id="main_block">
+        <div id="prose_block">
+          
+
+<div class="blog_post">
+  <a name="cartpole++"></a>
+  <h2 class="blog_post_title"><a href="/blog/cartpole_plus_plus" rel="bookmark" title="Permanent Link to cartpole++">cartpole++</a></h2>
+  <small>August 11, 2016 at 10:00 PM | categories:
+
+<a href='/blog/tag/projects'>projects</a>
+</small><p/>
+  <div class="post_prose">
+    
+  <p>one of the classic control problems of reinforcement learning is the cartpole; the oldest reference to which i can find
+   is <a href="https://webdocs.cs.ualberta.ca/~sutton/papers/barto-sutton-anderson-83.pdf">Barto, Sutton &amp; Anderson's "Neuronlikw Adaptive Elements That Can Solve Difficult Learning Control Problems (1983)</a>
+</p>
+<p>it's a simple enough sounding problem; given a cart in 2d, with a pole balancing on it, move the cart left and right to keep the pole balanced (i.e. within a small angle of vertical).
+</p>
+<p>the entire problem can be described by input 4 variables; the cart position, the cart velocity, the pole angle, the pole angular velocity but even still it's surprisingly difficult to solve. there are loads of implementations of it and if you want to tinker i'd <i>highly</i> recommend starting with <a href="https://gym.openai.com/envs/CartPole-v0">openai's gym version</a>
+</p>
+<p>as soon as you've solved it though you might want to play with a more complex physics environment and for that you need a serious physics simulator, e.g. the industry standard (and fully open sourced) <a href="http://bulletphysics.org/">bullet physics</a> engine.
+</p>
+<p>the simplest cartpole i could make includes 1) the ground 2) a cart (red) and 3) a pole (green). the blue line here denotes the z-axis. ( all code and repro instructions are <a href="https://github.com/matpalm/cartpoleplusplus">on github</a> )
+</p>
+<img width="420" src="/blog/imgs/2016/cartpole/cartpole.png"/>
+
+<ul>
+ <li>
+     the cart and pole move in 3d, not 1d.
+ </li>
+
+ <li>
+     the pole is <i>not</i> connected to the cart (and since it's relatively light it makes from some crazy dynamics...)
+ </li>
+
+ <li>
+     each run is started with a push of the cart in a random direction.
+ </li>
+</ul>
+
+<h3>state representation</h3>
+<p>there are two state representations available; a low dimensional one based on the cart &amp; pole pose and a high dimensional one based on raw pixels.
+</p>
+<p>in both representations we use the idea of action repeats; per env.step we apply the choosen action 5 times, take a state snapshot, apply the action another 5 times and take another snapshot. the delta between these two snapshots provides enough information to infer velocity (if the learning algorithm finds that useful to do )
+</p>
+<ul>
+ <li>
+     the low dimensional state is (2, 2, 7)<ul>
+ <li>
+     axis=0 represents the two snapshots; 0=first, 1=second
+ </li>
+
+ <li>
+     axis=1 represents the object; 0=cart, 1=pole
+ </li>
+
+ <li>
+     axis=2 is the 7d pose; 3d postition + 4d quaternion orientation
+ </li>
+
+ <li>
+     this representation is usually just flattened to (28,) when used
+ </li>
+</ul>
+
+ </li>
+
+ <li>
+     the high dimensional state is (50, 50, 6)<ul>
+ <li>
+     <code>[:,:,0:3]</code> (the first three channels) is the RGB of a 50x50 render at first snapshot
+ </li>
+
+ <li>
+     <code>[:,:,3:6]</code> (the second three channels) is the RGB of a 50x50 render at the second snapshot
+ </li>
+
+ <li>
+     ( TODO: i concatted in the channel axis for ease of use with conv2d but conv3d is available and i should switch )
+ </li>
+</ul>
+
+ </li>
+</ul>
+<p>an example of the sequence of 50,50 renderings as seen by the network is the following (though network doesn't see the overlaid debugging info)
+</p>
+<img src="/blog/imgs/2016/cartpole/eg_5050_episode.gif"/>
+
+
+<h3>control</h3>
+<p>there are two basic methods for control; discrete and continuous
+</p>
+<ul>
+ <li>
+     the discrete control version uses 5 discrete actions; don't push, push up, down, left, right<ul>
+ <li>
+     ( i've included a "dont move" action since, once the pole is balanced, the best thing to do is stop )
+ </li>
+</ul>
+
+ </li>
+
+ <li>
+     the continuous control version uses a 2d action; the forces to apply in the x &amp; y directions.
+ </li>
+</ul>
+
+<h3>rewards</h3>
+<p>reward is just +1 for each step the pole is still upright
+</p>
+
+<h2>random agent</h2>
+<p>running this cartpole simulation with
+   <a href="https://github.com/matpalm/cartpoleplusplus/blob/master/random_action_agent.py">random actions</a>
+   gives pretty terrible performance with either random discrete or continuous control. we're lucky to get 5 or 10 steps (of a maximum 200 for our episode) in the video each time the cart skips back to the center represents the pole falling out of bounds and the sim reseting.
+</p>
+<iframe width="420" height="315" src="https://www.youtube.com/embed/buSAT-3Q8Zs" frameborder="0" allowfullscreen></iframe>
+
+
+<h2>discrete control; low dimensional</h2>
+<ul>
+ <li>
+     5 actions; go left, right, up, down, do nothing
+ </li>
+
+ <li>
+     state is cart &amp; pole poses
+ </li>
+</ul>
+
+<h3>training a deep q network</h3>
+<p>after training a vanilla <a href="https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf">dqn</a>
+   using <a href="https://github.com/matthiasplappert/keras-rl">kera-rl</a>
+   we get reasonable controller
+</p>
+<iframe width="420" height="315" src="https://www.youtube.com/embed/zteyMIvhn1U" frameborder="0" allowfullscreen></iframe>
+
+<p>the training curve is what we expect; terrible number of steps at the start then gradually getting a reasonable number
+   of full runs (steps=200). still never gets to perfect runs 100% of the time though. there's also an interesting blip around
+   episode 1,000 where it looked like it was doing OK and then diverged and recovered by about episode 7,500.
+</p>
+<img src="/blog/imgs/2016/cartpole/training_curve.png"/>
+
+
+<h3>training with likelihood ratio policy gradient</h3>
+<p>training with a <a href="https://github.com/matpalm/cartpoleplusplus/blob/master/lrpg_cartpole.py">
+   baseline likelihood ratio policy gradient algorithm</a> works well too...
+   after 12 hrs it's getting 70% success rate keeping the pole balanced.
+</p>
+<iframe width="420" height="315" src="https://www.youtube.com/embed/aricda9gs2I" frameborder="0" allowfullscreen></iframe>
+
+<p>seems very sensitive to the initialisation though; here's three runs i started at the same time. it's interesting how much
+   quicker the green one was getting good results....
+</p>
+<img src="/blog/imgs/2016/cartpole/three_pg_training_means.png"/>
+
+<p>what's <i>really</i> interesting is looking at what the blue (and actually red) models are doing....
+</p>
+<p>whereas the green one (in the video above) is constantly making adjustments these other two models (red and blue) are much happier trying to stay still, i.e. long sequences of a 0 action. if they manage to get it balanced, or even nearly so, they just stop. this prior of 0 means though that if it's <i>not</i> balanced and they wait too long they haven't got time to recover. that's really cool! digging a bit further we can see that early in training there were cases where it manages to balance the pole very quickly and then just stopping for the rest of the episode. these were very successful, compared to other runs in the same batch, and hence this prior formed; do nothing and get a great (relative) reward! it's taking a loooong time for them to recover from these early successes and, eventually, they'll have an arguably better model at convergence.
+</p>
+<p>here's the proportions of actions per run for the cases where the episode resulted in a reward of 200 (i.e. it's balanced).
+   notice how the red and blue ones don't do well for particular initial starts, these correspond to cases where the behaviour of "no action" overwhelms particular starting pushes.
+</p>
+<table>
+  <tr><th>run</th><th>stop</th><th>left</th><th>right</th><th>up</th><th>down</th></tr>
+  <tr>
+    <td>green</td>
+    <td>0.32</td>
+    <td>0.16</td>
+    <td>0.15</td>
+    <td>0.22</td>
+    <td>0.13</td>
+  </tr>
+  <tr>
+    <td>red</td>
+    <td>0.65</td>
+    <td>0.12</td>
+    <td>0.00</td>
+    <td>0.11</td>
+    <td>0.10</td>
+  </tr>
+  <tr>
+    <td>blue</td>
+    <td>0.80</td>
+    <td>0.11</td>
+    <td>0.00</td>
+    <td>0.00</td>
+    <td>0.08</td>
+  </tr>
+</table>
+
+<iframe width="420" height="315" src="https://www.youtube.com/embed/28j10F8AgCo" frameborder="0" allowfullscreen></iframe>
+
+
+<h2>continuous control; low dimensional</h2>
+<ul>
+ <li>
+     2d action; force to apply on cart in x &amp; y directions
+ </li>
+
+ <li>
+     state is cart &amp; pole poses
+ </li>
+</ul>
+
+<h3>training with deep deterministic policy gradient</h3>
+<p><a href="http://arxiv.org/abs/1509.02971">Continuous control with deep reinforcement learning</a>
+   introduced an continuous control version of deep q networks using an actor/critic model.
+</p>
+<p>my implementation for this problem is <a href="https://github.com/matpalm/cartpoleplusplus/blob/master/ddpg_cartpole.py">ddpg_cartpole.py</a> and it learns a reasonable policy though for the few long runs i've done it diverges after awhile.
+   (i've also yet to have this run stable with raw pixels (probably bugs in my code no doubt))
+</p>
+<iframe width="420" height="315" src="https://www.youtube.com/embed/8X05GA5ZKvQ" frameborder="0" allowfullscreen></iframe>
+
+
+<h2>continuous control; high dimensional</h2>
+<ul>
+ <li>
+     2d action; force to apply on cart in x &amp; y directions
+ </li>
+
+ <li>
+     state is 2 50x50 RGB images
+ </li>
+</ul>
+
+<h3>training with normalised advantage functions</h3>
+<p><a href="https://arxiv.org/abs/1603.00748">Continuous Deep Q-Learning with Model-based Acceleration</a> introduced normalised advantage functions.
+</p>
+<p>my implementation is <a href="https://github.com/matpalm/cartpoleplusplus/blob/master/naf_cartpole.py"">naf_cartpole.py</a> and i've found NAF to be a lot easier/stable to train than DDPG.
+</p>
+<p>based on raw pixels i haven't yet got a model that can balance most of the time.
+   it's definitely getting somewhere though if we look at episode length over time.
+   (caps out at 200 which is the max episode length)
+</p>
+<img src="/blog/imgs/2016/cartpole/naf_convergence.png"/>
+
+<p>here's an example of NAF at the start of training. note: these are the 50x50 images <i>as seen by the conv nets</i>
+</p>
+<p><img src="/blog/imgs/2016/cartpole/untrained/ep_00000.gif"/>
+   <img src="/blog/imgs/2016/cartpole/untrained/ep_00001.gif"/>
+   <img src="/blog/imgs/2016/cartpole/untrained/ep_00002.gif"/>
+   <img src="/blog/imgs/2016/cartpole/untrained/ep_00003.gif"/>
+   <img src="/blog/imgs/2016/cartpole/untrained/ep_00004.gif"/>
+   <img src="/blog/imgs/2016/cartpole/untrained/ep_00005.gif"/>
+   <img src="/blog/imgs/2016/cartpole/untrained/ep_00006.gif"/>
+</p>
+<p>here's some examples of eval after training for 24hrs. i can still see mistakes so it should be doing better :/
+</p>
+<p><img src="/blog/imgs/2016/cartpole/trained/ep_00000.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00001.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00002.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00003.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00004.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00005.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00006.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00007.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00008.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00009.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00010.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00011.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00012.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00013.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00014.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00015.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00016.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00017.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00018.gif"/>
+   <img src="/blog/imgs/2016/cartpole/trained/ep_00019.gif"/>
+</p>
+
+<h2>next steps</h2>
+<p>anyways maybe balancing on a cart is too boring;
+   what about on a <a href="https://www.google.com/search?q=kuka+iiwa">kuka arm</a> :)
+</p>
+<img src="/blog/imgs/2016/cartpole/kuka_pole.png"/>
+
+  </div>
+</div>
+
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  var disqus_url = "http://matpalm.com/blog/cartpole_plus_plus";
+</script>
+
+        </div><!-- End Prose Block -->
+      </div><!-- End Main Block -->
+      <div id="footer" style="float:right;">
+        
+  <hr/>
+  <p id="credits">
+Powered by <a href="http://www.blogofile.com">Blogofile</a>.<br/>
+<br/>
+RSS feeds for <a href="/blog/feed/index.xml">Entries</a>
+<br>
+</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10409220-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+      </div> <!-- End Footer -->
+    </div> <!-- End Content -->
+  </body>
+</html>
+
+
+
+
