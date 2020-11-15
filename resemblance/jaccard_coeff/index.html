@@ -1,0 +1,306 @@
+<html>
+
+ <head>
+  <title>resemblance with the jaccard coefficient</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=stylesheet href="../style.css" type="text/css">
+ </head>
+
+<body>
+
+<h4><a href="http://matpalm.com">&lt;&lt; back to other nerdy projects</a></h4>
+<h1>part 1: resemblance with the jaccard coefficient</h1>
+<h3><a href="../jaccard_distance">part 2: fastmap projection using jaccard distances</a></h3>
+<h3><a href="../simhash">part 3: the simhash algorithm</a></h3>
+<h3><a href="../sketching">part 4: a sketching algorithm</a></h3>
+
+<h2>huh?</h2>
+
+<p>
+i started working on another <a href="/rss.feed">rss feed classification</a> technique using a data duplication algorithm to classify articles.</br>
+the idea is that an article can be classified by determining which class it is most likely a duplicate of.</br>
+however half way through i realised this technique could work against a problem we were seeing at work and changed to start work on that data instead</br>
+it's a bit sad i know but data is data and it's still an interesting problem.</br>
+i'll use nothing but publicly available data for this, and if it looks promising i might get a chance to work on it further during business hours!
+</p>
+
+<p>
+all discussed ruby/c++ code is available from <a href="http://github.com/matpalm/resemblance">http://github.com/matpalm/resemblance</a>
+</p>
+
+<h2>so what is the actual problem?</h2>
+
+<p>
+given two very similiar business names, address pairs can we decide if they are actually the same company?</br>
+let's consider some examples...</br>
+</p>
+
+<p>eg1</br>
+<tt>
+Burra Hotel, 5 Market Sq, Burra, SA, 5417</br>
+Camping Country Superstore, 401 Pacific Hwy, Belmont North, NSW, 2280</br>
+</tt>
+it's pretty obvious these are not the same company. next!
+</p>
+
+<p>eg2</br>
+<tt>
+One Stop Bakery, 1304 High St Rd, Wantirna, VIC, 3152</br>
+One Stop Bakery, 1304 High Street Rd, Wantirna South, VIC, 3152</br>
+</tt>
+i think these are the same, it's just one is using an abbrev for street.
+</p>
+
+<p>eg3</br>
+<tt>
+Park Beach Interiors, Showroom Park Beach Plaza Pacific Hwy, Coffs Harbour, NSW, 2450</br>
+Park Beach Interiors, Showroom Park Beach Plaza Pacific Highway, Coffs Harbour, NSW, 2450</br>
+Park Beach Interiors, Park Beach Plaza Pacific Hwy, Coffs Harbour, NSW, 2450</br>
+Park Beach Interiors, 26 Park Beach Plaza, Pacific Hwy, Coffs Harbour, NSW, 2450</br>
+</tt>
+i think these are <b>all</b> the same.
+</p>
+
+<p>eg 4</br>
+<tt>
+Weaver Interiors, 955 Pacific Hwy, Pymble, NSW, 2073</br>
+Weaver Interiors, 997 Pacific Hwy, Pymble, NSW, 2073</br>
+</tt>
+this pair is interesting.... they <i>might</i> be the same, but maybe not...
+</p>
+
+<p>eg 5</br>
+<tt>
+Gibbon Hamor Commercial Interiors, 233 Johnston St, Annandale, NSW, 2038</br>
+Gibbon Hamor Development Planners, 233 Johnston St, Annandale, NSW, 2038</br>
+</tt>
+this pair is also interesting for the same reasons.
+</p>
+
+<a name="shingling"></a>
+<h2>shingling</h2>
+
+<p>
+shingling is a way of generating a <a href="http://en.wikipedia.org/wiki/Set_(mathematics)">set</a> that represents a bit of data which can be used for comparisons</br>
+eg. the 4 bigram shingles of <tt>"the cat sat on the cat"</tt> are...
+<ol><li>the cat<li>cat sat<li>sat on<li>on the</ol>
+<small>(note: this is a set so we only count the shingle "the cat" once)</small></br>
+</p>
+
+<h2>the jaccard index</h2>
+
+<p>
+the <a href="http://en.wikipedia.org/wiki/Jaccard_index">jaccard index</a> is a simple measure of how similiar two sets are.</br>
+it's simply the ratio of the size of the intersection of the sets and the size of the union of the sets.</br>
+</p>
+
+<p>
+eg. if <tt>J(A,B)</tt> is jaccard index between sets <tt>A</tt> and <tt>B</tt></br>
+and <tt>A = {1,2,3}, B = {2,3,4}, C = {4,5,6}</tt>,</br>
+then <tt>J(A,B) = 2/4 = 0.5,</tt></br>
+and <tt>J(A,C) = 0/6 = 0,</tt></br>
+and <tt>J(B,C) = 1/5 = 0.2</tt></br>
+so the most "similiar" sets are <tt>A</tt> and <tt>B</tt> and the least similiar are <tt>A</tt> and <tt>C</tt></br>
+(note also <tt>J(A,A) = J(B,B) = J(C,C) = 1</tt>)
+</p>
+
+<h2>putting it all together</h2>
+
+<p>
+so given two business name/addresses we can build a shingling set for each and use the jaccard index to decide how similiar they are.</br>
+we'll use bigrams for building our sets but lets use character bigrams, not word bigrams.</br>
+this is since the documents are quite small and we want to include puncutation in the comparisons...</br>
+</p>
+
+<p>
+lets run through our above examples again...
+</p>
+
+<p>eg 1</br>
+Burra Hotel, 5 Market Sq, Burra, SA, 5417</br>
+is represented by the set of 2 character-gram shingles</br>
+<small><small><tt>{" 5", " B", " H", " M", " S", ", ", "17", "41", "5 ", "54", "A,", "Bu", "Ho", "Ma", "SA",
+"Sq", "a ", "a,", "ar", "el", "et", "ke", "l,", "ot", "q,", "ra", "rk", "rr", "t ", "te", "ur"}</tt></small></small>
+</p>
+
+<p>
+Camping Country Superstore, 401 Pacific Hwy, Belmont North, NSW, 2280</br>
+is represented by the set of 2 character-gram shingles</br>
+<small><small><tt>{" 2", " 4", " B", " C", " H", " N", " P", " S", ", ", "01", "1 ", "22", "28", "40", "80",
+ "Be", "Ca", "Co", "Hw", "NS", "No", "Pa", "SW", "Su", "W,", "ac", "am", "c ", "ci", "e,", "el", "er", "fi",
+ "g ", "h,", "ic", "if", "in", "lm", "mo", "mp", "ng", "nt", "on", "or", "ou", "pe", "pi", "re", "rs", "rt",
+ "ry", "st", "t ", "th", "to", "tr", "un", "up", "wy", "y ", "y,"}
+</tt></small></small>
+</p>
+
+<p>they have an intersection size of 6 shingles and a union size of 87 shingles, hence a jaccard index of 6/87 = 0.068</p>
+
+<p>eg 2</br>
+One Stop Bakery, 1304 High St Rd, Wantirna, VIC, 3152 and </br>
+One Stop Bakery, 1304 High Street Rd, Wantirna South, VIC, 3152</br>
+have an intersection size of 46 shingles and a union size of 57 shingles, hence a jaccard index of 46/57 = 0.807
+</p>
+
+<p>eg 3</br>
+a) Park Beach Interiors, Showroom Park Beach Plaza Pacific Hwy, Coffs Harbour, NSW, 2450 </br>
+b) Park Beach Interiors, Showroom Park Beach Plaza Pacific Highway, Coffs Harbour, NSW, 2450</br>
+c) Park Beach Interiors, Park Beach Plaza Pacific Hwy, Coffs Harbour, NSW, 2450</br>
+d) Park Beach Interiors, 26 Park Beach Plaza, Pacific Hwy, Coffs Harbour, NSW, 2450</br>
+have indexes J(ab)=0.888, J(ac)=0.861, J(ad)=0.808, J(bc)=0.760, J(bd)=0.716, J(cd)=0.932
+</p>
+
+<p>eg 4</br>
+Weaver Interiors, 955 Pacific Hwy, Pymble, NSW, 2073 and </br>
+Weaver Interiors, 997 Pacific Hwy, Pymble, NSW, 2073</br>
+have an intersection size of 43 shingles and a union size of 49 shingles, hence a jaccard index of 43/49 = 0.877
+</p>
+
+<p>eg 5</br>
+Gibbon Hamor Commercial Interiors, 233 Johnston St, Annandale, NSW, 2038 and </br>
+Gibbon Hamor Development Planners, 233 Johnston St, Annandale, NSW, 2038</br>
+have an intersection size of 49 shingles and a union size of 76 shingles, hence a jaccard index of 49/76 = 0.644
+</p>
+
+<h2>conclusion</h2>
+
+<p>
+though there is no obvious magic cutoff point it seems to give pretty good values.</br>
+it would find some obvious duplicates, though would require a bit of human double checking to make sure.
+</p>
+
+<p>
+here's a histogram of the frequency of resemblance values from the comparison of all pairs of 2000 name addresses</br>
+(a total of 1,999,000 comparisons and notice the y scale is logarithmic)</br>
+<img src="resemblance_histogram.png"/>
+</p>
+
+<h2>algorithmic discussion</h2>
+
+<h3>order n squared sucks</h3>
+
+<p>
+the jaccard coefficient is, unfortunately,  not <a href="http://en.wikipedia.org/wiki/Transitive_relation">transistive</a></br>
+(ie if we know J(A,B) and J(B,C) it tells use nothing about J(A,C)</br>
+</p>
+
+<p>
+naively then to determine the pair with the highest similarity requires we compare <i>every element with
+every other element</i>.</br>
+this is O(n<sup>2</sup>) and O(n<sup>2</sup>) sucks since we are looking at (n(n-1))/2 comparisons, joy!</br>
+</p>
+
+<p>
+
+<p>lets examine some of the ruby runtimes
+<table>
+<tr><td>num records</td><td>comparisons</td><td>time</td></tr>
+<tr><td>50</td><td>1,225</td><td>0.2s</td></tr>
+<tr><td>100</td><td>4,950</td><td>0.9s</td></tr>
+<tr><td>250</td><td>31,125</td><td>5.6s</td></tr>
+<tr><td>500</td><td>124,750</td><td>24s</td></tr>
+<tr><td>750</td><td>280,875</td><td>52s</td></tr>
+<tr><td>2000</td><td>1,999,000</td><td>6m 57s</td></tr>
+</table>
+</p>
+
+<p>
+and just say i ran this over a subset of the full data, say, 1,000,000 records</br>
+it would be 499,999,500,000 comparisons</br>
+and at about 300,000 per minute we'll be here till christmas (2011)</br>
+</p>
+
+<p>( luckily the actual data allows me to do something which reduces the runtime to be O(n) but i'm not going to talk about it out of work)</p>
+
+<h3>bit level optimisation in c++</h3>
+
+<p>
+i decided to reimplement this in c++ and go the whole hog by using a bit level representation of the data to wring everything out of the machine.
+</p>
+
+<p>
+the big question is: how to optimise the jaccard index calculation? it's where the time is spent.</br>
+</p>
+
+<p>
+consider the shingle sets for "cat" and "mat", ie <tt>{"ca","at"}</tt> and <tt>{"ma","at"}</tt></br>
+we can convert shingles to ints by taking all the unique ones and mapping them to ints from a sequence starting at 0</br>
+ie <tt> { "ca" => 0, "at" => 1, "ma" => 2}</tt></br>
+giving us the two equivalent shingle sets <tt>{0,1}</tt> and <tt>{2,1}</tt></br>
+finally we can use the values in these sets to set bits in a nibble</br>
+giving us the two nibbles <tt>0011</tt> (setting bits 0 and 1) and <tt>0110</tt> (setting bits 2 and 1)</br>
+</p>
+
+<p>
+now consider the bit representations and the results of the bitwise operators | and &amp; </br>
+<tt>&nbsp;&nbsp;0011</tt> (equivalent to <tt>{"ca","at"}</tt>)</br>
+<tt>&nbsp;&nbsp;0110</tt> (equivalent to <tt>{"ma","at"}</tt>)</br>
+<tt>&amp;&nbsp;0010</tt> =&gt; and'ing the bits strings gives us their intersection!</br>
+<tt>|&nbsp;0111</tt> =&gt; or'ing the bits strings gives us their union!</br>
+</p>
+
+<p>
+the number of bits set in x0010 (size of intersection) is 1 and </br>
+the number of bits set in x0111 (size of union) is 3</br>
+so the jaccard index of "cat" and "mat" is 1/3
+</p>
+
+<p>
+<small>
+note: we can count the number of bits set with a crazy bit of c like</br>
+<tt>
+inline int count_number_bits_set(long l) {</br>
+&nbsp;unsigned int c;</br>
+&nbsp;&nbsp;for(c=0;l;c++)</br>
+&nbsp;&nbsp;&nbsp;l &= l-1;</br>
+&nbsp;return c;</br>
+}</tt></br>
+(thanks to  <a href="http://en.wikipedia.org/wiki/Brian_Kernighan">brian kernighan</a> for that one)
+</small></p>
+
+<p>
+using this method we can calculate the union or intersection of a 4 byte long (ie 32 set elements) in a single | or &amp;!</br>
+bamm!
+</p>
+
+<p>
+finally we can use the awesome <a href="http://openmp.org">openmp</a> library ( available as part of gcc since 4.2 )</br>
+with <a href="http://github.com/matpalm/resemblance/tree/master/cpp/resemblance.cpp">two additional lines of code</a> (both pragma statements) we can give hints to the compiler where the code can be multithreaded
+</p>
+
+<p>
+<table>
+<tr><td>num records</td><td>comparisons</td><td>ruby time</td><td>c++ time</td><td>c++ openmp time</td></tr>
+<tr><td>50</td><td>1,225</td><td>0.29s</td><td>0.008s</td><td>0.013s</td></tr>
+<tr><td>100</td><td>4,950</td><td>0.97s</td><td>0.01s</td><td>0.013s</td></tr>
+<tr><td>250</td><td>31,125</td><td>5.5s</td><td>0.04s</td><td>0.04s</td></tr>
+<tr><td>500</td><td>124,750</td><td>22s</td><td>0.12s</td><td>0.09s</td></tr>
+<tr><td>1000</td><td>499,500</td><td>1m 30s</td><td>0.37s</td><td>0.2s</td></tr>
+<tr><td>2000</td><td>1,999,000</td><td>6m 34s</td><td>1.2s</td><td>0.5s</td></tr>
+<tr><td>4000</td><td>7,998,000</td><td>?</td><td>7.4s</td><td>1.8s</td></tr>
+<tr><td>8000</td><td>31,996,000</td><td>?</td><td>21s</td><td>6.2s</td></tr>
+<tr><td>16000</td><td>127,992,000</td><td>?</td><td>?</td><td>26s</td></tr>
+</table>
+</p>
+
+<p>
+so the ruby code is getting about 5,000 a second</br>
+the single threaded c++ implementation is getting about 1,500,000 a second</br>
+and the c++ implementation using openmp on a quad core box (utilising about 350% cpu) is getting about 5,000,000 a second</br>
+this is a speed up of about 1,000 times</br>
+booya! that's more like it!
+</p>
+
+<p>
+now lets consider <a href="../jaccard_distance">the jaccard distance</a> after which we'll consider the <a href="../simhash">simhash algorithm</a> as a way of avoiding all that O(n<sup>2</sup>) nastiness.
+</p>
+
+<p><small>
+june 11 2009
+</br><a href="http://twitter.com/#!/mat_kelcey">me on twitter</a>
+</br><a href="https://plus.google.com/+MatKelcey?rel=author">me on google+</a>
+</small></p>
+
+<hr>
+
+</body>
+</html>

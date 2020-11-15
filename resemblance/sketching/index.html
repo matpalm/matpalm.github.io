@@ -1,0 +1,98 @@
+<html>
+
+ <head>
+  <title>sketching</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=stylesheet href="../style.css" type="text/css">
+ </head>
+
+<body>
+
+<h4><a href="http://matpalm.com">&lt;&lt; back to other nerdy projects</a></h4>
+<h3><a href="../jaccard_coeff">part 1: resemblance with the jaccard coefficient</a></h3>
+<h3><a href="../jaccard_distance">part 2: fastmap projection using jaccard distances</a></h3>
+<h3><a href="../simhash">part 3: the simhash algorithm</a></h3>
+<h1>part 4: a sketching algorithm</h1>
+
+<h2>what is it?</h2>
+
+<p>
+sketching is another similiar near duplicate finding technique.</br>
+a very good description of one sketching algorithm is given in s19.6 of manning et al's awesome text
+<a href="https://nlp.stanford.edu/IR-book/html/htmledition/near-duplicates-and-shingling-1.html">introduction to information retrieval</a>
+</p>
+
+<p>
+the basic idea is built around hashing a document's shingles a number of times to make a 'sketch' of a document.</br>
+turns out that the jaccard coefficient of two documents is estimated by the overlap of the document's sketch.
+</p>
+
+<p>
+it requires a large datastructure but the building and checking of it is NOT O(n<sup>2</sup>) in runtime
+</p>
+
+<h2>experiments</h2>
+
+<p>
+so trying it out it's very fast! here's my simple <a href="http://github.com/matpalm/resemblance/blob/master/ruby/sketch.rb">ruby implementation</a>
+</p>
+
+<p>
+<table>
+<tr><td>entries </td><td>shingling c++ </td><td>simhash16   </td><td>simhash32     </td><td>usimhash64</td>    <td>sketch</td></tr>
+<tr><td>1,600    </td><td>3s            </td><td>27s (67%)   </td><td>48s (75%)     </td><td>2m 52s (97%)</td>  <td>3s (95%)</td></tr>
+<tr><td>3,200    </td><td>5s            </td><td>58s (50%)   </td><td>1m 43s (61%)  </td><td>6m 38s (92%)</td>  <td>15s (94%)</td></tr>
+<tr><td>6,400    </td><td>14s           </td><td>            </td><td>5m (48%)      </td><td>19m 29s (83%)</td> <td>1m 10s (98%)</td></tr>
+<tr><td>12,800   </td><td>1m            </td><td>            </td><td>8m 10s(42%)   </td><td> </td>            <td>1m 52s (91%)</td></tr>
+</table>
+</p>
+
+<p>
+however a slight problem
+<table>
+<tr><td>entries</td> <td>time</td>   <td>memory usage</td><td>kb per entry</trtd></tr>
+<tr><td>1,600</td>   <td>3s</td>     <td>16mb</td><td>10</td></tr>
+<tr><td>3,200</td>   <td>15s</td>    <td>66mb</td><td>21</td></tr>
+<tr><td>6,400</td>   <td>1m 10s</td> <td>290mb</td><td>46</td></tr>
+<tr><td>12,800</td>  <td>1m 52s</td> <td>1gb</td><td>81</td></tr>
+</table>
+</p>
+
+<p>
+so seems we have encountered a classic time space tradeoff.</br>
+though the time is approximately linear the algorithm is quadratic in space (we're looking at needing 65gb ram for only 100,000 entries)
+</p>
+
+<p>
+we'll have to get out of ram and start writing things to disk...
+</p>
+
+<p>
+<i>enter days of our lives like dream sequence skipping forward five months in time....</i>
+</p>
+
+<p>at this stage i went off and had a good month long hack session in erlang writing an awesome
+<a href="http://github.com/matpalm/resemblance/tree/master/erl/">framework</a>
+ for handling the problems associated with this large dataset. it was very interesting, lots and fun and probably the most complex piece of erlang code i've written.
+however i never really finished it since right near the end of it i realised i was just writing a map reduce framework.
+again, interesting stuff, but why bother when there is one even more
+awesome that the one i wrote called <a href="http://hadoop.apache.org/">hadoop</a>
+</p>
+
+<p>
+so after picking up hadoop i started playing with some other bits and pieces, like <a href="http://matpalm.com/sip/">statistically improbable phrases</a>
+and some random graph stuff around twitter social networks (like <a href="http://matpalm.com/blog/tag/e10/">e10</a> and
+<a href="http://matpalm.com/blog/tag/e11/">e11</a>) and am finally back to this resemblance problem. more stuff coming soon!
+</p>
+
+<p><small>
+june 2009
+</br><a href="http://twitter.com/#!/mat_kelcey">me on twitter</a>
+</br><a href="https://plus.google.com/+MatKelcey?rel=author">me on google+</a>
+</small></p>
+
+<hr>
+
+
+</body>
+</html>

@@ -1,0 +1,410 @@
+<html>
+
+ <head>
+  <title>simhash</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=stylesheet href="../style.css" type="text/css">
+ </head>
+
+<body>
+
+<h4><a href="http://matpalm.com">&lt;&lt; back to other nerdy projects</a></h4>
+<h3><a href="../jaccard_coeff">part 1: resemblance with the jaccard coefficient</a></h3>
+<h3><a href="../jaccard_distance">part 2: fastmap projection using jaccard distances</a></h3>
+<h1>part 3: the simhash algorithm</h1>
+<h3><a href="../sketching">part 4: a sketching algorithm</a></h3>
+
+<h2>why?</h2>
+
+<p>
+shingling gives great results but the O(n<sup>2</sup>) runtime is poor</br>
+a set of 1e6 records would require 5e11 comparisons and even the cpp impl can "only" do 5e6 /sec</br>
+that's 2 months of runtime, 1.999 months too long in my mind.
+</p>
+
+<p>
+we need an heuristic that can help us avoid all that brute forceness.....
+</p>
+
+<h2>what?</h2>
+
+<p>
+let's try making use of the hash algorithm simhash.</br>
+simhash was developed by Moses Charikar and is described in his paper</br>
+<a href="http://www.cs.princeton.edu/courses/archive/spring04/cos598B/bib/CharikarEstim.pdf">similarity estimation techniques from rounding algorithms.pdf</a>
+</p>
+
+<p>
+so what is so special about simhash?
+</p>
+
+<p>
+a hash function usually hashes different values to totally different hash values</br>
+
+<pre>
+irb(main):006:0> p1 = 'the cat sat on the mat'
+irb(main):005:0> p2 = 'the cat sat on a mat'
+irb(main):007:0> p3 = 'we all scream for ice cream'
+irb(main):007:0> p1.hash
+=> 415542861
+irb(main):007:0> p2.hash
+=> 668720516
+irb(main):007:0> p3.hash
+=> 767429688
+</pre>
+</p>
+
+<p>
+simhash is one where similiar items are hashed to similiar hash values</br>
+(by similar we mean the bitwise hamming distance between hash values)</br>
+<pre>
+irb(main):003:0> p1.simhash
+=> 851459198
+00110010110000000011110001111110
+
+irb(main):004:0> p2.simhash
+=> 847263864
+00110010100000000011100001111000
+
+irb(main):002:0> p3.simhash
+=> 984968088
+00111010101101010110101110011000
+</pre>
+in this case we can see the hamming distance of the similar items (p1,p2)=4</br>
+whereas (p1,p3)=16 and (p2,p3)=12
+</p>
+
+<h2>how?</h2>
+
+<p>
+the simhash of a phrase is calculated as follow..
+<ol>
+
+<li> pick a hashsize, lets say 32 bits </li>
+
+<li>
+let V = [0] * 32 # (ie 32 zeros)
+</li>
+
+<li>
+break the phrase up into features</br>
+<pre>
+irb(main):003:0> 'the cat sat on the mat'.shingles
+=> #&lt;Set: {"th", "he", "e ", " c", "ca", "at", "t ",
+    " s", "sa", " o", "on", "n ", " t", " m", "ma"}&gt;
+</pre>
+</li>
+
+<li>
+hash each feature using a normal 32-bit hash algorithm</br>
+<pre>
+"th".hash = -502157718
+"he".hash = -369049682
+...
+</pre>
+</li>
+
+<li>
+for each hash</br>
+if bit<sub>i</sub> of hash is set then add 1 to V[i]</br>
+if bit<sub>i</sub> of hash is not set then take 1 from V[i]</br>
+</li>
+
+<li>
+simhash bit<sub>i</sub> is 1 if V[i] > 0  and 0 otherwise
+</li>
+
+</ol>
+</p>
+
+<h2>who cares?</h2>
+
+<p>
+simhash is useful because if the simhash bitwise hamming distance of two phrases is low then
+their jaccard coefficient is high
+</p>
+
+<p>
+but how can we make use of this to try to find the similiar items?
+</p>
+
+<p>
+consider this other factoid....</br>
+in the case that two numbers have a low bitwise hamming distance</br>
+and the difference in their bits are in the lower order bits</br>
+then it turns out that they will end up close to each other if the list is sorted.
+</p>
+
+<p>
+consider numbers
+<pre>
+1 37586	1001001011010010
+2 50086	1100001110100110 7 &lt;--(this column lists hamming
+3 2648	0000101001011000 11    distance to previous entry)
+4 934   0000001110100110 9
+5 40957	1001111111111101 9
+6 2650	0000101001011010 9
+7 64475	1111101111011011 7
+8 40955	1001111111111011 4
+</pre>
+</p>
+
+<p>
+if we sort them
+<pre>
+4 934   0000001110100110
+3 2648	0000101001011000 9
+6 2650	0000101001011010 1
+1 37586	1001001011010010 5
+8 40955	1001111111111011 6
+5 40957	1001111111111101 2
+2 50086	1100001110100110 9
+7 64475	1111101111011011 9
+</pre>
+then we notice that two pairs with very smallest hamming distance</br>
+hdist(3,6)=1 and hdist(8,5)=2</br>
+have ended up adjacent to each other.
+</p>
+
+<p>
+great! so in this case rather than check every combo we could just check the
+adjacent pairs of the list, each is a good candidate.
+</p>
+
+<p>
+this has reduces the runtime</br>
+from n*(n-1)/2 coeff calcs O(n<sup>2</sup>)</br>
+to n fingerprints calcs O(n) + a sort O(n logn) + n coeff calcs O(n) ( which is O(n logn) overall )
+</p>
+
+<p>
+alas there is another pair with a low hamming distance, hdist(4,2)=2
+that have ended up totally apart at other ends of the list...
+</p>
+
+<p>
+sorting only picked up the pairs that differed in their lower order bits.
+</p>
+
+<p>
+to get around this consider another convenient property of bitwise hamming distance
+a permutation of the bits of two numbers preserves hamming distance..
+</p>
+
+<p>
+if we permutate by 'rotating' the bits, ie bit shift left and replace lowest
+order bit with the 'lost' highest order bit we get 'new' fingerprints that have
+the same hamming distances</br>
+<pre>
+'rotate' bits left twice
+4 3736	0000111010011000
+3 10592	0010100101100000 9
+6 10600	0010100101101000 1
+1 19274	0100101101001010 5
+8 32750	0111111111101110 6
+5 32758	0111111111110110 2
+2 3739	0000111010011011 9
+7 61295	1110111101101111 9
+</pre>
+</p>
+
+<p>
+if we sort again by fingerprint
+<pre>
+4 3736	0000111010011000
+2 3739	0000111010011011 2
+3 10592	0010100101100000 11
+6 10600	0010100101101000 1
+1 19274	0100101101001010 5
+8 32750	0111111111101110 6
+5 32758	0111111111110110 2
+7 61295	1110111101101111 6
+</pre>
+yay! this time the (2,4) pair ended up adjacent</br>
+we also identified the (3,6) and (5,8) pairs as candidates again
+</p>
+
+<p>
+so to avoid whether the items differ in the higher or lower order bits we can
+just so the following B times (where B is the bit length of the fingerprint)
+<ol>
+<li>rotate the bits</li>
+<li>sort</li>
+<li>check adjacent</li>
+</ol>
+</p>
+
+<p>
+in the likely case that B &lt;&lt; n the entire algorithm will still be under O(n<sup>2</sup>)
+</p>
+
+<p><small>
+(in fact we wouldn't check each adjacent pair each rotation, rather collect the adjacent pairs in
+a set and check at the end, very similiar items would end up adjacent in a number of the rotations
+but only need to be checked once)
+</small></p>
+
+<p>
+but it all hinges on the fact that similiar items end up next to each other in the sorted lists...timetime
+</p>
+
+<h2>experiments</h2>
+
+<p>
+lets see how well it does for finding similarities above 0.6</br>
+<small>for simhash we give the runtime and it's accuracy in finding solutions</br>
+eg 5s (90%) implies simhash took 5s to find 90% of all possible resemblances under 0.6</small>
+<table>
+<tr>
+	<td>entries</td>
+	<td>shingling</td>
+	<td>simhash16</td>
+	<td>simhash32</td>
+</tr>
+<tr>
+	<td>100</td>
+	<td>1s</td>
+	<td>1s (69%)</td>
+	<td>1s (69%)</td>
+</tr>
+<tr>
+	<td>200</td>
+	<td>4s</td>
+	<td>1s (61%)</td>
+	<td>2s (67%)</td>
+</tr>
+<tr>
+	<td>400</td>
+	<td>16s</td>
+	<td>2s (62%)</td>
+	<td>3s (65%)</td>
+</tr>
+<tr>
+	<td>800</td>
+	<td>1m 6s</td>
+	<td>3s (41%)</td>
+	<td>6s (54%)</td>
+</tr>
+<tr>
+	<td>1600</td>
+	<td>4m 30s</td>
+	<td>10s (31%)</td>
+	<td>11s (31%)</td>
+</tr>
+</table>
+</p>
+
+<p>
+simhash observations
+<ul>
+<li>it's much faster, furthermore simhashs runtime growth is (just) sublinear, not exponential</li>
+<li>32bit performs better than 16bit, with only a little extra runtime required</li>
+<li>it's getting more and more inaccurate... is this a function of just trying adjacents? perhaps. sampling
+a couple of cases where it missed some it would have found them if only trying a window of the next 5 instead of the next 1</li>
+</ul>
+</p>
+
+<p>
+if we change the code to consider the next 10 instead of just the next 1 we get....
+<table>
+<tr><td>entries</td><td>shingling</td><td>simhash16</td><td>simhash32</td></tr>
+<tr><td>100</td><td>1s</td><td>2s (100%)</td><td>1s (100%)</td></tr>
+<tr><td>200</td><td>4s</td><td>3s (91%)</td><td>5s (96%)</td></tr>
+<tr><td>400</td><td>16s</td><td>6s (88%)</td><td>10s (93%)</td></tr>
+<tr><td>800   </td><td>1m 6s    </td><td>  13s (79%) </td><td> 22s (83%)</td></tr>
+<tr><td>1600  </td><td>4m 30s </td><td>  27s (67%) </td><td> 48s (75%)</td></tr>
+<tr><td>3200  </td><td>21m 30s</td><td>  58s (50%)</td><td> 1m 43s (61%)</td></tr>
+</table>
+</p>
+
+<p>
+a x4 runtime for x2 the accuracy, seems worth it.</br>
+but it appears the window is going to have to get bigger and bigger as the dataset grows.
+this idea of a window size being some magic function of the dataset smells like a problem in the algorithm
+</p>
+
+<p>
+an important thing to notice is that though the accuracy is dropping off it's the
+items with a lower similarity that not being found. with a fixed window size of 10
+entries we can see that the best precision is in the high similarities
+<table>
+<tr><td>#entries</td><td>&gt;0.9         </td><td>&gt;0.8          </td><td>&gt;0.7     </td><td>&gt;0.6      </td></tr>
+<tr><td>400 </td><td> 9/9 (100%)  </td><td> 40/40 (100%) </td><td> 65/65 (100%) </td><td> 93/100 (93%)  </td></tr>
+<tr><td>800 </td><td> 19/19 (100%)</td><td> 77/77 (100%) </td><td> 143/147 (97%)</td><td> 190/227 (83%)  </td></tr>
+<tr><td>1600</td><td> 40/42 (95%) </td><td> 133/139 (95%)</td><td> 234/255 (91%)</td><td> 307/406 (75%)  </td></tr>
+<tr><td>3200</td><td> 64/75 (85%) </td><td> 218/265 (82%)</td><td> 397/546 (72%)</td><td> 614/1003 (61%) </td></tr>
+</table>
+</p>
+
+<p>
+continuing to look at the 0.6 values in bigger sets
+<table>
+<tr><td>entries </td><td> shingling (c++)</td><td>  simhash32</td></tr>
+<tr><td>6,400   </td><td>13s             </td><td>  5m (48%)      </td></tr>
+<tr><td>12,800  </td><td>1m              </td><td>  8m 10s (42%)  </td></tr>
+<tr><td>25,600  </td><td>4m 31s          </td><td>  17m 22s (37%) </td></tr>
+<tr><td>51,200  </td><td>19m             </td><td>  45m (31%)     </td></tr>
+<tr><td>102,400 </td><td> 1h 31m         </td><td>  1h 53m (27%) </td></tr>
+</table>
+</p>
+
+<p>
+so it seems the single threaded ruby simhash is juuuust about to overtake the multi threaded c++ brute force implementation
+but alas simhash is dying with out of memory.
+</p>
+
+<p>
+there are a number of things i could do to reduce consumption but i've noticed that even with the rather large window
+size simhash32 is getting pretty terrible results for similarities over 0.6...
+</p>
+
+<p>
+how about increasing the hash size from 32 to 64 bits? alas the ruby default hashing is only giving 32bit values so we need to use a larger custom hashing function.
+</p>
+
+<p>
+how does swapping in a 64bit <a href="http://en.wikipedia.org/wiki/Universal_hashing">universal hash</a> help?
+it takes quite a bit longer
+(somewhat expected; there are twice as many bits to rotate and the hash function is now
+<a href="http://github.com/matpalm/resemblance/blob/master/ruby/universal_hash.rb">implemented in ruby</a> instead of using ruby's c hash impl)
+but seems more accurate...
+<table>
+<tr><td>entries </td><td>shingling c++ </td><td>simhash16   </td><td>simhash32     </td><td>usimhash64</td></tr>
+<tr><td>800     </td><td>1s            </td><td>13s (79%)   </td><td>22s (83%)     </td><td>72s (100%)</td></tr>
+<tr><td>1600    </td><td>3s            </td><td>27s (67%)   </td><td>48s (75%)     </td><td>2m 52s (97%)</td></tr>
+<tr><td>3200    </td><td>5s            </td><td>58s (50%)   </td><td>1m 43s (61%)  </td><td>6m 38s (92%)</td></tr>
+<tr><td>6400    </td><td>14s           </td><td>            </td><td>5m (48%)      </td><td>19m 29s (83%)</td></tr>
+</table>
+</p>
+
+<p>
+and the behaviour is as before, it has captured the higher level of similarities
+more than the lower similarities
+<table>
+<tr><td>usimhash64</tud><td> &gt;0.9</td><td> &gt;0.8</td><td> &gt;0.7</td><td> &gt;0.6      </td></tr>
+<tr><td>6400      </td><td> 100%</td><td> 97% </td><td> 92% </td><td> 83%</td></tr>
+</table>
+</p>
+
+<p>
+the universal hash has another useful property. since it's seeded from a random value it can be run a number
+of times with different results. so what we can do is perform a number of independant runs in parallel on a
+multicore machine. this roughly makes the execution time 4 times faster (on 4 core box) bringing it back down
+to runtime required for simhash32
+</p>
+
+<p>
+how's about trying a <a href="../sketching">sketching</a> algorithm?
+</p>
+
+<p><small>
+may 2009
+</br><a href="http://twitter.com/#!/mat_kelcey">me on twitter</a>
+</br><a href="https://plus.google.com/+MatKelcey?rel=author">me on google+</a>
+</small></p>
+
+<hr>
+
+
+</body>
+</html>

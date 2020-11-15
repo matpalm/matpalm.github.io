@@ -1,0 +1,347 @@
+<html>
+
+ <head>
+  <title>fastmap projection using jaccard distances</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=stylesheet href="../style.css" type="text/css">
+ </head>
+
+<body>
+
+<h4><a href="http://matpalm.com">&lt;&lt; back to other nerdy projects</a></h4>
+<h3><a href="../jaccard_coeff">part 1: resemblance with the jaccard coefficient</a></h3>
+<h1>part 2: fastmap projection using jaccard distances</h1>
+<h3><a href="../simhash">part 3: the simhash algorithm</a></h3>
+<h3><a href="../sketching">part 4: a sketching algorithm</a></h3>
+
+<p>
+<small>all code for this experiment available from <a href="http://github.com/matpalm/resemblance">github.com/matpalm/resemblance</a></small>
+</p>
+
+<h2>a jaccard distance example</h2>
+
+<p>
+a variation of the jaccard coefficient (considered in my <a href="../jaccard_coeff">last experiment</a>) is the jaccard distance.</br>
+rather than returning a coefficient from 0 (different) to 1 (the same) it returns a "distance" where similiar items are "close" together.
+</p>
+
+<p>
+for two sets A and B</br>
+if X is the cardinality (ie number of elements) of the xor of A and B (X = | A ^ B |)</br>
+and U is the cardinality of the union of A and B (U = | A ∪ B |)</br>
+then the jaccard distance is X / X + U</br>
+</p>
+
+<p>
+eg considering some sample data items</br>
+</p>
+
+<p>
+<tt>
+code> cat test.data
+</tt>
+</p>
+
+<p>
+<tt>
+0 - richard's favorite flavour of softdrink is peanut butter and jam</br>
+1 - nowadays the best band in the world is bad religion</br>
+2 - richard's favorite softdrink flavor is peanut butter and jelly</br>
+3 - this sentence has nothing, i mean nothing, to do with the others</br>
+4 - i used to think slayer was the best band in the world</br>
+</tt>
+</p>
+
+<p>we can apply <a href="../jaccard_coeff/index.html#shingling">shingling</a> to calculate the pairwise jaccard distances</p>
+
+<p>
+<tt>
+code> cat test.data | shingle.rb distance 0 > distances.jaccard
+</tt>
+</p>
+
+<p>
+<table border="1">
+<colgroup width="16%"><colgroup width="16%"><colgroup width="16%">
+<colgroup width="16%"><colgroup width="16%"><colgroup width="16%">
+<tr> <td>&nbsp;</td> <td>0</td> <td>1</td> <td>2</td> <td>3</td> <td>4</td> </tr>
+<tr> <td>0</td> <td>0.00</td> <td>0.86</td> <td>0.17</td> <td>0.83</td> <td>0.79</td> </tr>
+<tr> <td>1</td> <td>0.86</td> <td>0.00</td> <td>0.84</td> <td>0.82</td> <td>0.56</td> </tr>
+<tr> <td>2</td> <td>0.17</td> <td>0.84</td> <td>0.00</td> <td>0.85</td> <td>0.78</td> </tr>
+<tr> <td>3</td> <td>0.83</td> <td>0.82</td> <td>0.85</td> <td>0.00</td> <td>0.72</td> </tr>
+<tr> <td>4</td> <td>0.79</td> <td>0.56</td> <td>0.78</td> <td>0.72</td> <td>0.00</td> </tr>
+</table>
+</p>
+
+<p>
+the most similiar pair with a distance of 0.17 is </br>
+<tt>
+0 - richard's favorite flavour of softdrink is peanut butter and jam</br>
+2 - richard's favorite softdrink flavor is peanut butter and jelly</br>
+</tt>
+</p>
+
+<p>
+the next most similiar pair with a distance of 0.56 is </br>
+<tt>
+1 - nowadays the best band in the world is bad religion</br>
+4 - i used to think slayer was the best band in the world</br>
+</tt>
+</p>
+
+<p>and everything else is roughly equal.</p>
+
+<h2>visualisation of all pairwise distances</h2>
+
+<p>
+but how can we visualise the entire set?</br>
+pairwise distances can be used to determine points whose spacing corresponds to these distances.</br>
+as close as possible, that is, as the dimensionality allows...</br>
+eg. by picking points in a billion-dimensional space we'd always be able to position them exactly at the jaccard distances.</br>
+(by basically make all the relationships <a href="http://en.wikipedia.org/wiki/Orthogonal">orthogonal</a>)</br>
+but in a "smaller" space, say 2-dimensions, we might not be able to find exact points but will have to be content with minimising the error.</br>
+</p>
+
+<p>
+side note: can these <i>individual</i> distances be used to visualise the data as a <i>whole</i>?</br>
+yes! since the jaccard distance calculation honours the <a href="http://en.wikipedia.org/wiki/Triangle_inequality">the triangle inequality</a></br>
+(if the triangle equality didnt hold then A close to be B and B close to C wouldn't imply A close to C and we need this transistive property)</br>
+more on this in a bit.</p>
+
+<h2>going from distances to points</h2>
+
+<p>
+given these distances can we decide on 5 points in n-dimensional space for visualising this data?</br>
+</p>
+
+<p>
+one hacky approach for deciding on points given distances is multi dimensional scaling</br>
+( i used it in a <a href="http://matpalm.com/audioscrobbler/multi.dimensional.tag.distance/">previous experiment</a> to go
+from a 1000 dimensional tag space to a 2 or 3 dimensional space )</br>
+we could allocate random points in the n-dimensional space and "scale" them till the error of their distances was minimised.</br>
+but it's doesn't quite feel right....
+</p>
+
+<p>
+so i posted the
+<a href="http://stackoverflow.com/questions/182086/determining-points-from-set-of-pairwise-distances">question</a>
+ to <a href="http://stackoverflow.com">stackoverflow</a> and got a great paper on a technique called
+<a href="http://www.kyriakides.net/CBCL/references/Faloutsos/p163-faloutsos.pdf">fastmap</a> that i'm going to just basically implement and discuss here.
+</p>
+
+<h2>fastmap</h2>
+
+<h3>mapping onto a line</h3>
+
+<p>
+<a href="http://www.kyriakides.net/CBCL/references/Faloutsos/p163-faloutsos.pdf">fastmap</a> is a cool little algorithm for
+calculating points given only the distances between the points.</br>
+it works in n-dimensional space but starts by determining the best points for 1 dimension (aka a line) and generalises.</br>
+</p>
+
+<p>
+we'll imagine this line is the x-axis and start by deciding which points will define the ends of the line.</br>
+we do this by choosing the two points that are furthest apart from each other.</br>
+to guarantee the furthest apart we would have to compare each point to each other ( (n<sup>2</sup> - n)/2 comparisons, ie O(n<sup>2</sup>) )</br>
+but it's turns out we don't have to use the absolutely furthest ones apart and we can find a pair using a simple O(2n) heuristic.</br>
+</p>
+
+<p>to determine end points A and B it's simply...</br>
+<ol>
+<li>define end point A as the point furthest from any random point</li>
+<li>define end point B as the point furthest from A</li>
+</ol>
+</p>
+
+<p>
+if we define |AB| to be the distance from A to B</br>
+and let A be the origin, ie x<sub>a</sub>=0, and then B be along the x-axis at the point x<sub>b</sub>=|AB|</br>
+we can project all other points onto the x-axis so that they lie (roughly) between these two</br>
+eg for point C we project to C' which lies somewhere such that 0 &lt;= x<sub>c</sub> &lt;= |AB|</br>
+(this will work for all A,B,C thanks to the triangle inequality property of the jaccard distance)
+</p>
+
+<p>
+this projection is calculated using our old mate <a href="http://en.wikipedia.org/wiki/Pythagoras">pythagoras</a></br>
+x<sub>c</sub> = ( |AC|<sup>2</sup> + |AB|<sup>2</sup> - |BC|<sup>2</sup> )  / 2 |AB|</br>
+<img src="c_projection.png"/>
+</p>
+
+<p>
+after projecting all points we'll have a 1 dimenionsal representation which preserves distances as much as possible</br>
+</p>
+
+<p>
+for our working example we end up with...</br>
+</p>
+
+<p>
+<tt>
+code> cat distances.jaccard | fastmap.rb 1 > points.1d
+</tt>
+</p>
+
+<p>
+<table>
+<tr><td>id</td><td>x coord</td><td>record</td></tr>
+<tr><td>1</td><td>0.00</td><td>nowadays the best band in the world is bad religion</td></tr>
+<tr><td>4</td><td>0.25</td><td>i used to think slayer was the best band in the world</td></tr>
+<tr><td>3</td><td>0.41</td><td>this sentence has nothing, i mean nothing, to do with the others</td></tr>
+<tr><td>2</td><td>0.82</td><td>richard's favorite softdrink flavor is peanut butter and jelly</td></tr>
+<tr><td>0</td><td>0.86</td><td>richard's favorite flavour of softdrink is peanut butter and jam</td></tr>
+</tt>
+</table>
+</p>
+
+<p>
+how accurate is the projection? we can convert back to pairwise distances and check the mean square error</br>
+</p>
+
+<p>
+<tt>
+code> cat points.1d | convert_points_to_distances.rb > distances.projected.1d</br>
+code> mean_sqr_err.rb distances.jaccard distances.projected.1d
+</tt>
+</p>
+
+<p>
+for this 1d projection the error is 0.10, which is pretty accurate.</br>
+(it's equivalent of an error of 1.0 in only one of the distances for a set of 10 pairwise distances)
+</p>
+
+<h3>mapping onto another dimenison</h3>
+
+<p>
+how do we now generalise to map into another dimension?</br>
+what we want to do is project the distances now into an orthogonal dimension, let's say a y-axis</br>
+how do we adjust our pairwise distances to take into account the projections we just did?</br>
+let's consider some cases... we define ||AB|| as the adjusted pairwise distance.</br>
+</p>
+
+<h4>parallel projection</h4>
+<p>
+consider if during our projection we projected C to C' and D to D'</br>
+and that after the projection |CD| = |C'D'|, ie |CD| = x<sub>d</sub> - x<sub>c</sub></br>
+<img src="cd_parallel_projection.png"/></br>
+in this case the projection has described the distance required exactly.</br>
+for the purpose of the next projection we want ||CD|| = 0 (ie nothing more to do).</br>
+(the line CD must be parallel to AB)</br>
+</p>
+
+<h4>orthogonal projection</h4>
+<p>
+alternatively consider that if during our projection we projected C to C' and D to D'</br>
+and that after the projection |C'D'| = 0 ie x<sub>c</sub> = x<sub>d</sub></br>
+<img src="cd_orth_projection.png"/></br>
+in this case the projection hasn't captured any of the actual distance between C and D.</br>
+for the purpose of the next projection we want ||CD|| = |CD|</br>
+(the line CD must be orthogonal to AB)</br>
+</p>
+
+<h4>the inbetween cases</h4>
+<p>
+so the general form of converting the distances, which includes the parallel and orthogonal cases, is</br>
+||CD||<sup>2</sup> = |CD|<sup>2</sup> - |C'D'|<sup>2</sup></br>
+</p>
+
+<p>
+after this adjustment we can just perform the same projection steps and obtain values for a second dimension.
+</p>
+
+<h3>example continued into 2d</h3>
+<p>
+projecting our data twice (ie into 2 dimensions) we get
+</p>
+
+<p>
+<tt>
+code> cat distances.jaccard | fastmap.rb 2 > points.2d</br>
+</tt>
+</p>
+
+<p>
+<table>
+<tr><td>id</td><td>x coord</td><td>y coord</td><td>record</td></tr>
+<tr><td>0</td><td>0.86</td><td>0.69</td><td>richard's favorite flavour of softdrink is peanut butter and jam</td></tr>
+<tr><td>1</td><td>0.00</td><td>0.69</td><td>nowadays the best band in the world is bad religion</td></tr>
+<tr><td>2</td><td>0.82</td><td>0.74</td><td>richard's favorite softdrink flavor is peanut butter and jelly</td></tr>
+<tr><td>3</td><td>0.41</td><td>0.00</td><td>this sentence has nothing, i mean nothing, to do with the others</td></tr>
+<tr><td>4</td><td>0.25</td><td>0.51</td><td>i used to think slayer was the best band in the world</td></tr>
+</tt>
+</table>
+</p>
+
+<p>
+<img src="2dplot.png">
+</p>
+
+<p>
+for this 2d projection we have reduced the error to 0.01</br>
+a huge improvement from the 0.1 error of the 1 dimensional case.</br>
+we can now easily see the most similiar items 0 and 2 are closest</br>
+with the next most similiar items 1 and 4 in the same rough area</br>
+</p>
+
+<h3>example continued into 3d</h3>
+
+<p>
+projecting our data thrice (ie into 3 dimensions) we get
+</p>
+
+<p>
+<tt>
+code> cat distances.jaccard | fastmap.rb 3 > points.3d</br>
+</tt>
+</p>
+
+<p>
+<table>
+<tr><td>id</td><td>x coord</td><td>y coord</td><td>z coord</td><td>record</td></tr>
+<tr><td>0</td><td>0.86</td><td>0.69</td><td>0.44</td><td>richard's favorite flavour of softdrink is peanut butter and jam</td></tr>
+<tr><td>1</td><td>0.00</td><td>0.69</td><td>0.44</td><td>nowadays the best band in the world is bad religion</td></tr>
+<tr><td>2</td><td>0.82</td><td>0.74</td><td>0.48</td><td>richard's favorite softdrink flavor is peanut butter and jelly</td></tr>
+<tr><td>3</td><td>0.41</td><td>0.00</td><td>0.48</td><td>this sentence has nothing, i mean nothing, to do with the others</td></tr>
+<tr><td>4</td><td>0.25</td><td>0.51</td><td>0.00</td><td>i used to think slayer was the best band in the world</td></tr>
+</tt>
+</table>
+</p>
+
+<p>
+<object width="425" height="350"> <param name="movie" value="http://www.youtube.com/v/OoHzX6eJIVo"> </param>
+<embed src="http://www.youtube.com/v/OoHzX6eJIVo" type="application/x-shockwave-flash" width="425" height="350"> </embed> </object></p>
+
+<p>
+gnuplot animation generated with</br>
+<tt>
+bash> ruby plot.3d.rb > plot.3d.gp</br>
+bash> gnuplot plot.3d.gp</br>
+bash> mencoder mf://*png -o plot.3d.avi -ovc lavc</br>
+</tt>
+</p>
+
+<p>
+again we reduce our error, now down to 0.001
+</p>
+
+<h3>example continued into 4d</h3>
+
+<p>
+finally, without the explicit numbers, if we project one more time into 3 dimensions we reduce our mean square error to 0. </br>
+with only 5 points this would always be possible since in general we can always project n+1 points into n dimensions</br>
+without a formal proof it seems to make sense; 2 points onto a line, 3 points of a triangle onto a plane, etc</br>
+</p>
+
+<p>
+next, avoiding O(n<sup>2</sup>) with the <a href="../simhash">simhash algorithm</a>
+</p>
+
+<p><small>
+june 2009
+</br><a href="http://twitter.com/#!/mat_kelcey">me on twitter</a>
+</br><a href="https://plus.google.com/+MatKelcey?rel=author">me on google+</a>
+</small></p>
+
+<hr>
+
+</body>
+</html>
