@@ -1,0 +1,57 @@
+<html>
+ <head>
+	<title>the median of a trillion numbers</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+ </head>
+<body>
+
+<p>
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="algorithm.html">the base algorithm&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<h2>the question</h2>
+
+<p>i had an interview questions once which was "how would you find the median of a trillion integers
+spread across a thousand machines"
+</p>
+
+<p>
+though i managed to bumble my way to an answer that was generally on the right
+track i've never gone through my solution in detail,</br>
+so here goes....
+</p>
+
+<p>
+firstly; what's a median? </br>
+informally the median of a list of elements is the "middle" element after the list is sorted.
+</p>
+
+<p>
+eg for a sorted list with 11 elements [1 1 2 3 3 4 5 5 5 6 9]</br>
+the median of this list is the value in the "middle" with 5 elements on either side</br>
+ie. the value 4
+</p>
+
+<p>
+so what makes this question about medians worthy of an interview question?
+</p>
+
+<p>
+doing some back of envelope calculations we see that a trillion (10<sup>12</sup>) ints would consume, at 4 bytes per int, </br>
+4x10<sup>12</sup> bytes = 4x10<sup>9</sup> kb = 4x10<sup>6</sup> mb = 4x10<sup>3</sup> gb.</br>
+spread over 1,000 machines thats 4gb worth of ints per machine.
+</p>
+
+<p>
+not so easy to just sort...
+</p>
+
+<p>
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="algorithm.html">the base algorithm&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+<p><small>nov 2008</small></p>
+
+</body>

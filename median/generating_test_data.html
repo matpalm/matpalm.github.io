@@ -1,0 +1,63 @@
+<html>
+ <head>
+	<title>the median of a trillion numbers</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+ </head>
+<body>
+
+<p>
+<a href="distributing.html">&lt;&lt;&nbsp;&nbsp;distributing</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="ruby_impl.html">ruby implementation&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<h2>generating test data</h2>
+
+<h3>scripts</h3>
+
+<p>
+i've built two scripts to help in generating test data
+</p>
+
+<p>
+the first generates numbers between two values with a specific median value, 
+it's cryptically called <a href="http://github.com/matpalm/median/tree/master/generate_test_data.rb">generate_test_data.rb</a>
+<pre>
+bash> ./generate_test_data.rb min_value median_value max_value number_of_values (optional_seed)
+</pre>
+</p>
+
+<p>
+the second spreads values from stdin evenly over a number of files, it's even more cryptically called 
+<a href="http://github.com/matpalm/median/tree/master/spread_across_files.rb">spread_across_files.rb</a>
+<pre>
+bash> ./spread_across_files.rb file_prefix number_of_files
+</pre>
+</p>
+
+<h3>eg</h3>
+
+<p>
+<pre>
+bash> ./generate_test_data.rb 200 275 300 5e6 | ./spread_across_files.rb num 4
+</pre>
+generates files num.0, num.1, num.2 and num.3,</br>
+each with about 1,250,000 numbers</br>
+with values between 200 and 300</br>
+and an overall median of 275</br>
+</p>
+
+<p>
+to be honest though spread_across_files is a bit of reinventing the wheel, 
+<a href="http://unixhelp.ed.ac.uk/CGI/man-cgi?split">split</a> is just as good.
+</p>
+
+<p>
+<a href="distributing.html">&lt;&lt;&nbsp;&nbsp;distributing</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="ruby_impl.html">ruby implementation&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+<p><small>nov 2008</small></p>
+
+</body>

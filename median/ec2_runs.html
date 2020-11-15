@@ -1,0 +1,140 @@
+<html>
+ <head>
+	<title>the median of a trillion numbers</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+ </head>
+<body>
+
+<p>
+<a href="comparison.html">&lt;&lt;&nbsp;&nbsp;performance comparisons</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="conclusion.html">conclusion&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<h2>amazon ec2 runs</h2>
+
+<h3>preparing the data</h3>
+
+<p>
+original spec was a trillion ints (1e12) over a thousand (1e3) machines</br>
+this is equivalent to 1e9 per machine</br>
+but lets say 3e9 over 3 machines to prove the aspects of concurrency</br>
+we need some big boxes to run against, lets rent some from <a href="http://aws.amazon.com/ec2/#instance">amazon ec2!</a></br>
+</p>
+
+<p>
+using 3 of the high-cpu extra large instance (8 virtual cores each) we'll need the data spread across 24 files.
+<pre>
+bash> time ./generate_test_data.rb 1 3141592 10e6 3e9 | split -l 125000000 -d
+</pre>
+this is taking too much space, each of the 24 files is 930mb, 400mb compressed at the highest level</br>
+(a test showed bzip2 gave slightly better compression than lzma)</br>
+that's almost 10gb compressed, and i'm not going to scp that to amazon.</br>
+</p>
+
+<p>
+could we just generate the data on the box?</br>
+maybe. the app is taking 10min per file and i'd prefer not to waste the rental time generating data...</br>
+perhaps storing this ints as strings isn't going to cut it for this much data.</br>
+</p>
+
+<p>
+let's work through an example of 32 bytes
+<pre>
+bash> hexdump -C sample_test_data
+00000000  31 32 34 31 38 37 30 0a  31 34 38 37 36 35 38 0a  |1241870.1487658.|
+00000010  31 30 30 35 30 34 37 0a  33 31 34 30 30 35 32 0a  |1005047.3140052.|
+</pre>
+</p>
+
+<p>
+how much smaller is it dumping at lower level erlang format and see what we get</br>
+<pre>
+erl> {ok,F} = file:open("test2",write).
+erl> B = term_to_binary(parse_file:to_list("sample_test_data")).
+erl> file:write(F, B).
+erl> file:close(F).
+</pre>
+</p>
+
+<p>
+slightly better, 27 bytes, but hardly worth the effort</br>
+<pre>
+bash> hexdump -C test2
+00000000  83 6c 00 00 00 04 62 00  12 f3 0e 62 00 16 b3 2a  |.l....b....b...*|
+00000010  62 00 0f 55 f7 62 00 2f  e9 d4 6a                 |b..U.b./..j|
+</pre>
+i think we're going to have generate the dict format ( ie {value,freq} pairs ) from the start.</br>
+it's worth noting that with the dict format idea it doesnt really make much difference how many elements there are.</br>
+it's the range of elements that dictates the size.</br>
+</p>
+
+<p>
+let's downgrade to 100e6 total with a range of 1 to 100e3</br>
+<pre>
+bash> ./generate_test_data.rb 1 31415 100e3 100e6 > test.100e6
+bash> test.100e6 | split -d -l 4166714 
+</pre>
+a 556mb file total; 24 files of 24mb;</br>
+each 24mb reduces to 1.3mb through parse_file:to_dict and further to 300kb after bzipping</br>
+results in about 7mb total, much more reasonable</br>
+</p>
+
+<h3>running on amazon</h3>
+
+<p>
+ec2 is very well documented, follow the 
+<a href="http://docs.amazonwebservices.com/AWSEC2/2008-08-08/GettingStartedGuide/">getting started guide</a>
+if you want to have a crack.</br>
+</p>
+
+<p>
+i wanted to use one of the newer high cpu instances (8 cores, 7gb ram) and found some notes in the dev guide
+about the recommend using a 2.6.18 XEN compatible kernel</br>
+grepping the output of <tt>ec2-describe-images -a</tt></br>
+gives such a kernel, and a machine image that uses it</br>
+<pre>
+IMAGE aki-9800e5f1 ec2-public-images/vmlinuz-2.6.18-xenU-ec2-v1.0.x86_64.aki.manifest.xml
+IMAGE ami-332cc85a gentoo-c1.xlarge-nocona-1223748124/image.manifest.xml x86_64 machine aki-9800e5f1
+</pre>
+might use this instance (and i love gentoo for servers, how i could NOT use it)
+</p>
+
+<p>
+so lets boot one up
+<pre>
+mats> ec2run ami-332cc85a -k gsg-keypair -t c1.xlarge
+</pre>
+and get on it and get an erlang environment installed!</br>
+(don't forget to emerge with smp enabled (like i did first time) a single threaded erlang vm might be a bit underwhelming on an 8 proc box...)
+<pre>
+mats> ssh -i ~/dev/ec2/id_rsa-gsg-keypair root@ec2-67-202-25-26.compute-1.amazonaws.com
+ec2> USE="smp" emerge erlang
+</pre>
+</p>
+
+<p>
+a quick check to see code is ok
+<pre>
+ec2> erl -noshell -sname i1 -setcookie 123 -run controller init worker_freq data/x00.dict
+</pre>
+all good.</br>
+if fact, a bit too good.</br>
+it ran super fast and running all the data files x00.dict to x23.dict and it's done in a few seconds.</br>
+it's hardly worth running up another instance at all.</br>
+as the code works across multiple machines (i tested it between my main dev box and the pvr)</br>
+so i think i might wrap this experiment up and not bother firing up another instance.
+<pre>
+mats> ec2-terminate-instances i-6534820c
+</pre>
+</p>
+
+<p>
+<a href="comparison.html">&lt;&lt;&nbsp;&nbsp;performance comparisons</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="conclusion.html">conclusion&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+<p><small>nov 2008</small></p>
+
+</body>

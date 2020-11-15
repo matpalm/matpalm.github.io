@@ -1,0 +1,178 @@
+<html>
+ <head>
+	<title>the median of a trillion numbers</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+ </head>
+<body>
+
+<p>
+<a href="question.html">&lt;&lt;&nbsp;&nbsp;the question</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="distributing.html">distributing&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<h2>the algorithm</h2>
+
+<h3>partitioning and pivots</h3>
+
+<p>
+not suprisingly it turns out doing a complete sort is a bit wasteful if we're only after the median.</br>
+all we want is the element that had the same number of elements on either side.</br>
+this type of operation, known as a partition, is actually the basis of that most famous sort of all, <a href="http://en.wikipedia.org/wiki/Quicksort">quicksort</a>. 
+</p>
+
+<p>
+the basic method of the quicksort algorithm is to select an element, called a pivot and move it into it's correct sorted position by shuffling elements around it.</br>
+all elements less than the pivot are moved to the front of the list and the rest, corresponding to elements equal or greater, are left in place.</br>
+after this partitioning the pivot is in it's correct sorted position (though the rest of the list is still a shambles).</br>
+the rest can be sorted by recursively applying the same partitioning approach to both the elements
+before the pivot and the elements after the pivot.
+</p>
+
+<p>
+to find just the median though we can use the idea partitioning around the first pivot, without having to do the extra work of the complete sort.
+</p>
+
+<h3>order statistics</h3>
+<p>
+first an informal definition: regarding <a href="http://en.wikipedia.org/wiki/Order_statistics">order statistics</a></br>
+the n<sup>th</sup> order statistic of a list is the element which is in the n<sup>th</sup> postition when the list is sorted</br>
+eg the 1<sup>st</sup> order statistic of a 9 element list is the minimum</br>
+eg the m<sup>th</sup> order statistic of a m element list is the maximum</br>
+eg the m<sup>th</sup> order statistic of a 2m element list is the median</br>
+</p>
+
+<h3>pivot selection</h3>
+
+<h4>the perfect pivot</h4>
+
+<p>
+let's work through an example</br>
+say we have the list</br>
+<pre>[4 3 1 1 5 <u>9</u> 2 6 5 3 5]</pre>
+(we'll use an underline to denote the value in the mth order stat position for a 2m element list)</br>
+</p>
+
+<p>
+we are after the median, ie the 6th order stat</br>
+if we partitioned around the first list element, ie 4, the list would be</br>
+<pre>[<font color="red">3 1 1 2 3</font> <u><strong>4</strong></u> <font color="green">5 9 6 5 5</font>]</pre>
+(we'll use <font color="red">red</font> values to denote those less than a pivot, <font color="green">green</font> values for those equal or greater than a pivot)
+
+</p>
+since the 4 has been moved to position 6 we can say 4 is the 6th order statistic of this list.</br>
+which, as luck would have it, is exactly what we were looking for!</br>
+so this pivot, 4, is the median.</br>
+</p>
+
+<p>
+this was much less work than quicksort since we didn't have to sort the sublists <font color="red">[3 1 1 2 3]</font> or <font color="green">[5 9 6 5 5]</font></br>
+but it only worked because 4 was a good choice.</br>
+but what if after the parititioning the pivot isn't the 6th order stat?
+</p>
+
+<h4>a pivot to the right of the median postition</h4>
+
+<p>
+consider a case then the pivot ends up "to the right" of the median postition</br>
+<pre>L1 = [6 3 1 1 5 <u>9</u> 2 4 5 3 7]</pre>
+if we partitioned around the first element, 6, we have</br>
+<pre>L1 = [<font color="red">3 1 1 5 5 <u>2</u> 4 3</font> <strong>6</strong> <font color="green">9 7</font>]</pre>
+</p>
+
+<p>
+this time we have calculated 6 to be the 9th order statistic.</br>
+since we were after the 6th order stat so know then that 6 is not the median.</br>
+furthermore since the 9th order stat is "to the right" of the 6th order stat we know then that the median must be less than 6.</br>
+therefore not only do we know 6 is not the median, it can't be 9 or 7 either.</br>
+this is very important since it means we can actually discard these values completely.</br>
+<pre>L2 = L1 - [6 9 7]</pre>
+<pre>L2 = [3 1 1 5 5 <u>2</u> 4 3]</pre>
+</p>
+
+<p>
+<i>L1's 6th order stat, it's median, is L2's 6th order stat</i></br>
+(since we discarded values <i>after</i> the middle value we can continue by looking for the same order stat)</br>
+</p>
+
+<p>
+take note though that the 6th order stat of L2 is <b>not</b> L2's median.</br>
+L2's median would be it's 4th order stat. 
+</p>
+
+<h4>a pivot to the left of the median postition</h4>
+
+<p>
+consider a case then the pivot ends up "to the left" of the median postition</br>
+<pre>L1 = [2 3 1 1 5 <u>9</u> 3 6 5 3 5]</pre>
+again we are after the median which is the 6th order stat</br>
+</p>
+
+<p>
+partitioning around the first element, 2, we have
+<pre>L1 = [<font color="red">1 1</font> <strong>2</strong> <font color="green">3 5 <u>9</u> 3 6 5 3 5</font>]</pre>
+</p>
+
+<p>
+in this case our pivot is the 3rd order stat, but we were after the 6th order stat</br>
+since the 3rd order stat is "to the left" of the 6th order stat we can additionally say the median isn't 1</br>
+discarding this time values less than the pivot</br>
+<pre>L2 = L1 - [1 1]</pre>
+<pre>L2 = [2 3 5 <u>9</u> 3 6 5 3 5]</pre>
+               
+<p>
+<i>L1's 6th order stat, it's median, is L2's 4th order stat</i></br>
+(since we discarded values <i>before</i> the middle value we need to adjust what order stat we are now looking for)</br>
+</p>
+
+<h3>in summary</h3>
+
+<p>
+if we are looking for the kth order stat and we choose a pivot that is it we've found the median.</br>
+otherwise we throw some values away, adjust what order stat we're looking for and continue.
+</p>
+
+<a name="rotation"></a>
+<h3>corner case</h3>
+
+<p>what a surprise, there is a corner case....</p>
+
+<p>
+say we have list</br>
+<pre>L1 = [2 3 1 1 5 <u>9</u> 3 6 5 3 5]</pre>
+and we choose the first value, 2, as a pivot we discard some values (the 1's) and get </br>
+<pre>L2 = [2 3 5 <u>9</u> 3 6 5 3 5]</pre>
+now if we continue and choose the first value, 2, as a pivot we end up discarding nothing more and get </br>
+<pre>L3 = [2 3 5 <u>9</u> 3 6 5 3 5]</pre>
+and we've gotten nowhere...<br>
+so if the pivot ends up in the first place we have to rotate the list (ie move first element to end) and try again.
+</p>
+
+<h3>corner case 2</h3>
+
+<p>
+what a surprise, there's another corner case....</br>
+this algorithm doesn't solve that case though when all elements of the list are the same</br>
+<pre>L1 = [3 3 3 3 3]</pre>
+no amount of rotation will save us now.</br>
+so we need some special handling for this one;</br>
+it's simply; if list min = list max then the median is the first element
+</p>
+
+<h3>a few shortcuts</h3>
+
+<p>
+if we ever end up looking for the 1st order stat we can just scan for the minimum</br>
+if we ever end up looking for the kth order stat of a k element list we can just scan for the maximum</br>
+</p>
+
+<p>
+<a href="question.html">&lt;&lt;&nbsp;&nbsp;the question</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="distributing.html">distributing&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<p><small>nov 2008</small></p>
+</body>
+

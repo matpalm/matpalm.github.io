@@ -1,0 +1,194 @@
+<html>
+ <head>
+	<title>the median of a trillion numbers</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+ </head>
+<body>
+
+<p>
+<a href="erlang_single.html">&lt;&lt;&nbsp;&nbsp;single process erlang implementation</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="comparison.html">performance comparisons&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<h2>multiple process erlang implementation</h2>
+
+<h3>list of lists</h3>
+
+in the multi process implementation splits the list of numbers to consider into a sub lists</br>
+each sub list can be handled by a seperate erlang process, potentially across different machines</br>
+(these lists don't have to be the same size)</br>
+<pre>
+single [1,2,3,4,5,6,7,8,9]
+multi  [[1,2,3,4],[5,6],[7,8,9]]
+</pre>
+<p>
+
+<p>
+recall there a number of operations required in <a href="distributing.html#counting_not_moving">distributed</a> case</br>
+includes things like determining total number of elements, determining minimum value, etc</br>
+each of these operations can be done against each sub list individually with the results aggregated
+</p>
+
+<p>
+eg to determine total number of elements
+<pre>
+single -> length( [1,2,3,4,5,6,7,8,9] ) = 9
+multi  -> sum ( length([1,2,3,4]), length([5,6]), length([7,8,9]) ) = sum([4,2,3]) = 9
+</pre>
+</p>
+
+<p>
+eg to determine minimum value</br>
+<pre>
+single -> min( [1,2,3,4,5,6,7,8,9] ) = 1
+multi  -> min( min([1,2,3,4]), min([5,6]), min([7,8,9]) ) = min([1,5,7]) = 1
+</pre>
+</p>
+
+<h3>other changes required</h3>
+
+<h4>rotation</h4>
+
+<p>
+in the single list case we pick the pivot as the first value.</br>
+in the multi list case we pick the pivot as the first value of the first list.</br>
+recall in the algorithm that <a href="algorithm.html#rotation">rotation</a> is sometimes required.</br>
+this is to ensure all potential values for a pivot are explored.</br>
+so in the multi list case the rotation needs to operate at two levels; rotate the first list and then rotate the list of lists</br>
+<pre>
+before [[1,2,3],[4,5,6],[7,8,9]]
+after  [[4,5,6],[7,8,9],[2,3,1]]
+</pre>
+</p>
+
+<h4>empty sublist cleanup</h4>
+
+<p>
+the algorithm needs to reject values less than or greater than a particular value.</br>
+in the single list case it's never the case that the list becomes empty though this is possible in the multi list case.</br>
+</p>
+
+<p>
+consider the single list case for
+<pre>
+[3,1,2,2,2,4,5]
+pivot 3, num less than 3 = 4, so 3 is 5rd order stat, discard all over 4
+result [3,1,2,2,2]
+</pre>
+</p>
+
+<p>
+now consider the multi list case for
+<pre>
+[[3,1,2],[2,2],[4,5]]
+pivot 3, num less than 3 = 4, so 3 is 5rd order stat, discard all over 4
+result [[3,1,2],[2,2],[]]
+</pre>
+in this case we can exclude this empty list from further processing
+</p>
+
+<p>
+the multi process erlang version splits the work across two modules</br>
+a <a href="http://github.com/matpalm/median/tree/master/controller.erl">controller</a> orchestrates the process</br>
+processing of lists is done by a number of spawned <a href="http://github.com/matpalm/median/tree/master/worker.erl">workers</a></br>
+if a worker ends up with no elements is it terminated</br>
+</p>
+
+<p>
+try it out with
+<pre>
+bash> ./generate_test_data.rb 0 314 1000 10e3 | ./spread_across_files.rb numbers 4
+bash> erl -sname bob -noshell -run controller init worker numbers.[0-3]
+314
+</pre>
+</p>
+
+<p>
+in fact if you have two (or more) machines, you can try it distributed style!</br>
+<ol>
+<li>replicate the directory structure you are using (ie code and data) on each machine</li>
+<li>make a file called <tt>.hosts.erlang</tt> according to the format described at the bottom of the 
+<a href="http://www.erlang.org/doc/man/net_adm.html">net adm</a> man page</li>
+<li>copy it to each machine where the code and data is</li>
+<li>on all boxes but one run
+<pre>
+bash> erl -sname worker -noshell -setcookie 123
+</pre>
+</li>
+<li>on the last box run 
+<pre>
+bash> erl -sname master -noshell -setcookie 123 -run controller init worker numbers.[0-3]
+</pre>
+</li>
+</ol>
+the code is written such that it spawns a process per file and round robin allocates each process to
+run on a machine in the cluster.</br>
+the code to do this is only fractionally harder than not doing it; this is the joy of erlang!
+</p>
+
+<h3>optimising even MORE</h3>
+
+<p>
+there is another optimisation we can make if we make an assumption about the data.
+</p>
+
+<p>
+say we have a list of N ints where for each value e; 1 &lt;= e &lt;= M.
+</p>
+
+<p>
+the list can be represented in two ways...</br>
+the N elements directly</br>
+<pre>
+[e<sub>1</sub>, e<sub>2</sub>, ... ,e<sub>n</sub>]
+</pre>
+or a lookup take of the M distinct values and their frequencies</br>
+<pre>
+[{1,f<sub>1</sub>}, {2,f<sub>2</sub>}, ... , {M,f<sub>m</sub>}]
+</pre>
+
+the first case uses N ints, the second case uses 2M ints.</br>
+both are usable data structures for our algorithm.</br>
+</p>
+
+<p>
+in the case that N &gt;&gt;&gt; M we can make huge savings, in both time and space, by using the second.
+</p>
+
+<p>
+eg consider a trillion ints with distinct values 1 to a billion</br>
+storing the list uses 1e12 ints</br>
+storing the lookup when all values are represented uses 2e9 ints</br>
+<i>500 times less</i></br>
+</p>
+
+<p>
+this requires some minor mods to the worker module. we'll call it <a href="http://github.com/matpalm/median/tree/master/worker_freq.erl">worker_freq</a></br>
+</p>
+
+<p>
+it also requires a different input format, instead of parsing the numbers directly (eg numbers.0)</br>
+we can convert to a erlang binary format of the dictionary (eg numbers.0.dict) that can be read by the workers</br>
+we use <a href="http://github.com/matpalm/median/tree/master/generate_binary_dicts.erl">generate_binary_dicts</a> to do this
+</p>
+
+<p>
+try it out with
+<pre>
+bash> ./generate_test_data.rb 0 314 1000 10e3 | ./spread_across_files.rb numbers 4
+bash> erl -noshell -run generate_binary_dicts main numbers.[0-3]
+bash> erl -sname bob -noshell -run controller init worker_freq numbers.[0-3].dict
+314
+</pre>
+</p>
+
+<p>
+<a href="erlang_single.html">&lt;&lt;&nbsp;&nbsp;single process erlang implementation</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="comparison.html">performance comparisons&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+<p><small>nov 2008</small></p>
+
+</body>

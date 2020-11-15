@@ -1,0 +1,158 @@
+<html>
+ <head>
+	<title>the median of a trillion numbers</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+ </head>
+<body>
+
+<p>
+<a href="erlang_multi.html">&lt;&lt;&nbsp;&nbsp;multiple process erlang implementation</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="ec2_runs.html">running on amazon ec2&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<h2>performance comparisons</h2>
+
+<p>
+lets do some testing on a quad core box with 2gb ram.</br>
+we'll generate 10 million numbers into a ramdisk (/dev/shm) </br>
+<pre>
+bash> ./generate_test_data.rb 0 31415 1e5 10e6 | ./spread_across_files.rb /dev/shm/numbers 4
+</pre>
+
+<p>
+first up is the simple ruby impl
+<pre>
+bash> time cat /dev/shm/numbers.[0-3] | ./median.rb
+2m 38s
+</pre>
+this version goes memory nuts and quickly has consumed pretty much all resident memory it can get (just under 2gb)</br>
+i wonder if this is usual ruby behaviour? it's not being a good citizen in terms of garbage collection!!!</br>
+the process sits at cpu user / system / idle around 25 / 0 / 75 (ie a single core)</br> 
+once the swapping starts it's reduced to something a bit more erratic like 20 / 5 / 75</br> 
+</p>
+
+<p>
+next is the multi process erlang impl that doesnt use frequency dictionaries
+<pre>
+bash> time erl -sname bob -noshell -run controller init worker /dev/shm/numbers.[0-3]
+47s
+</pre>
+it sits at about user / system / idle cpu usage of about 70 / 15 / 15</br>
+and is using much less ram; about 50mb resident and another 150mb or so for data.</br>
+</p>
+
+<p>
+let's have a crack at the frequency dictionary version</br>
+it's an unfair comparison to the ruby one though since it uses a different data structure</br>
+<pre>
+bash> time erl -noshell -run generate_binary_dicts main /dev/shm/numbers.[0-3]
+1m 16s
+bash> time erl -sname bob -noshell -run controller init worker_freq /dev/shm/numbers.[0-3].dict
+2s
+</pre>
+what's going on?</br>
+though the <i>processing</i> using the dictionary is wildly fast, </br>
+the <i>parsing</i> to generate the dictionary takes longer than the version that parses <b>and</b> processes the list</br>
+</p>
+
+<p>
+in fact just testing the parsing time we see quite a variation in something which only differs in
+the building of the dictionary. </br>
+dictionaries in erlang must be slower than i thought!
+<pre>
+mat@ubishop:~/dev/median$ erl -noshell -run parse_file test to_list /dev/shm/numbers.1e6
+to_list time 8.098419 sec
+mat@ubishop:~/dev/median$ erl -noshell -run parse_file test to_dict /dev/shm/numbers.1e6
+to_dict time 13.150428 sec
+</pre>
+</p>
+
+<p>
+poking around we see it's the io for reading the file from disk in 
+<a href="http://github.com/matpalm/median/tree/master/parse_file.erl">parse.erl</a></br>
+</p>
+
+<p>
+we can try changing from stream based file:io (bolded) ...
+<pre>
+to_dict(Filename) ->
+    {ok,File} = <b>file:open(Filename,read),</b>
+    to_dict(File, dict:new(), next_line(File)).
+
+to_dict(File,Freqs,eof) ->
+    file:close(File),
+    Freqs;
+
+to_dict(File,Freqs,Line) ->
+    Value = line_to_int(Line),
+    to_dict(File, dict:update_counter(Value,1,Freqs), next_line(File)).
+
+next_line(File) ->
+    <b>io:get_line(File,'').</b>
+    
+line_to_int(Line) ->
+    Line_without_cr = lists:sublist(Line, length(Line)-1),
+    list_to_integer(Line_without_cr).
+
+</pre>
+</p>
+
+<p>
+... to a binary parsing (bolded)
+<pre>
+to_dict_b(InFilename) ->
+    {ok,B} = <b>file:read_file(InFilename),</b>
+    to_dict_b(InFilename,B,dict:new()).
+
+to_dict_b(_InFilename, <<>>, Dict) ->
+    Dict;
+    
+to_dict_b(InFilename, Binary, Dict) ->
+    { ReducedBinary, Line } = next_line_b(Binary),
+    Int = list_to_integer(Line),
+    NewDict = dict:update_counter(Int,1,Dict),
+    to_dict_b(InFilename, ReducedBinary, NewDict).
+
+next_line_b(Binary) ->
+    next_line_b(Binary, []).
+
+next_line_b(<<>>, _Collected) ->
+    ignore_last_line_if_didnt_end_in_newline;
+
+next_line_b(<b>&lt;&lt;"\n",Rest/binary&gt;&gt;</b>, Collected) ->  
+    { Rest, binary_to_list(list_to_binary(lists:reverse(Collected))) }; % black magic voodoo line
+
+next_line_b(<b>&lt;&lt;C:1/binary,Rest/binary&gt;&gt;</b>, Collected) ->
+    next_line_b(Rest, [C|Collected]). 
+</pre>
+</p>
+
+<p>
+this gives a speed up</br>
+from 1m 16s with cpu user / system / idle of 75 / 10 / 15</br>
+to 40s with a much better cpu utilisation of user / system / idle 94 / 5 / 1</br>
+furthermore the number of context switches is about 20 times less (!!)</br>
+</p>
+
+<p>
+but what is the trade off?</br>
+apart from the binary voodoo black magic lines required; (in particular binary-to-list-to-binary-list-reverse-to-wtf?!?! )</br>
+it is more expensive in memory.</br>
+whereas the slower version occupies about 40mb resident memory the binary version is more like 100mb</br>
+</p>
+
+<p>
+this binary approach (even though there is a memory cost) doesnt feel right though....</br>
+there must be a better way to get a similiar effeciency using standard libraries</br>
+</p>
+
+<p>
+<a href="erlang_multi.html">&lt;&lt;&nbsp;&nbsp;multiple process erlang implementation</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="ec2_runs.html">running on amazon ec2&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<p><small>nov 2008</small></p>
+</body>

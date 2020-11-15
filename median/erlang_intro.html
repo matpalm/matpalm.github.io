@@ -1,0 +1,303 @@
+<html>
+ <head>
+	<title>the median of a trillion numbers</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel=StyleSheet href="style.css" type="text/css">
+ </head>
+<body>
+
+<p>
+<a href="ruby_impl.html">&lt;&lt;&nbsp;&nbsp;ruby implementation</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="erlang_single.html">single process erlang implementation&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+
+<h2>brutally short intro to erlang</h2>
+
+<p>
+the obvious choice for this kind of distributed algorithm is <a href="http://en.wikipedia.org/wiki/Erlang_programming_language">erlang</a></br>
+there are lots of tutes online but here's my quick intro
+</p>
+
+<p>
+all examples done in erlang shell erl
+<pre>
+bash> erl
+</pre>
+</p>
+
+<p>
+variables start with a capital and are immutable
+<pre>
+erl> X = 2.
+X is unbound, assigns it value 2
+erl> X = 3.
+ERROR! since X is already bound
+erl> X = 2.
+X is bound, and has value 2 so equality holds
+erl> Y = 3.
+Y is unbound, assigns it value 3
+erl> X = Y-1.
+X is value 2, Y-1 is value 2, so equality holds
+</pre>
+</p>
+
+<p>
+(note: values in erl shell can be unbound with f(orget) function)
+<pre>
+erl> X = 2.
+erl> f().
+erl> X = 3.
+no error
+</pre>
+</p>
+
+<p>
+there are various types of variables
+</p>
+
+<p>
+standard numerics; ints & floats
+<pre>
+erl> A = 2.
+erl> B = 3.5.
+</pre>
+</p>
+
+<p>
+atoms; symbolic constants that start with a lowercase
+<pre>
+erl> C = shutdown_command.
+</pre>
+</p>
+
+<p>
+tuples; short lists used for building structs
+<pre>
+erl> D = {min_max,3,10}.
+</pre>
+</p>
+
+<p>
+lists; variables sized array with lots of helper functions
+<pre>
+erl> E = [1,2,3].
+erl> length(E).
+3
+erl> E ++ [4].
+[1,2,3,4]
+</pre>
+</p>
+
+<p>
+functions; are first class objects
+<pre>
+erl> G = fun(X) -> X * 2 end.
+erl> G(5).
+10
+</pre>
+</p>
+
+<p>
+pattern matching
+</p>
+
+<p>
+binding of variables is through pattern matching
+<pre>
+erl> f().
+erl> X = 2.
+simplest pattern match there is 
+erl> {min_max,Min,Max} = {min_max,3,10}.
+erl> Min.
+3
+erl> Max.
+10
+</pre>
+</p>
+
+<p>
+special variable 'underscore' used for matching values we don't care about
+<pre>
+erl> f().
+erl> {min_max,Min,5} = {min_max,4,6}.
+FAIL, no match. 5 != 6
+erl> {min_max,Min,_} = {min_max,4,6}.
+erl> Min.
+3
+</pre>
+</p>
+
+<p>
+some special list matching with 'pipe' list splitter
+<pre>
+erl> [Head|Tail] = [1,2,3].
+erl> Head.
+1
+erl> Tail.
+[2,3]
+</pre>
+</p>
+
+<p>
+most looping code implemented in function programming style, ie recursively</br>
+using pattern matching a different version of the overloaded sum function is called
+<pre>
+sum([]) ->
+    0;
+sum([H|T]) ->
+    H + sum(T).
+</pre>
+</p>
+
+<p>
+executed as
+<pre>
+sum([1,2,3])
+= 1 + sum([2,3])
+= 1 + ( 2 + sum([3]) )
+= 1 + ( 2 + ( 3 + sum([]) ) )
+= 1 + ( 2 + ( 3 + ( 0 ) ) )
+= 6
+</pre>
+<p>
+
+<p>
+actually compiled though to use an accumulator</br>
+thus can use <a href="http://en.wikipedia.org/wiki/Tail_recursion">last call optimisation</a> to avoid recursive stackoverflow</br>
+(ie can then be implement as loop using jump operation).</br>
+<pre>
+sum(L) ->
+    sum(L,0);
+sum([],Acc) ->
+    Acc;
+sum([H|T],Acc) ->
+    sum(T, Acc+H).
+</pre>
+</p>
+
+<p>
+executed as
+<pre>
+sum([1,2,3])
+= sum([1,2,3],0)
+= sum([2,3],0+1)
+= sum([3],1)
+= sum([3],1+2)
+= sum([3],3)
+= sum([],3+3)
+= sum([],6)
+= 6
+</pre>
+</p>
+
+<p>
+concurrency support
+</p>
+
+<p>
+erlangs main strength is it's concurrency support</br>
+any function call can be run asynchronously using the spawn command
+
+<pre>
+main() ->
+    say_word_n_times('hello',4),
+    say_word_n_times('goodbye',4).
+</pre>
+
+results in
+
+<pre>
+hello
+hello
+hello
+hello
+goodbye
+goodbye
+goodbye
+goodbye
+</pre>
+
+<pre>
+main() ->
+    spawn(fun() -> say_word_n_times('hello',4) end),
+    spawn(fun() -> say_word_n_times('goodbye',4) end).
+</pre>
+
+results in something like
+
+<pre>
+hello
+goodbye
+hello
+hello
+goodbye
+goodbye
+hello
+goodbye
+</pre>
+</p>
+
+<p>
+spawn creates a new erlang 'process'.</br>
+each process has it's own context and runs on one of N erlang managed system threads.</br>
+processes are extremely lightweight and very cheap to create/destroy; it's quite feasible to have thousands of running processes</br>
+</p>
+
+<p>
+processes can <b>only</b> communicate through messaging.</br>
+a process can be sent a message with the ! operator.</br>
+messages are queued in a mailbox and handling with the receive operator.
+</p>
+
+<p>
+<pre>
+main() ->
+    P = spawn(fun() -> message_loop() end),
+    P ! hello,    
+    P ! hello,
+    P ! goodbye,
+    P ! hello.
+
+message_loop() ->
+    receive
+	hello ->
+	    io:format("i got a hello\n"),
+	    message_loop();
+	goodbye ->
+	    io:format("bye bye!\n")
+    end.
+</pre>
+
+results in 
+
+<pre>
+i got a hello
+i got a hello
+bye bye!
+</pre>
+
+main process spawns a process that enters the message loop</br>
+main process then sends 4 messages to spawned process</br>
+spawned process receives a 'hello', writes some output and reenter message loop</br>
+spawned process receives a 'hello', writes some output and reenter message loop</br>
+spawned process receives a 'shutdown', writes some output but <b>doesnt</b> reenter message loop</br>
+final hello message unprocessed</br>
+</p>
+
+<p>
+the real power comes from fact processes can be spawned just as easily on another erlang vm
+<pre>
+    P = spawn(AnotherNode, fun() -> message_loop() end),
+</pre>
+no other change to the code is required.
+</p>
+
+<p>
+<a href="ruby_impl.html">&lt;&lt;&nbsp;&nbsp;ruby implementation</a>&nbsp;&nbsp;&nbsp;
+<a href="index.html">index</a>&nbsp;&nbsp;&nbsp;
+<a href="erlang_single.html">single process erlang implementation&nbsp;&nbsp;&gt;&gt;</a>
+</p>
+<p><small>nov 2008</small></p>
+
+</body>
